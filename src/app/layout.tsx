@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Dinamico Scadenze',
-  description: 'Non mancare mai più una scadenza.',
+  title: 'Pittima App',
+  description: 'La tua app per non dimenticare mai più una scadenza.',
 };
 
 export default function RootLayout({

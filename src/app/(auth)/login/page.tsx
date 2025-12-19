@@ -1,3 +1,4 @@
+'use client';
 import { LoginForm } from '@/components/auth/login-form';
 import { Icons } from '@/components/icons';
 import Link from 'next/link';
@@ -12,7 +13,7 @@ export default function LoginPage() {
         >
           <Icons.logo className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-headline font-bold text-foreground">
-            Dinamico Scadenze
+            Pittima App
           </h1>
         </Link>
         <p className="text-balance text-muted-foreground">

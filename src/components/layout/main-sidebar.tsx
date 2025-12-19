@@ -41,7 +41,7 @@ export function MainSidebar() {
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <Icons.logo className="h-7 w-7 text-primary" />
           <span className="font-headline text-xl font-semibold text-foreground group-data-[collapsible=icon]:hidden">
-            Dinamico Scadenze
+            Pittima App
           </span>
         </Link>
       </SidebarHeader>
