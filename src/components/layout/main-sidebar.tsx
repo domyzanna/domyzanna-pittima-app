@@ -108,6 +108,7 @@ export function MainSidebar() {
             size="icon"
             className="ml-auto group-data-[collapsible=icon]:hidden"
             onClick={handleSignOut}
+            aria-label="Esegui il logout"
           >
             <LogOut className="h-4 w-4" />
           </Button>
