@@ -31,7 +31,7 @@ const monthlySummaryPrompt = ai.definePrompt({
   name: 'monthlySummaryPrompt',
   input: {schema: MonthlySummaryInputSchema},
   output: {schema: MonthlySummaryOutputSchema},
-  prompt: `You are an AI assistant that generates monthly summaries of deadlines for users.
+  prompt: `You are an AI assistant that generates monthly summaries of deadlines for users. Respond exclusively in Italian.
 
 Current month deadlines: {{{currentMonthDeadlines}}}
 Next month deadlines: {{{nextMonthDeadlines}}}
