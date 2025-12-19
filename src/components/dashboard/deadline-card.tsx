@@ -9,27 +9,32 @@ import { cn } from '@/lib/utils';
 import { Archive, Edit } from 'lucide-react';
 
 const urgencyStyles = {
-  low: {
+  bassa: {
     indicator: 'bg-status-low',
     text: 'text-status-low',
   },
-  medium: {
+  media: {
     indicator: 'bg-status-medium',
     text: 'text-status-medium',
   },
-  high: {
+  alta: {
     indicator: 'bg-status-high',
     text: 'text-status-high',
   },
-  expired: {
+  scaduto: {
     indicator: 'bg-status-expired',
     text: 'text-status-expired',
   },
 };
 
+const defaultStyle = {
+  indicator: 'bg-muted',
+  text: 'text-muted-foreground',
+};
+
 export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
   const { name, details, daysRemaining, urgency } = deadline;
-  const style = urgencyStyles[urgency];
+  const style = urgencyStyles[urgency] || defaultStyle;
 
   const formattedDays =
     daysRemaining >= 0 ? `${daysRemaining}g` : `${Math.abs(daysRemaining)}g fa`;
