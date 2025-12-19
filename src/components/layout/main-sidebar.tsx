@@ -145,45 +145,6 @@ export function MainSidebar() {
             <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <SidebarMenu className="mt-2">
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Account" className="w-full">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-sm font-normal"
-                  >
-                    <UserIcon className="h-4 w-4 mr-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">
-                      Account
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 mb-2" align="end">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user?.displayName || 'Utente'}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem>Profilo</DropdownMenuItem>
-                    <DropdownMenuItem>Impostazioni</DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );

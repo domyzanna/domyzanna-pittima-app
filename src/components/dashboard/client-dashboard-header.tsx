@@ -1,6 +1,5 @@
 'use client';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { UserNav } from '@/components/layout/user-nav';
 import { AddDeadlineDialog } from './add-deadline-dialog';
 import { useState } from 'react';
 
@@ -14,7 +13,6 @@ export default function ClientDashboardHeader() {
       </div>
       <div className="flex items-center gap-4">
         <AddDeadlineDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-        <UserNav />
       </div>
     </header>
   );
