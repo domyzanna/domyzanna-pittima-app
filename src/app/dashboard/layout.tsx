@@ -1,6 +1,11 @@
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/layout/main-sidebar';
-import { DashboardHeader } from '@/components/dashboard/dashboard-header';
+import dynamic from 'next/dynamic';
+
+const ClientDashboardHeader = dynamic(
+  () => import('@/components/dashboard/client-dashboard-header'),
+  { ssr: false }
+);
 
 export default function DashboardLayout({
   children,
@@ -11,7 +16,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <MainSidebar />
       <SidebarInset>
-        <DashboardHeader />
+        <ClientDashboardHeader />
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </SidebarInset>
     </SidebarProvider>
