@@ -1,3 +1,5 @@
+'use client';
+
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/layout/main-sidebar';
 import dynamic from 'next/dynamic';
