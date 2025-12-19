@@ -112,9 +112,9 @@ export function MainSidebar() {
               <SidebarMenuButton
                 asChild
                 tooltip={cat.name}
-                isActive={pathname.includes(`/category/${cat.id}`)}
+                isActive={pathname === `/dashboard/category/${cat.id}`}
               >
-                <Link href="#">
+                <Link href={`/dashboard/category/${cat.id}`}>
                   {getIcon(cat.icon)}
                   {cat.name}
                 </Link>
