@@ -29,17 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, PlusCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { PlusCircle } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
-import { it } from 'date-fns/locale';
+import { format, parseISO } from 'date-fns';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -49,9 +41,7 @@ const formSchema = z.object({
     'Documenti Personali',
     'Abbonamenti',
   ]),
-  expirationDate: z.date({
-    required_error: 'La data di scadenza è obbligatoria.',
-  }),
+  expirationDate: z.string().min(1, 'La data di scadenza è obbligatoria.'),
   recurrence: z.enum([
     'una-tantum',
     'mensile',
@@ -75,13 +65,16 @@ export function AddDeadlineDialog({
     defaultValues: {
       name: '',
       category: undefined,
-      expirationDate: undefined,
+      expirationDate: '',
       recurrence: undefined,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log({
+      ...values,
+      expirationDate: parseISO(values.expirationDate), // Convert string back to Date object on submit
+    });
     onOpenChange(false);
     form.reset();
     // Here you would typically call a server action to save the data
@@ -155,38 +148,11 @@ export function AddDeadlineDialog({
               control={form.control}
               name="expirationDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Data di Scadenza</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, 'PPP', { locale: it })
-                          ) : (
-                            <span>Scegli una data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date('1900-01-01')}
-                        initialFocus
-                        locale={it}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
