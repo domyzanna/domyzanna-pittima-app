@@ -143,16 +143,18 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
             </Button>
             <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
-              Aggiorna
+              Modifica
             </Button>
           </div>
         </div>
       </Card>
-      <EditDeadlineDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        deadline={deadline}
-      />
+      {isEditDialogOpen && (
+        <EditDeadlineDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          deadline={deadline}
+        />
+      )}
     </>
   );
 }

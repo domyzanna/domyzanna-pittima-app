@@ -21,6 +21,17 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -29,13 +40,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, collection } from 'firebase/firestore';
+import { doc, updateDoc, collection, deleteDoc } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
+import { Trash2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -85,6 +97,27 @@ export function EditDeadlineDialog({
       notificationDays: deadline.notificationDays || 30,
     },
   });
+
+    const handleDelete = async () => {
+    if (!user || !firestore) return;
+    const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
+    try {
+      await deleteDoc(deadlineRef);
+      toast({
+        title: 'Eliminata!',
+        description: 'La scadenza è stata eliminata definitivamente.',
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description: "Impossibile eliminare la scadenza. Riprova più tardi.",
+      });
+    }
+  };
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -250,7 +283,29 @@ export function EditDeadlineDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="flex justify-between items-center sm:justify-between sm:w-full">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" type="button">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Questa azione è irreversibile. La scadenza verrà eliminata permanentemente
+                      dai nostri server.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annulla</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                      Sì, elimina
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button type="submit">Salva Modifiche</Button>
             </DialogFooter>
           </form>

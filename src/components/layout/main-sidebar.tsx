@@ -8,9 +8,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, PlusCircle } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -36,6 +37,8 @@ import {
 import type { Category } from '@/lib/types';
 import { collection } from 'firebase/firestore';
 import { SidebarMenuSkeleton } from '../ui/sidebar';
+import { useState } from 'react';
+import { AddCategoryDialog } from '../dashboard/add-category-dialog';
 
 const getIcon = (iconName: string) => {
   const IconComponent = (LucideIcons as any)[iconName];
@@ -52,6 +55,7 @@ export function MainSidebar() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
 
   const categoriesQuery = useMemoFirebase(
     () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
@@ -75,6 +79,7 @@ export function MainSidebar() {
   };
 
   return (
+    <>
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader className="border-b">
         <Link href="/dashboard" className="flex items-center gap-2.5">
@@ -98,6 +103,8 @@ export function MainSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          
+          <SidebarSeparator />
 
           {isLoadingCategories && (
             <>
@@ -121,6 +128,15 @@ export function MainSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          <SidebarMenuItem>
+             <SidebarMenuButton
+                tooltip="Aggiungi Categoria"
+                onClick={() => setIsCategoryDialogOpen(true)}
+              >
+                <PlusCircle />
+                Aggiungi Categoria
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t">
@@ -174,5 +190,7 @@ export function MainSidebar() {
         </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
+    <AddCategoryDialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen} />
+    </>
   );
 }
