@@ -36,6 +36,7 @@ import { addDoc, collection } from 'firebase/firestore';
 import type { Category } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { subDays } from 'date-fns';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -49,6 +50,7 @@ const formSchema = z.object({
     'semestrale',
     'annuale',
   ]),
+  notificationDays: z.coerce.number().min(0, 'I giorni di preavviso devono essere un numero positivo'),
 });
 
 type AddDeadlineDialogProps = {
@@ -79,6 +81,7 @@ export function AddDeadlineDialog({
       categoryId: undefined,
       expirationDate: '',
       recurrence: 'una-tantum',
+      notificationDays: 30,
     },
   });
 
@@ -92,11 +95,16 @@ export function AddDeadlineDialog({
       return;
     }
     try {
+      const expirationDate = new Date(values.expirationDate);
+      const notificationStartDate = subDays(expirationDate, values.notificationDays);
+
       const deadlineData = {
         ...values,
         userId: user.uid,
         isCompleted: false,
-        expirationDate: new Date(values.expirationDate).toISOString(),
+        expirationDate: expirationDate.toISOString(),
+        notificationStartDate: notificationStartDate.toISOString(),
+        notificationStatus: 'pending',
       };
       const deadlinesColRef = collection(
         firestore,
@@ -192,6 +200,19 @@ export function AddDeadlineDialog({
                   <FormLabel>Data di Scadenza</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notificationDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Giorni di preavviso notifica</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

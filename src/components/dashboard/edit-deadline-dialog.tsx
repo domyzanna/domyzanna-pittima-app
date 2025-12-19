@@ -35,7 +35,7 @@ import { doc, updateDoc, collection } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -49,6 +49,7 @@ const formSchema = z.object({
     'semestrale',
     'annuale',
   ]),
+  notificationDays: z.coerce.number().min(0, 'I giorni di preavviso devono essere un numero positivo'),
 });
 
 type EditDeadlineDialogProps = {
@@ -81,6 +82,7 @@ export function EditDeadlineDialog({
       categoryId: deadline.category.id,
       expirationDate: format(new Date(deadline.expirationDate), 'yyyy-MM-dd'),
       recurrence: deadline.recurrence,
+      notificationDays: deadline.notificationDays || 30,
     },
   });
 
@@ -95,10 +97,18 @@ export function EditDeadlineDialog({
     }
     try {
       const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
+      
+      const expirationDate = new Date(values.expirationDate);
+      const notificationStartDate = subDays(expirationDate, values.notificationDays);
+      
       const deadlineDataToUpdate = {
         ...values,
-        expirationDate: new Date(values.expirationDate).toISOString(),
+        expirationDate: expirationDate.toISOString(),
+        notificationStartDate: notificationStartDate.toISOString(),
+        // Potremmo voler resettare lo stato della notifica se la data cambia
+        notificationStatus: 'pending',
       };
+
       await updateDoc(deadlineRef, deadlineDataToUpdate);
 
       toast({
@@ -182,6 +192,19 @@ export function EditDeadlineDialog({
                   <FormLabel>Data di Scadenza</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notificationDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Giorni di preavviso notifica</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

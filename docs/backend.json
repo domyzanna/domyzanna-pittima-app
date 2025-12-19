@@ -70,6 +70,24 @@
         "isCompleted": {
           "type": "boolean",
           "description": "Indicates if the deadline has been completed."
+        },
+        "notificationDays": {
+          "type": "number",
+          "description": "How many days in advance to start notifying the user."
+        },
+        "notificationStartDate": {
+          "type": "string",
+          "description": "The specific date to start sending notifications (ISO 8601 format).",
+          "format": "date-time"
+        },
+        "notificationStatus": {
+          "type": "string",
+          "description": "The current state of the notification process for this deadline.",
+          "enum": [
+            "pending",
+            "active",
+            "paused"
+          ]
         }
       },
       "required": [
@@ -79,7 +97,10 @@
         "name",
         "expirationDate",
         "recurrence",
-        "isCompleted"
+        "isCompleted",
+        "notificationDays",
+        "notificationStartDate",
+        "notificationStatus"
       ]
     },
     "Category": {

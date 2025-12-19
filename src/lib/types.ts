@@ -9,6 +9,8 @@ export type Recurrence =
 
 export type Urgency = 'scaduto' | 'alta' | 'media' | 'bassa';
 
+export type NotificationStatus = 'pending' | 'active' | 'paused';
+
 // Firestore document for a user's category
 export type Category = {
   id: string;
@@ -27,6 +29,9 @@ export type Deadline = {
   expirationDate: string; // ISO 8601 format
   recurrence: Recurrence;
   isCompleted: boolean;
+  notificationDays: number;
+  notificationStartDate: string; // ISO 8601 format
+  notificationStatus: NotificationStatus;
 };
 
 // Type for client-side processing, combining deadline with its category info
