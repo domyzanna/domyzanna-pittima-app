@@ -45,13 +45,34 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      
+      if (!userCredential.user.emailVerified) {
+        toast({
+            variant: 'destructive',
+            title: 'Email non verificata',
+            description: 'Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.',
+        });
+        return;
+      }
+      
       router.push('/dashboard');
+
     } catch (error: any) {
       console.error('Error signing in', error);
       let description = 'Credenziali non valide. Riprova.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      if (
+        error.code === 'auth/user-not-found' ||
+        error.code === 'auth/wrong-password' ||
+        error.code === 'auth/invalid-credential'
+      ) {
         description = 'Email o password non corrette. Controlla e riprova.';
+      } else if (error.code === 'auth/user-disabled') {
+        description = 'Questo account è stato disabilitato.';
       }
       toast({
         variant: 'destructive',
