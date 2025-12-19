@@ -17,6 +17,7 @@ import {
   LogOut,
   LayoutDashboard,
   PlusCircle,
+  User as UserIcon,
 } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
@@ -25,6 +26,15 @@ import { Button } from '../ui/button';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -87,32 +97,93 @@ export function MainSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t">
-        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-9 w-9">
-            <AvatarImage
-              src={user?.photoURL ?? `https://avatar.vercel.sh/${user?.email}.png`}
-              alt={user?.email ?? '@utente'}
-            />
-            <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-medium">
-              {user?.displayName || 'Utente'}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {user?.email}
-            </span>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-auto group-data-[collapsible=icon]:hidden"
-            onClick={handleSignOut}
-            aria-label="Esegui il logout"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start items-center gap-3"
+            >
+              <div className="group-data-[collapsible=icon]:-ml-1">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage
+                    src={
+                      user?.photoURL ??
+                      `https://avatar.vercel.sh/${user?.email}.png`
+                    }
+                    alt={user?.email ?? '@utente'}
+                  />
+                  <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex flex-col items-start group-data-[collapsible=icon]:hidden">
+                <span className="text-sm font-medium">
+                  {user?.displayName || 'Utente'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {user?.email}
+                </span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 mb-2" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {user?.displayName || 'Utente'}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem>Profilo</DropdownMenuItem>
+              <DropdownMenuItem>Impostazioni</DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <SidebarMenu className="mt-2">
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Account" className="w-full">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-sm font-normal"
+                  >
+                    <UserIcon className="h-4 w-4 mr-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Account
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mb-2" align="end">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user?.displayName || 'Utente'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem>Profilo</DropdownMenuItem>
+                    <DropdownMenuItem>Impostazioni</DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
