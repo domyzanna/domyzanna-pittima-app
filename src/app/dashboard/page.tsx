@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, writeBatch } from 'firebase/firestore';
+import { collection, writeBatch, doc } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
 import { CategorySection } from '@/components/dashboard/category-section';
@@ -57,12 +57,7 @@ export default function DashboardPage() {
         );
 
         defaultCategories.forEach((categoryData) => {
-          const newCatRef = collection(
-            firestore,
-            'users',
-            user.uid,
-            'categories'
-          ).doc();
+          const newCatRef = doc(categoriesColRef);
           batch.set(newCatRef, {
             ...categoryData,
             userId: user.uid,
@@ -134,7 +129,7 @@ export default function DashboardPage() {
                 Sembra che tu non abbia ancora nessuna categoria.
               </p>
                <p className="mt-2">
-                Ricarica la pagina per creare le categorie di default oppure creane di nuove in autonomia.
+                Le categorie di default verranno create a breve. Se non appaiono, prova a ricaricare la pagina.
               </p>
             </CardContent>
           </Card>
