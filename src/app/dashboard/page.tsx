@@ -1,20 +1,27 @@
+'use client';
 import { mockDeadlines } from '@/lib/data';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
 import type { ProcessedDeadline, Category } from '@/lib/types';
 import { CategorySection } from '@/components/dashboard/category-section';
 import { MonthlySummary } from '@/components/dashboard/monthly-summary';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
-  const deadlines: ProcessedDeadline[] = mockDeadlines
-    .map((d) => {
-      const daysRemaining = calculateDaysRemaining(d.expirationDate);
-      return {
-        ...d,
-        daysRemaining,
-        urgency: getUrgency(daysRemaining),
-      };
-    })
-    .sort((a, b) => a.daysRemaining - b.daysRemaining);
+  const [deadlines, setDeadlines] = useState<ProcessedDeadline[]>([]);
+
+  useEffect(() => {
+    const processedDeadlines: ProcessedDeadline[] = mockDeadlines
+      .map((d) => {
+        const daysRemaining = calculateDaysRemaining(d.expirationDate);
+        return {
+          ...d,
+          daysRemaining,
+          urgency: getUrgency(daysRemaining),
+        };
+      })
+      .sort((a, b) => a.daysRemaining - b.daysRemaining);
+    setDeadlines(processedDeadlines);
+  }, []);
 
   const categories = [...new Set(deadlines.map((d) => d.category))] as Category[];
 
