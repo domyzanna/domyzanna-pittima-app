@@ -1,0 +1,199 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the ScadenzApp application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "locale": {
+          "type": "string",
+          "description": "User's preferred locale (e.g., 'it-IT')."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "locale"
+      ]
+    },
+    "Deadline": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Deadline",
+      "type": "object",
+      "description": "Represents a deadline or reminder in the ScadenzApp application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Deadline entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Deadline)"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Deadline)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the deadline."
+        },
+        "description": {
+          "type": "string",
+          "description": "A more detailed description of the deadline."
+        },
+        "expirationDate": {
+          "type": "string",
+          "description": "Date and time when the deadline expires.",
+          "format": "date-time"
+        },
+        "recurrence": {
+          "type": "string",
+          "description": "Recurrence type (One-time, Monthly, Quarterly, Semi-annual, Annual)."
+        },
+        "notificationStartDays": {
+          "type": "number",
+          "description": "Number of days before expiration to start receiving notifications."
+        },
+        "notificationIntensity": {
+          "type": "string",
+          "description": "Notification intensity level (Light, Medium, Heavy)."
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Indicates if the deadline has been completed."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "categoryId",
+        "name",
+        "expirationDate",
+        "recurrence",
+        "notificationStartDays",
+        "notificationIntensity",
+        "isCompleted"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category for grouping deadlines.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Category)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the category."
+        },
+        "fields": {
+          "type": "array",
+          "description": "An array of custom fields applicable to this category.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.  Authentication is handled by Firebase Auth; this collection holds supplementary user data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, corresponding to the Firebase Auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/deadlines/{deadlineId}",
+        "definition": {
+          "entityName": "Deadline",
+          "schema": {
+            "$ref": "#/backend/entities/Deadline"
+          },
+          "description": "Stores deadlines associated with a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, corresponding to the Firebase Auth UID. Represents the owner of the deadline."
+            },
+            {
+              "name": "deadlineId",
+              "description": "The unique identifier for the deadline."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores categories created by a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, corresponding to the Firebase Auth UID.  Represents the owner of the category."
+            },
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for the category."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization and structural segregation to achieve these goals.\n\n**Authorization Independence:**  Authorization Independence is achieved through denormalization. Specifically, the `userId` from the User document is copied into every document in the `deadlines` and `categories` subcollections. This eliminates the need for `get()` calls in Firestore rules to validate ownership, allowing for atomic operations (transactions and batches) without compromising security. For collaborative features we would include a `members` map on entities that users collaborate on.\n\n**QAPs (Rules Are Not Filters):** The structure facilitates secure `list` operations. Because all documents within a given collection share the same security posture, rules can be written to securely list documents based on simple equality checks (e.g., `request.auth.uid == resource.data.userId`). This prevents the need to filter based on data within the documents, which is an anti-pattern.\n\n**Structural Segregation:** Data with differing access requirements is stored in separate collections. User-specific data (deadlines and categories) are stored in user-owned subcollections (`/users/{userId}/deadlines/{deadlineId}` and `/users/{userId}/categories/{categoryId}`). This structural segregation simplifies security rules, as each collection has a clear and consistent access control policy.\n\n**Invariants:** The structure supports data integrity by enforcing ownership via the `userId` field and timestamps (if needed) and makes denormalized data easy to manage with clear ownership constraints.\n\nBy storing the Deadline documents as subcollections of the User document, we are ensuring that each user's deadlines are isolated and path-based ownership is enforced. Additionally, storing categories as subcollections under the user document ensures that the categories are easily secured and scoped to the individual user."
+  }
+}

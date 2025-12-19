@@ -1,0 +1,125 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-generated
+ * content, including deadlines and categories, is stored in subcollections under that
+ * specific user's document. This ensures that a user can only ever access their own data,
+ * providing strong privacy and security by default.
+ *
+ * Data Structure: The data is organized hierarchically under the `/users/{userId}` path.
+ * Each user's document serves as the root for their private subcollections, such as
+ * `/users/{userId}/deadlines` and `/users/{userId}/categories`. This structure makes
+ * path-based security rules simple and effective.
+ *
+ * Key Security Decisions:
+ * - User Data Isolation: All access rules are predicated on the `userId` in the path,
+ *   ensuring a user can never read, write, or list another user's data.
+ * - No User Enumeration: Listing the top-level `/users` collection is explicitly
+ *   disallowed to prevent malicious actors from discovering all users of the application.
+ * - Self-Service Profile: A newly authenticated user is permitted to create their own
+ *   user profile document, but cannot create one for anyone else.
+ *
+ * Denormalization for Authorization: The `userId` field is denormalized (copied) onto
+ * every `Deadline` and `Category` document. This is a critical design choice that allows
+ * rules to validate ownership on create and enforce immutability on update, ensuring
+ * a document's ownership can never be changed after it's created. This avoids costly
+ * `get()` calls and makes the rules more performant and secure.
+ *
+ * Structural Segregation: The use of user-specific subcollections (`deadlines`, `categories`)
+ * is a form of structural segregation. It cleanly separates the private data of one user
+ * from another, making security rules for listing documents straightforward and highly secure.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for reusable logic
+    
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the given userId.
+     * This is the primary function for enforcing data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Validates that the owner field in a newly created document matches the
+     * owner specified in the path. Enforces relational integrity.
+     */
+    function isCreatingOwnDocument(userId, docData) {
+      return isOwner(userId) && docData.userId == userId;
+    }
+    
+    /**
+     * Validates that the owner field of a document is immutable on update.
+     */
+    function isImmutableOwnerField() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow (get) An authenticated user reads their own profile: `auth.uid == 'user_abc'`, `get /users/user_abc`
+     * @allow (create) A new user creates their own profile document: `auth.uid == 'user_xyz'`, `create /users/user_xyz` with `{id: 'user_xyz'}`
+     * @deny (list) A user tries to list all other users in the system.
+     * @deny (update) A user tries to update another user's profile: `auth.uid == 'user_123'`, `update /users/user_456`
+     * @principle Restricts access to a user's own data tree and allows self-creation of a profile.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages a user's private deadlines.
+       * @path /users/{userId}/deadlines/{deadlineId}
+       * @allow (create) An authenticated user creates a deadline for themselves: `auth.uid == 'user_abc'`, `create /users/user_abc/deadlines/deadline_1` with `{userId: 'user_abc'}`
+       * @allow (list) An authenticated user lists their own deadlines.
+       * @deny (get) A user tries to read another user's deadline: `auth.uid == 'user_123'`, `get /users/user_456/deadlines/deadline_1`
+       * @deny (create) A user tries to create a deadline under another user's profile: `auth.uid == 'user_123'`, `create /users/user_456/deadlines/deadline_1`
+       * @principle Enforces strict ownership for all operations within a user's private subcollection.
+       */
+      match /deadlines/{deadlineId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnDocument(userId, request.resource.data);
+        allow update: if isExistingOwner(userId) && isImmutableOwnerField();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages a user's private categories for organizing deadlines.
+       * @path /users/{userId}/categories/{categoryId}
+       * @allow (create) An authenticated user creates a category for themselves: `auth.uid == 'user_abc'`, `create /users/user_abc/categories/cat_1` with `{userId: 'user_abc'}`
+       * @allow (list) An authenticated user lists their own categories.
+       * @deny (get) A user tries to read another user's category: `auth.uid == 'user_123'`, `get /users/user_456/categories/cat_1`
+       * @deny (create) A user tries to create a category with a mismatched userId in the body: `auth.uid == 'user_abc'`, `create /users/user_abc/categories/cat_1` with `{userId: 'user_xyz'}`
+       * @principle Enforces strict ownership and validates relational integrity between the path and document data.
+       */
+      match /categories/{categoryId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnDocument(userId, request.resource.data);
+        allow update: if isExistingOwner(userId) && isImmutableOwnerField();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
