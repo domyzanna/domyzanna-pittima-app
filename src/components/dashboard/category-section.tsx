@@ -1,7 +1,6 @@
 import type { ProcessedDeadline, Category } from '@/lib/types';
 import { DeadlineCard } from './deadline-card';
 import * as LucideIcons from 'lucide-react';
-import { Icons } from '../icons';
 
 type CategorySectionProps = {
   category: Category;
@@ -10,12 +9,20 @@ type CategorySectionProps = {
 
 // A little hacky, but allows dynamic icons from a string
 const getIcon = (iconName: string) => {
-  const Icon = (LucideIcons as any)[iconName];
-  if (Icon) {
-    return <Icon className="h-6 w-6 text-primary" />;
-  }
-  return <LucideIcons.AlertCircle className="h-6 w-6 text-destructive" />; // Fallback icon
-};
+    const IconComponent = (LucideIcons as any)[iconName];
+    if (IconComponent) {
+      return <IconComponent className="h-6 w-6 text-primary" />;
+    }
+  
+    // Fallback Icon
+    const FallbackIcon = (LucideIcons as any)['AlertCircle'];
+    if (FallbackIcon) {
+      return <FallbackIcon className="h-6 w-6 text-destructive" />;
+    }
+  
+    return null; 
+  };
+  
 
 export function CategorySection({
   category,

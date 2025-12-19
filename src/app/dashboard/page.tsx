@@ -1,7 +1,7 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, writeBatch } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
 import { CategorySection } from '@/components/dashboard/category-section';
@@ -9,11 +9,19 @@ import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { Icons } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
+  { name: 'Veicoli', icon: 'Car' },
+  { name: 'Assicurazioni', icon: 'Shield' },
+  { name: 'Documenti Personali', icon: 'FileText' },
+  { name: 'Abbonamenti', icon: 'Repeat' },
+  { name: 'Casa', icon: 'Home' },
+  { name: 'Tasse e Pagamenti', icon: 'Landmark' },
+];
+
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // Memoize Firestore queries to prevent re-renders
   const categoriesQuery = useMemoFirebase(
     () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
     [firestore, user]
@@ -23,13 +31,63 @@ export default function DashboardPage() {
     [firestore, user]
   );
 
-  // Fetch data using the hooks
   const { data: categories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesQuery);
   const { data: deadlines, isLoading: isLoadingDeadlines } =
     useCollection<Deadline>(deadlinesQuery);
 
   const isLoading = isLoadingCategories || isLoadingDeadlines;
+  const [isSeeding, setIsSeeding] = useState(true);
+
+  useEffect(() => {
+    async function seedDefaultCategories() {
+      if (
+        user &&
+        firestore &&
+        !isLoadingCategories &&
+        categories?.length === 0
+      ) {
+        console.log('Nessuna categoria trovata, creazione categorie di default...');
+        const batch = writeBatch(firestore);
+        const categoriesColRef = collection(
+          firestore,
+          'users',
+          user.uid,
+          'categories'
+        );
+
+        defaultCategories.forEach((categoryData) => {
+          const newCatRef = collection(
+            firestore,
+            'users',
+            user.uid,
+            'categories'
+          ).doc();
+          batch.set(newCatRef, {
+            ...categoryData,
+            userId: user.uid,
+            id: newCatRef.id,
+          });
+        });
+
+        try {
+          await batch.commit();
+          console.log('Categorie di default create con successo.');
+        } catch (error) {
+          console.error(
+            "Errore durante la creazione delle categorie di default:",
+            error
+          );
+        } finally {
+          setIsSeeding(false);
+        }
+      } else if (!isLoadingCategories) {
+        setIsSeeding(false);
+      }
+    }
+
+    seedDefaultCategories();
+  }, [user, firestore, categories, isLoadingCategories]);
 
   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
     if (!deadlines || !categories) {
@@ -39,9 +97,11 @@ export default function DashboardPage() {
     return deadlines
       .map((d) => {
         const category = categories.find((c) => c.id === d.categoryId);
-        if (!category) return null; // Or handle as 'Uncategorized'
+        if (!category) return null;
 
-        const daysRemaining = calculateDaysRemaining(new Date(d.expirationDate));
+        const daysRemaining = calculateDaysRemaining(
+          new Date(d.expirationDate)
+        );
         return {
           ...d,
           category,
@@ -53,7 +113,7 @@ export default function DashboardPage() {
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [deadlines, categories]);
 
-  if (isLoading) {
+  if (isLoading || isSeeding) {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
         <Icons.spinner className="h-12 w-12 animate-spin text-primary" />
@@ -64,18 +124,17 @@ export default function DashboardPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-2 space-y-8">
-        {(!categories || categories.length === 0) && (
+        {(!categories || categories.length === 0) && !isSeeding && (
           <Card>
             <CardHeader>
               <CardTitle>Benvenuto in Pittima!</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                Non hai ancora nessuna categoria. Le categorie ti aiutano a
-                organizzare le tue scadenze.
+                Sembra che tu non abbia ancora nessuna categoria.
               </p>
-              <p className="mt-2">
-                Le categorie di default verranno create al primo avvio, oppure puoi crearne di nuove in autonomia.
+               <p className="mt-2">
+                Ricarica la pagina per creare le categorie di default oppure creane di nuove in autonomia.
               </p>
             </CardContent>
           </Card>
