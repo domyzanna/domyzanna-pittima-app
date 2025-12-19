@@ -72,6 +72,12 @@ export function AddDeadlineDialog({
 }: AddDeadlineDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      category: undefined,
+      expirationDate: undefined,
+      recurrence: undefined,
+    },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
