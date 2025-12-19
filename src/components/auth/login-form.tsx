@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useAuth } from '@/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -21,22 +21,14 @@ import { useState } from 'react';
 import { Icons } from '../icons';
 import { useToast } from '@/hooks/use-toast';
 
-const formSchema = z
-  .object({
-    email: z.string().email({
-      message: 'Inserisci un indirizzo email valido.',
-    }),
-    password: z
-      .string()
-      .min(6, 'La password deve contenere almeno 6 caratteri.'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Le password non coincidono.',
-    path: ['confirmPassword'],
-  });
+const formSchema = z.object({
+  email: z.string().email({
+    message: 'Inserisci un indirizzo email valido.',
+  }),
+  password: z.string().min(1, 'La password è obbligatoria.'),
+});
 
-export function SignupForm() {
+export function LoginForm() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -47,24 +39,23 @@ export function SignupForm() {
     defaultValues: {
       email: '',
       password: '',
-      confirmPassword: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await signInWithEmailAndPassword(auth, values.email, values.password);
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Error creating user', error);
-      let description = "Impossibile creare l'account. Riprova più tardi.";
-      if (error.code === 'auth/email-already-in-use') {
-        description = 'Questo indirizzo email è già in uso. Prova ad accedere.';
+      console.error('Error signing in', error);
+      let description = 'Credenziali non valide. Riprova.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        description = 'Email o password non corrette. Controlla e riprova.';
       }
       toast({
         variant: 'destructive',
-        title: 'Qualcosa è andato storto',
+        title: 'Accesso fallito',
         description,
       });
     } finally {
@@ -101,24 +92,11 @@ export function SignupForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Conferma Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           )}
-          Crea Account
+          Accedi
         </Button>
       </form>
     </Form>
