@@ -14,6 +14,7 @@ import { DeadlineCard } from '@/components/dashboard/deadline-card';
 import { Icons } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import * as LucideIcons from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 const getIcon = (iconName: string | undefined) => {
   if (!iconName) {
@@ -28,14 +29,9 @@ const getIcon = (iconName: string | undefined) => {
   return <FallbackIcon className="h-6 w-6 text-destructive" />;
 };
 
-type CategoryPageProps = {
-  params: {
-    categoryId: string;
-  };
-};
-
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const { categoryId } = params;
+export default function CategoryPage() {
+  const params = useParams();
+  const categoryId = params.categoryId as string;
   const { user } = useUser();
   const firestore = useFirestore();
 
