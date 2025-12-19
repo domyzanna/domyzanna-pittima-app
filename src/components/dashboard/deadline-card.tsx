@@ -56,8 +56,9 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
                 .join(' · ')}
             </CardDescription>
           </div>
-          <div className={cn('text-lg font-bold font-mono', style.text)}>
-            {formattedDays}
+          <div className={cn('flex items-center gap-2 text-lg font-bold font-mono', style.text)}>
+            <span className={cn('h-3 w-3 rounded-full', style.indicator)}></span>
+            <span>{formattedDays}</span>
           </div>
         </div>
         <div className="flex justify-end items-center mt-4 gap-2">
