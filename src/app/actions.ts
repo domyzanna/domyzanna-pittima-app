@@ -5,8 +5,12 @@ import type { MonthlySummaryOutput } from '@/ai/flows/monthly-summary-ai-urgency
 import type { ProcessedDeadline } from '@/lib/types';
 import { addMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
+// The ProcessedDeadline type from the client contains a non-serializable LucideIcon.
+// We create a serializable version of it for the server action.
+type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'categoryIcon'>;
+
 export async function getAiSummary(
-  deadlines: ProcessedDeadline[]
+  deadlines: SerializableProcessedDeadline[]
 ): Promise<MonthlySummaryOutput> {
   const now = new Date();
   const currentMonthInterval = { start: startOfMonth(now), end: endOfMonth(now) };
@@ -15,18 +19,18 @@ export async function getAiSummary(
     end: endOfMonth(addMonths(now, 1)),
   };
 
-  const formatForAI = (d: ProcessedDeadline) => ({
+  const formatForAI = (d: SerializableProcessedDeadline) => ({
     name: d.name,
     category: d.category,
-    dueDate: d.expirationDate.toISOString().split('T')[0],
+    dueDate: new Date(d.expirationDate).toISOString().split('T')[0],
   });
 
   const currentMonthDeadlines = deadlines
-    .filter((d) => isWithinInterval(d.expirationDate, currentMonthInterval))
+    .filter((d) => isWithinInterval(new Date(d.expirationDate), currentMonthInterval))
     .map(formatForAI);
 
   const nextMonthDeadlines = deadlines
-    .filter((d) => isWithinInterval(d.expirationDate, nextMonthInterval))
+    .filter((d) => isWithinInterval(new Date(d.expirationDate), nextMonthInterval))
     .map(formatForAI);
 
   const overdueDeadlines = deadlines

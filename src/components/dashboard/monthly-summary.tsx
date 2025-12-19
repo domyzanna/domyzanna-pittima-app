@@ -28,8 +28,12 @@ export function MonthlySummary({
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAiSummary(deadlines);
-      if (result.summary.startsWith('Failed')) {
+      // Create a serializable version of deadlines, omitting the icon component
+      const serializableDeadlines = deadlines.map(
+        ({ categoryIcon, ...rest }) => rest
+      );
+      const result = await getAiSummary(serializableDeadlines);
+      if (result.summary.startsWith('Impossibile')) {
         setError(result.summary);
         setSummary(null);
       } else {
@@ -37,7 +41,9 @@ export function MonthlySummary({
       }
     } catch (e) {
       const errorMessage =
-        e instanceof Error ? e.message : 'Si è verificato un errore sconosciuto.';
+        e instanceof Error
+          ? e.message
+          : 'Si è verificato un errore sconosciuto.';
       setError(errorMessage);
       setSummary(null);
     } finally {
