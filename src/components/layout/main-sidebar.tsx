@@ -9,22 +9,20 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import {
-  Car,
-  Shield,
-  FileText,
-  Settings,
-  LogOut,
-  LayoutDashboard,
-  PlusCircle,
-  User as UserIcon,
-} from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useUser } from '@/firebase';
+import {
+  useAuth,
+  useUser,
+  useCollection,
+  useFirestore,
+  useMemoFirebase,
+} from '@/firebase';
 import { signOut } from 'firebase/auth';
 import {
   DropdownMenu,
@@ -35,20 +33,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import type { Category } from '@/lib/types';
+import { collection } from 'firebase/firestore';
+import { SidebarMenuSkeleton } from '../ui/sidebar';
 
-const menuItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/vehicles', icon: Car, label: 'Veicoli' },
-  { href: '/dashboard/insurance', icon: Shield, label: 'Assicurazioni' },
-  { href: '/dashboard/documents', icon: FileText, label: 'Documenti' },
-  { href: '/dashboard/custom', icon: PlusCircle, label: 'Personalizzato' },
-];
+const getIcon = (iconName: string) => {
+  const IconComponent = (LucideIcons as any)[iconName];
+  if (IconComponent) {
+    return <IconComponent />;
+  }
+  const FallbackIcon = (LucideIcons as any)['Folder'];
+  return <FallbackIcon />;
+};
 
 export function MainSidebar() {
   const pathname = usePathname();
   const { user } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
+
+  const categoriesQuery = useMemoFirebase(
+    () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
+    [firestore, user]
+  );
+  const { data: categories, isLoading: isLoadingCategories } =
+    useCollection<Category>(categoriesQuery);
 
   const handleSignOut = async () => {
     try {
@@ -76,20 +86,37 @@ export function MainSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="Dashboard"
+              isActive={pathname === '/dashboard'}
+            >
+              <Link href="/dashboard">
+                <LayoutDashboard />
+                Dashboard
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          {isLoadingCategories && (
+            <>
+              <SidebarMenuSkeleton showIcon />
+              <SidebarMenuSkeleton showIcon />
+              <SidebarMenuSkeleton showIcon />
+            </>
+          )}
+
+          {categories?.map((cat) => (
+            <SidebarMenuItem key={cat.id}>
               <SidebarMenuButton
                 asChild
-                tooltip={item.label}
-                isActive={
-                  item.href === '/dashboard'
-                    ? pathname === item.href
-                    : pathname.startsWith(item.href)
-                }
+                tooltip={cat.name}
+                isActive={pathname.includes(`/category/${cat.id}`)}
               >
                 <Link href="#">
-                  <item.icon />
-                  {item.label}
+                  {getIcon(cat.icon)}
+                  {cat.name}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
