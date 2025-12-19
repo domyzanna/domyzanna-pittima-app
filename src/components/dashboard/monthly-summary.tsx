@@ -15,6 +15,11 @@ import { Icons } from '@/components/icons';
 import type { ProcessedDeadline } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
+type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'category'> & {
+  category: string;
+};
+
+
 export function MonthlySummary({
   deadlines,
 }: {
@@ -28,9 +33,12 @@ export function MonthlySummary({
     setIsLoading(true);
     setError(null);
     try {
-      // Create a serializable version of deadlines, omitting the icon component
-      const serializableDeadlines = deadlines.map(
-        ({ categoryIcon, ...rest }) => rest
+      // Create a serializable version of deadlines
+      const serializableDeadlines: SerializableProcessedDeadline[] = deadlines.map(
+        (d) => ({
+         ...d,
+         category: d.category.name,
+        })
       );
       const result = await getAiSummary(serializableDeadlines);
       if (result.summary.startsWith('Impossibile')) {
@@ -83,7 +91,7 @@ export function MonthlySummary({
         )}
         <Button
           onClick={handleGenerateSummary}
-          disabled={isLoading}
+          disabled={isLoading || deadlines.length === 0}
           className="w-full"
         >
           {isLoading ? 'Generazione...' : 'Genera Riepilogo AI'}

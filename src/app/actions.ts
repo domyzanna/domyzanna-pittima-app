@@ -5,9 +5,10 @@ import type { MonthlySummaryOutput } from '@/ai/flows/monthly-summary-ai-urgency
 import type { ProcessedDeadline } from '@/lib/types';
 import { addMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
-// The ProcessedDeadline type from the client contains a non-serializable LucideIcon.
-// We create a serializable version of it for the server action.
-type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'categoryIcon'>;
+type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'category'> & {
+  category: string;
+};
+
 
 export async function getAiSummary(
   deadlines: SerializableProcessedDeadline[]

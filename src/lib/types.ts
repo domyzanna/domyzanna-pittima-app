@@ -1,11 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type Category =
-  | 'Veicoli'
-  | 'Assicurazione'
-  | 'Documenti Personali'
-  | 'Abbonamenti';
-
 export type Recurrence =
   | 'una-tantum'
   | 'mensile'
@@ -15,17 +9,29 @@ export type Recurrence =
 
 export type Urgency = 'scaduto' | 'alta' | 'media' | 'bassa';
 
-export type Deadline = {
+// Firestore document for a user's category
+export type Category = {
   id: string;
+  userId: string;
   name: string;
-  category: Category;
-  categoryIcon: LucideIcon;
-  expirationDate: Date;
-  recurrence: Recurrence;
-  details: Record<string, string>;
+  icon: string; // lucide-react icon name
 };
 
-export type ProcessedDeadline = Deadline & {
+// Firestore document for a user's deadline
+export type Deadline = {
+  id: string;
+  userId: string;
+  categoryId: string;
+  name: string;
+  description?: string;
+  expirationDate: string; // ISO 8601 format
+  recurrence: Recurrence;
+  isCompleted: boolean;
+};
+
+// Type for client-side processing, combining deadline with its category info
+export type ProcessedDeadline = Omit<Deadline, 'categoryId'> & {
+  category: Category;
   urgency: Urgency;
   daysRemaining: number;
 };

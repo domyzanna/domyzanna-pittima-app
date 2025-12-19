@@ -7,6 +7,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Archive, Edit } from 'lucide-react';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 const urgencyStyles = {
   bassa: {
@@ -33,11 +35,13 @@ const defaultStyle = {
 };
 
 export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
-  const { name, details, daysRemaining, urgency } = deadline;
+  const { name, description, daysRemaining, urgency, expirationDate } = deadline;
   const style = urgencyStyles[urgency] || defaultStyle;
 
   const formattedDays =
     daysRemaining >= 0 ? `${daysRemaining}g` : `${Math.abs(daysRemaining)}g fa`;
+  
+  const formattedDate = format(new Date(expirationDate), "d MMMM yyyy", { locale: it });
 
   return (
     <Card className="flex transition-shadow hover:shadow-md">
@@ -51,10 +55,11 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
                 <h3 className="text-lg font-semibold">{name}</h3>
             </CardTitle>
             <CardDescription className="text-sm mt-1">
-              {Object.entries(details)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join(' · ')}
+              Scade il: {formattedDate}
             </CardDescription>
+             {description && (
+              <p className="text-sm text-muted-foreground mt-2">{description}</p>
+            )}
           </div>
           <div className={cn('flex items-center gap-2 text-lg font-bold font-mono', style.text)}>
             <span className={cn('h-3 w-3 rounded-full', style.indicator)}></span>

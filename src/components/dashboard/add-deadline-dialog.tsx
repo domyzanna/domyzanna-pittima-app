@@ -31,16 +31,16 @@ import {
 } from '@/components/ui/select';
 import { PlusCircle } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
-import { format, parseISO } from 'date-fns';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { addDoc, collection } from 'firebase/firestore';
+import type { Category } from '@/lib/types';
+import { Textarea } from '../ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
-  category: z.enum([
-    'Veicoli',
-    'Assicurazione',
-    'Documenti Personali',
-    'Abbonamenti',
-  ]),
+  description: z.string().optional(),
+  categoryId: z.string().min(1, 'La categoria è obbligatoria'),
   expirationDate: z.string().min(1, 'La data di scadenza è obbligatoria.'),
   recurrence: z.enum([
     'una-tantum',
@@ -60,24 +60,66 @@ export function AddDeadlineDialog({
   open,
   onOpenChange,
 }: AddDeadlineDialogProps) {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const categoriesQuery = useMemoFirebase(
+    () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
+    [firestore, user]
+  );
+  const { data: categories, isLoading: isLoadingCategories } =
+    useCollection<Category>(categoriesQuery);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      category: undefined,
+      description: '',
+      categoryId: undefined,
       expirationDate: '',
-      recurrence: undefined,
+      recurrence: 'una-tantum',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log({
-      ...values,
-      expirationDate: parseISO(values.expirationDate), // Convert string back to Date object on submit
-    });
-    onOpenChange(false);
-    form.reset();
-    // Here you would typically call a server action to save the data
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description: 'Devi essere autenticato per aggiungere una scadenza.',
+      });
+      return;
+    }
+    try {
+      const deadlineData = {
+        ...values,
+        userId: user.uid,
+        isCompleted: false,
+        expirationDate: new Date(values.expirationDate).toISOString(),
+      };
+      const deadlinesColRef = collection(
+        firestore,
+        'users',
+        user.uid,
+        'deadlines'
+      );
+      await addDoc(deadlinesColRef, deadlineData);
+      toast({
+        title: 'Successo!',
+        description: 'Nuova scadenza aggiunta correttamente.',
+        className: 'bg-green-100 border-green-300',
+      });
+      onOpenChange(false);
+      form.reset();
+    } catch (error) {
+      console.error('Error adding document: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description: "Impossibile aggiungere la scadenza. Riprova più tardi.",
+      });
+    }
   }
 
   return (
@@ -116,28 +158,26 @@ export function AddDeadlineDialog({
             />
             <FormField
               control={form.control}
-              name="category"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isLoadingCategories}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona una categoria" />
+                        <SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Veicoli">Veicoli</SelectItem>
-                      <SelectItem value="Assicurazione">
-                        Assicurazione
-                      </SelectItem>
-                      <SelectItem value="Documenti Personali">
-                        Documenti Personali
-                      </SelectItem>
-                      <SelectItem value="Abbonamenti">Abbonamenti</SelectItem>
+                      {categories?.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -152,6 +192,19 @@ export function AddDeadlineDialog({
                   <FormLabel>Data di Scadenza</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrizione (Opzionale)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Aggiungi dettagli o note..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

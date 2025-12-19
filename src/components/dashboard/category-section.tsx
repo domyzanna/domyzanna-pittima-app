@@ -1,5 +1,6 @@
 import type { ProcessedDeadline, Category } from '@/lib/types';
 import { DeadlineCard } from './deadline-card';
+import * as LucideIcons from 'lucide-react';
 import { Icons } from '../icons';
 
 type CategorySectionProps = {
@@ -7,11 +8,13 @@ type CategorySectionProps = {
   deadlines: ProcessedDeadline[];
 };
 
-const categoryIcons = {
-  Veicoli: Icons.vehicle,
-  Assicurazione: Icons.insurance,
-  'Documenti Personali': Icons.document,
-  Abbonamenti: Icons.subscription,
+// A little hacky, but allows dynamic icons from a string
+const getIcon = (iconName: string) => {
+  const Icon = (LucideIcons as any)[iconName];
+  if (Icon) {
+    return <Icon className="h-6 w-6 text-primary" />;
+  }
+  return <LucideIcons.AlertCircle className="h-6 w-6 text-destructive" />; // Fallback icon
 };
 
 export function CategorySection({
@@ -20,13 +23,11 @@ export function CategorySection({
 }: CategorySectionProps) {
   if (deadlines.length === 0) return null;
 
-  const Icon = categoryIcons[category];
-
   return (
     <section>
       <h2 className="text-xl font-headline font-semibold mb-4 flex items-center gap-3">
-        <Icon className="h-6 w-6 text-primary" />
-        {category}
+        {getIcon(category.icon)}
+        {category.name}
       </h2>
       <div className="grid gap-4">
         {deadlines.map((deadline) => (
