@@ -5,92 +5,92 @@ import { addDays, subDays } from 'date-fns';
 const now = new Date();
 
 export const mockDeadlines: Deadline[] = [
-  // Vehicles
+  // Veicoli
   {
     id: '1',
     name: 'Fiat Panda',
-    category: 'Vehicles',
+    category: 'Veicoli',
     categoryIcon: Car,
-    expirationDate: addDays(now, 5), // High urgency
-    recurrence: 'annual',
-    details: { 'License Plate': 'AB123CD', Due: 'Insurance' },
+    expirationDate: addDays(now, 5), // Urgenza alta
+    recurrence: 'annuale',
+    details: { Targa: 'AB123CD', Scadenza: 'Assicurazione' },
   },
   {
     id: '2',
     name: 'Fiat Panda',
-    category: 'Vehicles',
+    category: 'Veicoli',
     categoryIcon: Car,
-    expirationDate: addDays(now, 120), // Low urgency
-    recurrence: 'annual',
-    details: { 'License Plate': 'AB123CD', Due: 'Technical Inspection' },
+    expirationDate: addDays(now, 120), // Urgenza bassa
+    recurrence: 'annuale',
+    details: { Targa: 'AB123CD', Scadenza: 'Revisione' },
   },
   {
     id: '3',
-    name: "Driver's License",
-    category: 'Vehicles',
+    name: 'Patente di Guida',
+    category: 'Veicoli',
     categoryIcon: Car,
-    expirationDate: subDays(now, 15), // Expired
-    recurrence: 'annual',
-    details: { Holder: 'John Doe' },
+    expirationDate: subDays(now, 15), // Scaduto
+    recurrence: 'annuale',
+    details: { Titolare: 'Mario Rossi' },
   },
 
-  // Insurance
+  // Assicurazione
   {
     id: '4',
-    name: 'Home Insurance',
-    category: 'Insurance',
+    name: 'Assicurazione Casa',
+    category: 'Assicurazione',
     categoryIcon: Shield,
-    expirationDate: addDays(now, 25), // Medium urgency
-    recurrence: 'annual',
-    details: { 'Policy #': 'H-98765' },
+    expirationDate: addDays(now, 25), // Urgenza media
+    recurrence: 'annuale',
+    details: { 'Polizza #': 'H-98765' },
   },
   {
     id: '5',
-    name: 'Life Insurance',
-    category: 'Insurance',
+    name: 'Assicurazione Vita',
+    category: 'Assicurazione',
     categoryIcon: Shield,
-    expirationDate: addDays(now, 90), // Low urgency
-    recurrence: 'semi-annual',
-    details: { 'Policy #': 'L-54321' },
+    expirationDate: addDays(now, 90), // Urgenza bassa
+    recurrence: 'semestrale',
+    details: { 'Polizza #': 'L-54321' },
   },
 
-  // Personal Documents
+  // Documenti Personali
   {
     id: '6',
-    name: 'Passport',
-    category: 'Personal Documents',
+    name: 'Passaporto',
+    category: 'Documenti Personali',
     categoryIcon: FileText,
-    expirationDate: addDays(now, 180), // Low urgency
-    recurrence: 'one-time',
-    details: { 'Document #': 'P-ABC123' },
+    expirationDate: addDays(now, 180), // Urgenza bassa
+    recurrence: 'una-tantum',
+    details: { 'Documento #': 'P-ABC123' },
   },
   {
     id: '7',
-    name: 'ID Card',
-    category: 'Personal Documents',
+    name: 'Carta d\'Identità',
+    category: 'Documenti Personali',
     categoryIcon: FileText,
-    expirationDate: subDays(now, 90), // Expired
-    recurrence: 'one-time',
-    details: { 'Document #': 'ID-XYZ789' },
+    expirationDate: subDays(now, 90), // Scaduto
+    recurrence: 'una-tantum',
+    details: { 'Documento #': 'ID-XYZ789' },
   },
 
-  // Subscriptions
+  // Abbonamenti
   {
     id: '8',
-    name: 'Streaming Service',
-    category: 'Subscriptions',
+    name: 'Servizio Streaming',
+    category: 'Abbonamenti',
     categoryIcon: Repeat,
-    expirationDate: addDays(now, 2), // High urgency
-    recurrence: 'monthly',
-    details: { Provider: 'NextFlix' },
+    expirationDate: addDays(now, 2), // Urgenza alta
+    recurrence: 'mensile',
+    details: { Fornitore: 'NextFlix' },
   },
   {
     id: '9',
-    name: 'Gym Membership',
-    category: 'Subscriptions',
+    name: 'Abbonamento Palestra',
+    category: 'Abbonamenti',
     categoryIcon: Repeat,
-    expirationDate: addDays(now, 45), // Low urgency
-    recurrence: 'quarterly',
-    details: { Location: 'Downtown Fitness' },
+    expirationDate: addDays(now, 45), // Urgenza bassa
+    recurrence: 'trimestrale',
+    details: { Sede: 'Palestra Centro' },
   },
 ];

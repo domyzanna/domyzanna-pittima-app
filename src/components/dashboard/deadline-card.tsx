@@ -32,7 +32,7 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
   const style = urgencyStyles[urgency];
 
   const formattedDays =
-    daysRemaining >= 0 ? `${daysRemaining}d` : `${Math.abs(daysRemaining)}d ago`;
+    daysRemaining >= 0 ? `${daysRemaining}g` : `${Math.abs(daysRemaining)}g fa`;
 
   return (
     <Card className="flex transition-shadow hover:shadow-md">
@@ -58,11 +58,11 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
         <div className="flex justify-end items-center mt-4 gap-2">
           <Button variant="ghost" size="sm">
             <Archive className="mr-2 h-4 w-4" />
-            Complete
+            Completa
           </Button>
           <Button variant="outline" size="sm">
             <Edit className="mr-2 h-4 w-4" />
-            Update
+            Aggiorna
           </Button>
         </div>
       </div>

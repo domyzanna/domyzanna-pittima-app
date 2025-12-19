@@ -1,19 +1,19 @@
 import type { LucideIcon } from 'lucide-react';
 
 export type Category =
-  | 'Vehicles'
-  | 'Insurance'
-  | 'Personal Documents'
-  | 'Subscriptions';
+  | 'Veicoli'
+  | 'Assicurazione'
+  | 'Documenti Personali'
+  | 'Abbonamenti';
 
 export type Recurrence =
-  | 'one-time'
-  | 'monthly'
-  | 'quarterly'
-  | 'semi-annual'
-  | 'annual';
+  | 'una-tantum'
+  | 'mensile'
+  | 'trimestrale'
+  | 'semestrale'
+  | 'annuale';
 
-export type Urgency = 'expired' | 'high' | 'medium' | 'low';
+export type Urgency = 'scaduto' | 'alta' | 'media' | 'bassa';
 
 export type Deadline = {
   id: string;

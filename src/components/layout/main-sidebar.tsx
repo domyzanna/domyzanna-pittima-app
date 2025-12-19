@@ -25,11 +25,11 @@ import { Button } from '../ui/button';
 import { usePathname } from 'next/navigation';
 
 const menuItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/vehicles', icon: Car, label: 'Vehicles' },
-  { href: '/dashboard/insurance', icon: Shield, label: 'Insurance' },
-  { href: '/dashboard/documents', icon: FileText, label: 'Documents' },
-  { href: '/dashboard/custom', icon: PlusCircle, label: 'Custom' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Cruscotto' },
+  { href: '/dashboard/vehicles', icon: Car, label: 'Veicoli' },
+  { href: '/dashboard/insurance', icon: Shield, label: 'Assicurazioni' },
+  { href: '/dashboard/documents', icon: FileText, label: 'Documenti' },
+  { href: '/dashboard/custom', icon: PlusCircle, label: 'Personalizzato' },
 ];
 
 export function MainSidebar() {
@@ -41,7 +41,7 @@ export function MainSidebar() {
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <Icons.logo className="h-7 w-7 text-primary" />
           <span className="font-headline text-xl font-semibold text-foreground group-data-[collapsible=icon]:hidden">
-            Deadline Dynamo
+            Dinamico Scadenze
           </span>
         </Link>
       </SidebarHeader>
@@ -72,14 +72,14 @@ export function MainSidebar() {
           <Avatar className="h-9 w-9">
             <AvatarImage
               src="https://picsum.photos/seed/user-avatar/100/100"
-              alt="@user"
+              alt="@utente"
             />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-medium">User</span>
+            <span className="text-sm font-medium">Utente</span>
             <span className="text-xs text-muted-foreground">
-              user@example.com
+              utente@esempio.com
             </span>
           </div>
           <Button

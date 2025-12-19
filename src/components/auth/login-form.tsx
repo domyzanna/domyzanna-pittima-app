@@ -20,10 +20,10 @@ import { Icons } from '../icons';
 
 const formSchema = z.object({
   email: z.string().email({
-    message: 'Please enter a valid email address.',
+    message: 'Inserisci un indirizzo email valido.',
   }),
   password: z.string().min(1, {
-    message: 'Password is required.',
+    message: 'La password è obbligatoria.',
   }),
 });
 
@@ -59,7 +59,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="name@example.com" {...field} />
+                <Input placeholder="nome@esempio.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,7 +76,7 @@ export function LoginForm() {
                   href="#"
                   className="ml-auto inline-block text-sm underline text-muted-foreground hover:text-primary"
                 >
-                  Forgot password?
+                  Password dimenticata?
                 </a>
               </div>
               <FormControl>
@@ -90,7 +90,7 @@ export function LoginForm() {
           {isLoading && (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           )}
-          Login
+          Accedi
         </Button>
       </form>
     </Form>

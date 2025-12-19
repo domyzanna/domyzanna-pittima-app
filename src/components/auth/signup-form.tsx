@@ -20,10 +20,10 @@ import { Icons } from '../icons';
 
 const formSchema = z.object({
   email: z.string().email({
-    message: 'Please enter a valid email address.',
+    message: 'Inserisci un indirizzo email valido.',
   }),
   password: z.string().min(8, {
-    message: 'Password must be at least 8 characters.',
+    message: 'La password deve contenere almeno 8 caratteri.',
   }),
 });
 
@@ -59,7 +59,7 @@ export function SignupForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="name@example.com" {...field} />
+                <Input placeholder="nome@esempio.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -82,7 +82,7 @@ export function SignupForm() {
           {isLoading && (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           )}
-          Create Account
+          Crea Account
         </Button>
       </form>
     </Form>

@@ -39,22 +39,25 @@ import { CalendarIcon, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import type { Dispatch, SetStateAction } from 'react';
+import { it } from 'date-fns/locale';
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, 'Il nome è obbligatorio'),
   category: z.enum([
-    'Vehicles',
-    'Insurance',
-    'Personal Documents',
-    'Subscriptions',
+    'Veicoli',
+    'Assicurazione',
+    'Documenti Personali',
+    'Abbonamenti',
   ]),
-  expirationDate: z.date({ required_error: 'Expiration date is required.' }),
+  expirationDate: z.date({
+    required_error: 'La data di scadenza è obbligatoria.',
+  }),
   recurrence: z.enum([
-    'one-time',
-    'monthly',
-    'quarterly',
-    'semi-annual',
-    'annual',
+    'una-tantum',
+    'mensile',
+    'trimestrale',
+    'semestrale',
+    'annuale',
   ]),
 });
 
@@ -63,7 +66,10 @@ type AddDeadlineDialogProps = {
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 };
 
-export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps) {
+export function AddDeadlineDialog({
+  open,
+  onOpenChange,
+}: AddDeadlineDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
@@ -79,14 +85,16 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Deadline
+          <PlusCircle className="mr-2 h-4 w-4" /> Aggiungi Scadenza
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Add New Deadline</DialogTitle>
+          <DialogTitle className="font-headline">
+            Aggiungi Nuova Scadenza
+          </DialogTitle>
           <DialogDescription>
-            Fill in the details for your new deadline.
+            Compila i dettagli per la tua nuova scadenza.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -99,9 +107,9 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Car Insurance" {...field} />
+                    <Input placeholder="es. Assicurazione Auto" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -112,25 +120,25 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>Categoria</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder="Seleziona una categoria" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Vehicles">Vehicles</SelectItem>
-                      <SelectItem value="Insurance">Insurance</SelectItem>
-                      <SelectItem value="Personal Documents">
-                        Personal Documents
+                      <SelectItem value="Veicoli">Veicoli</SelectItem>
+                      <SelectItem value="Assicurazione">
+                        Assicurazione
                       </SelectItem>
-                      <SelectItem value="Subscriptions">
-                        Subscriptions
+                      <SelectItem value="Documenti Personali">
+                        Documenti Personali
                       </SelectItem>
+                      <SelectItem value="Abbonamenti">Abbonamenti</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -142,7 +150,7 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
               name="expirationDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Expiration Date</FormLabel>
+                  <FormLabel>Data di Scadenza</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -154,9 +162,9 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
                           )}
                         >
                           {field.value ? (
-                            format(field.value, 'PPP')
+                            format(field.value, 'PPP', { locale: it })
                           ) : (
-                            <span>Pick a date</span>
+                            <span>Scegli una data</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -169,6 +177,7 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
                         onSelect={field.onChange}
                         disabled={(date) => date < new Date('1900-01-01')}
                         initialFocus
+                        locale={it}
                       />
                     </PopoverContent>
                   </Popover>
@@ -181,22 +190,22 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
               name="recurrence"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Recurrence</FormLabel>
+                  <FormLabel>Ricorrenza</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select how often it recurs" />
+                        <SelectValue placeholder="Seleziona la frequenza" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="one-time">One-time</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="semi-annual">Semi-annual</SelectItem>
-                      <SelectItem value="annual">Annual</SelectItem>
+                      <SelectItem value="una-tantum">Una tantum</SelectItem>
+                      <SelectItem value="mensile">Mensile</SelectItem>
+                      <SelectItem value="trimestrale">Trimestrale</SelectItem>
+                      <SelectItem value="semestrale">Semestrale</SelectItem>
+                      <SelectItem value="annuale">Annuale</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -204,7 +213,7 @@ export function AddDeadlineDialog({ open, onOpenChange }: AddDeadlineDialogProps
               )}
             />
             <DialogFooter>
-              <Button type="submit">Save Deadline</Button>
+              <Button type="submit">Salva Scadenza</Button>
             </DialogFooter>
           </form>
         </Form>

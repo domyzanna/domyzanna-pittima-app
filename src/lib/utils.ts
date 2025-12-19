@@ -8,10 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getUrgency(days: number): Urgency {
-  if (days < 0) return 'expired';
-  if (days <= 7) return 'high';
-  if (days <= 30) return 'medium';
-  return 'low';
+  if (days < 0) return 'scaduto';
+  if (days <= 7) return 'alta';
+  if (days <= 30) return 'media';
+  return 'bassa';
 }
 
 export function calculateDaysRemaining(date: Date): number {
@@ -20,15 +20,15 @@ export function calculateDaysRemaining(date: Date): number {
 
 export function getNextExpiration(date: Date, recurrence: Recurrence): Date {
   switch (recurrence) {
-    case 'monthly':
+    case 'mensile':
       return add(date, { months: 1 });
-    case 'quarterly':
+    case 'trimestrale':
       return add(date, { months: 3 });
-    case 'semi-annual':
+    case 'semestrale':
       return add(date, { months: 6 });
-    case 'annual':
+    case 'annuale':
       return add(date, { years: 1 });
-    case 'one-time':
+    case 'una-tantum':
     default:
       return date;
   }

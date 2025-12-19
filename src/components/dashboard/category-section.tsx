@@ -8,10 +8,10 @@ type CategorySectionProps = {
 };
 
 const categoryIcons = {
-  Vehicles: Icons.vehicle,
-  Insurance: Icons.insurance,
-  'Personal Documents': Icons.document,
-  Subscriptions: Icons.subscription,
+  Veicoli: Icons.vehicle,
+  Assicurazione: Icons.insurance,
+  'Documenti Personali': Icons.document,
+  Abbonamenti: Icons.subscription,
 };
 
 export function CategorySection({

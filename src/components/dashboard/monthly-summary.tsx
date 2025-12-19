@@ -37,7 +37,7 @@ export function MonthlySummary({
       }
     } catch (e) {
       const errorMessage =
-        e instanceof Error ? e.message : 'An unknown error occurred.';
+        e instanceof Error ? e.message : 'Si è verificato un errore sconosciuto.';
       setError(errorMessage);
       setSummary(null);
     } finally {
@@ -50,10 +50,10 @@ export function MonthlySummary({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 font-headline">
           <Wand2 className="text-primary" />
-          AI Monthly Summary
+          Riepilogo Mensile AI
         </CardTitle>
         <CardDescription>
-          Get an AI-powered summary of your most critical upcoming deadlines.
+          Ottieni un riepilogo basato sull'IA delle tue scadenze più critiche.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -63,7 +63,7 @@ export function MonthlySummary({
           </div>
         ) : error ? (
           <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Errore</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : summary ? (
@@ -72,7 +72,7 @@ export function MonthlySummary({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Click the button to generate your summary.
+            Clicca il pulsante per generare il tuo riepilogo.
           </p>
         )}
         <Button
@@ -80,7 +80,7 @@ export function MonthlySummary({
           disabled={isLoading}
           className="w-full"
         >
-          {isLoading ? 'Generating...' : 'Generate AI Summary'}
+          {isLoading ? 'Generazione...' : 'Genera Riepilogo AI'}
         </Button>
       </CardContent>
     </Card>

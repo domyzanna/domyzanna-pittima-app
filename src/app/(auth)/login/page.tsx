@@ -12,21 +12,21 @@ export default function LoginPage() {
         >
           <Icons.logo className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-headline font-bold text-foreground">
-            Deadline Dynamo
+            Dinamico Scadenze
           </h1>
         </Link>
         <p className="text-balance text-muted-foreground">
-          Enter your credentials to access your deadlines
+          Inserisci le tue credenziali per accedere alle tue scadenze
         </p>
       </div>
       <LoginForm />
       <div className="mt-4 text-center text-sm">
-        Don&apos;t have an account?{' '}
+        Non hai un account?{' '}
         <Link
           href="/signup"
           className="underline text-primary hover:text-primary/80"
         >
-          Sign up
+          Registrati
         </Link>
       </div>
     </>

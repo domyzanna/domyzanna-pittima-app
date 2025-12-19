@@ -30,7 +30,7 @@ export async function getAiSummary(
     .map(formatForAI);
 
   const overdueDeadlines = deadlines
-    .filter((d) => d.urgency === 'expired')
+    .filter((d) => d.urgency === 'scaduto')
     .map(formatForAI);
 
   try {
@@ -42,9 +42,9 @@ export async function getAiSummary(
     });
     return result;
   } catch (error) {
-    console.error('AI summary generation failed:', error);
+    console.error('La generazione del riepilogo AI è fallita:', error);
     return {
-      summary: 'Failed to generate AI summary. Please check the logs.',
+      summary: 'Impossibile generare il riepilogo AI. Controlla i log.',
     };
   }
 }

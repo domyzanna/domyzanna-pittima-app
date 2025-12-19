@@ -19,7 +19,7 @@ export function UserNav() {
           <Avatar className="h-8 w-8">
             <AvatarImage
               src="https://picsum.photos/seed/user-avatar/100/100"
-              alt="@user"
+              alt="@utente"
             />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
@@ -28,20 +28,20 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">User</p>
+            <p className="text-sm font-medium leading-none">Utente</p>
             <p className="text-xs leading-none text-muted-foreground">
-              user@example.com
+              utente@esempio.com
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem>Profilo</DropdownMenuItem>
+          <DropdownMenuItem>Impostazioni</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/login">Log out</Link>
+          <Link href="/login">Esci</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
