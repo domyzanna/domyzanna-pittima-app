@@ -3,7 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/firebase';
+import { sendSignInLinkToEmail } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,36 +18,64 @@ import {
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { Icons } from '../icons';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({
     message: 'Inserisci un indirizzo email valido.',
   }),
-  password: z.string().min(8, {
-    message: 'La password deve contenere almeno 8 caratteri.',
-  }),
 });
 
+const actionCodeSettings = {
+  url: typeof window !== 'undefined' ? `${window.location.origin}/login` : '',
+  handleCodeInApp: true,
+};
+
 export function SignupForm() {
-  const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
-      password: '',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await sendSignInLinkToEmail(auth, values.email, actionCodeSettings);
+      window.localStorage.setItem('emailForSignIn', values.email);
+      setIsEmailSent(true);
+      toast({
+        title: 'Controlla la tua email!',
+        description: `Abbiamo inviato un link di accesso a ${values.email}.`,
+      });
+    } catch (error: any) {
+      console.error('Error sending sign in link', error);
+      toast({
+        variant: 'destructive',
+        title: 'Qualcosa è andato storto',
+        description:
+          "Impossibile inviare il link di accesso. Riprova più tardi.",
+      });
+    } finally {
       setIsLoading(false);
-      // In a real app, you'd set auth context/token here and log the user in
-      router.push('/dashboard');
-    }, 1000);
+    }
+  }
+
+  if (isEmailSent) {
+    return (
+      <div className="text-center text-muted-foreground p-8 border bg-muted/50 rounded-lg">
+        <p>
+          Abbiamo inviato un link di accesso sicuro al tuo indirizzo email.
+          Clicca sul link per completare l'accesso.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -65,24 +94,11 @@ export function SignupForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           )}
-          Crea Account
+          Registrati con Email
         </Button>
       </form>
     </Form>
