@@ -27,7 +27,7 @@ import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 
 const menuItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Cruscotto' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/vehicles', icon: Car, label: 'Veicoli' },
   { href: '/dashboard/insurance', icon: Shield, label: 'Assicurazioni' },
   { href: '/dashboard/documents', icon: FileText, label: 'Documenti' },
