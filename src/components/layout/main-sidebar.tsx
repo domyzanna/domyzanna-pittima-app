@@ -22,7 +22,9 @@ import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Cruscotto' },
@@ -34,6 +36,23 @@ const menuItems = [
 
 export function MainSidebar() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Errore durante il logout:', error);
+    }
+  };
+
+  const getInitials = (email: string | null | undefined) => {
+    if (!email) return 'U';
+    return email.charAt(0).toUpperCase();
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -71,26 +90,26 @@ export function MainSidebar() {
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
           <Avatar className="h-9 w-9">
             <AvatarImage
-              src="https://picsum.photos/seed/user-avatar/100/100"
-              alt="@utente"
+              src={user?.photoURL ?? `https://avatar.vercel.sh/${user?.email}.png`}
+              alt={user?.email ?? '@utente'}
             />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-medium">Utente</span>
+            <span className="text-sm font-medium">
+              {user?.displayName || 'Utente'}
+            </span>
             <span className="text-xs text-muted-foreground">
-              utente@esempio.com
+              {user?.email}
             </span>
           </div>
           <Button
             variant="ghost"
             size="icon"
             className="ml-auto group-data-[collapsible=icon]:hidden"
-            asChild
+            onClick={handleSignOut}
           >
-            <Link href="/login">
-              <LogOut className="h-4 w-4" />
-            </Link>
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </SidebarFooter>

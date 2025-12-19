@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,28 +11,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Link from 'next/link';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 export function UserNav() {
+  const { user } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Errore durante il logout:', error);
+    }
+  };
+
+  const getInitials = (email: string | null | undefined) => {
+    if (!email) return 'U';
+    return email.charAt(0).toUpperCase();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
-              src="https://picsum.photos/seed/user-avatar/100/100"
-              alt="@utente"
+              src={user?.photoURL ?? `https://avatar.vercel.sh/${user?.email}.png`}
+              alt={user?.email ?? '@utente'}
             />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Utente</p>
+            <p className="text-sm font-medium leading-none">
+              {user?.displayName || 'Utente'}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              utente@esempio.com
+              {user?.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -40,9 +64,7 @@ export function UserNav() {
           <DropdownMenuItem>Impostazioni</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/login">Esci</Link>
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
