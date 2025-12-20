@@ -35,12 +35,7 @@ import { useFirestore, useUser } from '@/firebase';
 import { addDoc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import * as LucideIcons from 'lucide-react';
-
-const iconNames = Object.keys(LucideIcons).filter(
-  (k) =>
-    typeof (LucideIcons as any)[k] === 'object' &&
-    (LucideIcons as any)[k].displayName
-);
+import { iconNames } from '@/lib/icons';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome della categoria è obbligatorio.'),

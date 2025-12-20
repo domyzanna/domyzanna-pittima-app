@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -9,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
+  SidebarMenuSkeleton,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
 import { LayoutDashboard, PlusCircle } from 'lucide-react';
@@ -36,14 +38,16 @@ import {
 } from '../ui/dropdown-menu';
 import type { Category } from '@/lib/types';
 import { collection } from 'firebase/firestore';
-import { SidebarMenuSkeleton } from '../ui/sidebar';
 import { useState } from 'react';
 import { AddCategoryDialog } from '../dashboard/add-category-dialog';
+import { iconNames } from '@/lib/icons';
 
 const getIcon = (iconName: string) => {
-  const IconComponent = (LucideIcons as any)[iconName];
-  if (IconComponent) {
-    return <IconComponent />;
+  if (iconNames.includes(iconName)) {
+    const IconComponent = (LucideIcons as any)[iconName];
+    if (IconComponent) {
+      return <IconComponent />;
+    }
   }
   const FallbackIcon = (LucideIcons as any)['Folder'];
   return <FallbackIcon />;
