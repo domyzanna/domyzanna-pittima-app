@@ -7,7 +7,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import {
   getFirestore,
   collection,
@@ -18,20 +18,30 @@ import {
 } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import type { Deadline, User } from '@/lib/types';
+import type { Deadline } from '@/lib/types';
+import { firebaseConfig } from '@/firebase/config';
 
 // Firebase Admin SDK Initialization
-// This needs to be done once. We check if an app is already initialized.
 if (getApps().length === 0) {
+  let appOptions = {};
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    // Production environment with service account
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    initializeApp({
+    appOptions = {
       credential: cert(serviceAccount),
-    });
+    };
+  } else if (process.env.GOOGLE_CLOUD_PROJECT) {
+     // Development with gcloud auth
+     appOptions = {
+        projectId: process.env.GOOGLE_CLOUD_PROJECT,
+     }
   } else {
-    // For local development without service account key (using emulators or gcloud auth)
-    initializeApp();
+    // Fallback for local development or environments without standard variables
+    appOptions = {
+      projectId: firebaseConfig.projectId,
+    };
   }
+  initializeApp(appOptions);
 }
 
 const db = getFirestore();
@@ -92,7 +102,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Start of today
-    const todayTimestamp = Timestamp.fromDate(today);
 
     // 1. Get all users from Firebase Auth
     const listUsersResult = await auth.listUsers();
