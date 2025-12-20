@@ -22,20 +22,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Dispatch, SetStateAction } from 'react';
 import { useFirestore, useUser } from '@/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import * as LucideIcons from 'lucide-react';
-import { iconNames } from '@/lib/icons';
+import { IconSelect } from './icon-select';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome della categoria è obbligatorio.'),
@@ -80,7 +73,16 @@ export function AddCategoryDialog({
         user.uid,
         'categories'
       );
-      await addDoc(categoriesColRef, { ...values, userId: user.uid });
+      // Create a new document reference with an auto-generated ID
+      const newCategoryRef = doc(categoriesColRef);
+      
+      // Use the non-blocking function to set the document
+      setDocumentNonBlocking(newCategoryRef, { 
+        ...values, 
+        userId: user.uid,
+        id: newCategoryRef.id // Add the auto-generated ID to the document data
+      }, { merge: false });
+
       toast({
         title: 'Successo!',
         description: `Categoria "${values.name}" creata correttamente.`,
@@ -130,31 +132,10 @@ export function AddCategoryDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Icona</FormLabel>
-                  <Select
+                  <IconSelect
+                    selectedValue={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona un'icona" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <ScrollArea className="h-72">
-                        {iconNames.map((iconName) => {
-                          const Icon = (LucideIcons as any)[iconName];
-                          return (
-                            <SelectItem key={iconName} value={iconName}>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                <span>{iconName}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  />
                   <FormMessage />
                 </FormItem>
               )}

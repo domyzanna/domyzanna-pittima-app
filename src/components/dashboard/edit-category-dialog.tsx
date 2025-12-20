@@ -33,20 +33,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   useFirestore,
   useUser,
-  useCollection,
-  useMemoFirebase,
 } from '@/firebase';
 import {
   doc,
@@ -58,11 +48,10 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import * as LucideIcons from 'lucide-react';
-import { iconNames } from '@/lib/icons';
-import type { Category, Deadline } from '@/lib/types';
+import type { Category } from '@/lib/types';
 import { Trash2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { IconSelect } from './icon-select';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome della categoria è obbligatorio.'),
@@ -135,7 +124,7 @@ export function EditCategoryDialog({
   }
 
   const handleDelete = async () => {
-    if (!user || !firestore || deadlineCount > 0) return;
+    if (!user || !firestore || (deadlineCount !== null && deadlineCount > 0) ) return;
 
     const categoryRef = doc(firestore, 'users', user.uid, 'categories', category.id);
     try {
@@ -188,31 +177,10 @@ export function EditCategoryDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Icona</FormLabel>
-                  <Select
+                   <IconSelect
+                    selectedValue={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona un'icona" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <ScrollArea className="h-72">
-                        {iconNames.map((iconName) => {
-                          const Icon = (LucideIcons as any)[iconName];
-                          return (
-                            <SelectItem key={iconName} value={iconName}>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                <span>{iconName}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -223,7 +191,7 @@ export function EditCategoryDialog({
                   <Button
                     variant="destructive"
                     type="button"
-                    disabled={isChecking || deadlineCount > 0}
+                    disabled={isChecking || (deadlineCount !== null && deadlineCount > 0)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -248,7 +216,7 @@ export function EditCategoryDialog({
           </form>
         </Form>
         {isChecking && <p className="text-sm text-muted-foreground">Controllo scadenze collegate...</p>}
-        {!isChecking && deadlineCount > 0 && (
+        {!isChecking && deadlineCount !== null && deadlineCount > 0 && (
             <Alert variant="destructive">
                 <AlertTitle>Impossibile eliminare</AlertTitle>
                 <AlertDescription>
