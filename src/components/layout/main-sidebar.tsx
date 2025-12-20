@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -11,9 +10,10 @@ import {
   SidebarFooter,
   SidebarSeparator,
   SidebarMenuSkeleton,
+  SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -41,13 +41,12 @@ import { collection } from 'firebase/firestore';
 import { useState } from 'react';
 import { AddCategoryDialog } from '../dashboard/add-category-dialog';
 import { iconNames } from '@/lib/icons';
+import { EditCategoryDialog } from '../dashboard/edit-category-dialog';
 
 const getIcon = (iconName: string) => {
-  if (iconNames.includes(iconName)) {
-    const IconComponent = (LucideIcons as any)[iconName];
-    if (IconComponent) {
-      return <IconComponent />;
-    }
+  const IconComponent = (LucideIcons as any)[iconName];
+  if (IconComponent && iconNames.includes(iconName)) {
+    return <IconComponent />;
   }
   const FallbackIcon = (LucideIcons as any)['Folder'];
   return <FallbackIcon />;
@@ -59,7 +58,9 @@ export function MainSidebar() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
 
   const categoriesQuery = useMemoFirebase(
     () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
@@ -130,12 +131,19 @@ export function MainSidebar() {
                   {cat.name}
                 </Link>
               </SidebarMenuButton>
+                <SidebarMenuAction
+                    aria-label="Modifica categoria"
+                    showOnHover
+                    onClick={() => setEditingCategory(cat)}
+                >
+                    <Settings />
+                </SidebarMenuAction>
             </SidebarMenuItem>
           ))}
           <SidebarMenuItem>
              <SidebarMenuButton
                 tooltip="Aggiungi Categoria"
-                onClick={() => setIsCategoryDialogOpen(true)}
+                onClick={() => setIsAddCategoryDialogOpen(true)}
               >
                 <PlusCircle />
                 Aggiungi Categoria
@@ -194,7 +202,18 @@ export function MainSidebar() {
         </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
-    <AddCategoryDialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen} />
+    <AddCategoryDialog open={isAddCategoryDialogOpen} onOpenChange={setIsAddCategoryDialogOpen} />
+    {editingCategory && (
+        <EditCategoryDialog
+            open={!!editingCategory}
+            onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setEditingCategory(null);
+                }
+            }}
+            category={editingCategory}
+        />
+    )}
     </>
   );
 }
