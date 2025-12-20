@@ -4,6 +4,7 @@ import { generateMonthlySummary } from '@/ai/flows/monthly-summary-ai-urgency';
 import type { MonthlySummaryOutput } from '@/ai/flows/monthly-summary-ai-urgency';
 import type { ProcessedDeadline } from '@/lib/types';
 import { addMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { checkDeadlinesAndNotify } from '@/ai/flows/notification-hammer';
 
 type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'category'> & {
   category: string;
@@ -51,5 +52,17 @@ export async function getAiSummary(
     return {
       summary: 'Impossibile generare il riepilogo AI. Controlla i log.',
     };
+  }
+}
+
+export async function runCheckDeadlinesAndNotify() {
+  try {
+    console.log("Invocazione manuale di checkDeadlinesAndNotify...");
+    const result = await checkDeadlinesAndNotify();
+    console.log("Esecuzione completata:", result);
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error("Errore durante l'esecuzione manuale del controllo scadenze:", error);
+    return { success: false, error: error.message || 'Errore sconosciuto' };
   }
 }
