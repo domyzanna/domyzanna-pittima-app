@@ -16,79 +16,79 @@ import { firebaseConfig } from '@/firebase/config';
 
 // Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
-    const adminAppName = 'admin-notifications';
-    const existingApp = getApps().find(app => app.name === adminAppName);
-    if (existingApp) {
-      return existingApp;
+  const adminAppName = 'admin-notifications';
+  const existingApp = getApps().find((app) => app.name === adminAppName);
+  if (existingApp) {
+    return existingApp;
+  }
+
+  let appOptions = {};
+
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      appOptions = {
+        credential: cert(serviceAccount),
+        projectId: serviceAccount.project_id || firebaseConfig.projectId,
+      };
+      console.log('Initializing Firebase Admin for Notifications with Service Account...');
+    } catch (e) {
+      console.error(
+        'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
+        e
+      );
+      appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
     }
-  
-    let appOptions = {};
-  
-    // Prioritize service account key from environment variable
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
-      try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        appOptions = {
-          credential: cert(serviceAccount),
-          projectId: serviceAccount.project_id || firebaseConfig.projectId,
-        };
-        console.log("Initializing Firebase Admin for Notifications with Service Account...");
-      } catch (e) {
-        console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.", e);
-        // Fallback if JSON is invalid
-        appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
-      }
-    } else {
-        console.log("Initializing Firebase Admin for Notifications with default project ID (dev environment).");
-        // Fallback for local development or environments without the service key
-        appOptions = {
-            projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
-        };
-    }
-  
-    return initializeApp(appOptions, adminAppName);
+  } else {
+    console.log(
+      'Initializing Firebase Admin for Notifications with default project ID (dev environment).'
+    );
+    appOptions = {
+      projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
+    };
+  }
+
+  return initializeApp(appOptions, adminAppName);
 }
-  
+
 const adminApp = initializeAdminApp();
 const db = getFirestore(adminApp);
 const auth = getAuth(adminApp);
 
-
 // Define a "Tool" for sending emails. This makes our flow more modular.
 const sendEmailTool = ai.defineTool(
-    {
-      name: 'sendEmail',
-      description: 'Sends a transactional email to a user.',
-      inputSchema: z.object({
-        to: z.string().email(),
-        subject: z.string(),
-        body: z.string(),
-      }),
-      outputSchema: z.object({
-        success: z.boolean(),
-        message: z.string(),
-      }),
-    },
-    async (payload) => {
-      // In a real-world scenario, you would integrate with a service like
-      // SendGrid, Mailgun, or AWS SES here.
-      // For now, we are logging it, but this structure is ready for a real provider.
-      console.log('------- REAL EMAIL TOOL -------');
-      console.log(`To: ${payload.to}`);
-      console.log(`Subject: ${payload.subject}`);
-      console.log(`Body: ${payload.body}`);
-      console.log('-----------------------------');
-      
-      // Simulate a successful email dispatch
-      const success = true;
-      const message = success 
-        ? `Email successfully dispatched to ${payload.to}`
-        : `Failed to send email to ${payload.to}`;
-        
-      return { success, message };
-    }
-);
+  {
+    name: 'sendEmail',
+    description: 'Sends a transactional email to a user.',
+    inputSchema: z.object({
+      to: z.string().email(),
+      subject: z.string(),
+      body: z.string(),
+    }),
+    outputSchema: z.object({
+      success: z.boolean(),
+      message: z.string(),
+    }),
+  },
+  async (payload) => {
+    // In a real-world scenario, you would integrate with a service like
+    // SendGrid, Mailgun, or AWS SES here.
+    // For now, we are logging it, but this structure is ready for a real provider.
+    console.log('------- REAL EMAIL TOOL -------');
+    console.log(`To: ${payload.to}`);
+    console.log(`Subject: ${payload.subject}`);
+    console.log(`Body: ${payload.body}`);
+    console.log('-----------------------------');
 
+    // Simulate a successful email dispatch
+    const success = true;
+    const message = success
+      ? `Email successfully dispatched to ${payload.to}`
+      : `Failed to send email to ${payload.to}`;
+
+    return { success, message };
+  }
+);
 
 // Define Zod schemas for our flow inputs/outputs for type safety.
 
@@ -98,7 +98,6 @@ const NotificationPayloadSchema = z.object({
   deadlineName: z.string(),
   deadlineExpiration: z.string(),
 });
-type NotificationPayload = z.infer<typeof NotificationPayloadSchema>;
 
 /**
  * The "Hammer": Sends a single notification by calling the email tool.
@@ -108,7 +107,6 @@ export const sendEmailNotification = ai.defineFlow(
     name: 'sendEmailNotification',
     inputSchema: NotificationPayloadSchema,
     outputSchema: z.object({ success: z.boolean(), message: z.string() }),
-    // Make the tool available to this flow
     tools: [sendEmailTool],
   },
   async (payload) => {
@@ -119,14 +117,11 @@ export const sendEmailNotification = ai.defineFlow(
     const subject = `Promemoria Scadenza: ${payload.deadlineName}`;
     const body = `Ciao ${payload.userName},\n\nQuesto è un promemoria per la tua scadenza "${payload.deadlineName}" che è prevista per il ${payload.deadlineExpiration}.\n\nControlla la tua app per maggiori dettagli.\n\nSaluti,\nIl team di Pittima App`;
 
-    // The AI will decide to call the tool based on the prompt and tool description.
-    // Here, we explicitly call it to send the email.
     const emailResult = await ai.runTool('sendEmail', {
-        to: payload.userEmail,
-        subject: subject,
-        body: body,
+      to: payload.userEmail,
+      subject: subject,
+      body: body,
     });
-
 
     return emailResult;
   }
@@ -152,7 +147,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
     let notificationsTriggered = 0;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
+    today.setHours(0, 0, 0, 0);
 
     const listUsersResult = await auth.listUsers();
     const allUsers = listUsersResult.users;
@@ -161,14 +156,15 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
     for (const userRecord of allUsers) {
       const { uid, email, displayName, emailVerified } = userRecord;
-      
-      // We can only notify users with a verified email address.
+
       if (!email || !emailVerified) {
-          console.log(`Skipping user ${uid} - no verified email.`);
-          continue;
+        console.log(`Skipping user ${uid} - no verified email.`);
+        continue;
       }
 
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
+      // Simpler query: only filter by completion status.
+      // The rest of the logic will be handled in code.
       const q = deadlinesRef.where('isCompleted', '==', false);
       const deadlinesSnapshot = await q.get();
 
@@ -176,38 +172,45 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         continue;
       }
       
-      // Filter deadlines in code to avoid complex indexes
+      foundDeadlines += deadlinesSnapshot.size;
+
       for (const doc of deadlinesSnapshot.docs) {
         const deadline = doc.data() as Deadline;
-        foundDeadlines++;
-
+        
         const notificationStartDate = new Date(deadline.notificationStartDate);
-        const shouldNotify = deadline.notificationStatus !== 'paused' && notificationStartDate <= today;
+        
+        // Logic in code: check status and date.
+        // A deadline is active for notifications if its status is 'pending' or 'active'.
+        const isActiveForNotifications = deadline.notificationStatus === 'pending' || deadline.notificationStatus === 'active';
+        const isPastNotificationStartDate = notificationStartDate <= today;
 
-        if (shouldNotify) {
-            notificationsTriggered++;
-    
-            console.log(
-              `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
-            );
-    
-            // We call the notification flow but don't wait for it to complete.
-            // This allows us to quickly trigger many notifications in parallel.
-            sendEmailNotification({
-              userEmail: email,
-              userName: displayName || email.split('@')[0],
-              deadlineName: deadline.name,
-              deadlineExpiration: new Date(
-                deadline.expirationDate
-              ).toLocaleDateString('it-IT'),
-            });
+        if (isActiveForNotifications && isPastNotificationStartDate) {
+          notificationsTriggered++;
+
+          console.log(
+            `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
+          );
+
+          sendEmailNotification({
+            userEmail: email,
+            userName: displayName || email.split('@')[0],
+            deadlineName: deadline.name,
+            deadlineExpiration: new Date(
+              deadline.expirationDate
+            ).toLocaleDateString('it-IT'),
+          });
+          
+          // If the status was 'pending', update it to 'active' so we know notifications have started.
+          if (deadline.notificationStatus === 'pending') {
+            await doc.ref.update({ notificationStatus: 'active' });
+          }
         }
       }
     }
 
     const summary = {
       checkedUsers,
-      foundDeadlines: foundDeadlines, // Correctly count all found, not just snapshot size
+      foundDeadlines,
       notificationsTriggered,
     };
 

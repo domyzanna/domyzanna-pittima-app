@@ -4,13 +4,15 @@ import type { ProcessedDeadline } from '@/lib/types';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn, getNextExpiration } from '@/lib/utils';
-import { Archive, Edit } from 'lucide-react';
+import { Archive, Edit, Bell, BellOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { EditDeadlineDialog } from './edit-deadline-dialog';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const urgencyStyles = {
   bassa: {
@@ -45,6 +47,7 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
     urgency,
     expirationDate,
     recurrence,
+    notificationStatus,
   } = deadline;
   const style = urgencyStyles[urgency] || defaultStyle;
   const firestore = useFirestore();
@@ -87,6 +90,8 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
         );
         await updateDoc(deadlineRef, {
           expirationDate: nextExpiration.toISOString(),
+          // Reset notification status for the new period
+          notificationStatus: 'pending',
         });
         toast({
           title: 'Rinnovato!',
@@ -102,6 +107,28 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
       });
     }
   };
+
+  const handleNotificationToggle = async (isChecked: boolean) => {
+     if (!user || !firestore) return;
+     const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', id);
+     const newStatus = isChecked ? 'active' : 'paused';
+     try {
+        await updateDoc(deadlineRef, { notificationStatus: newStatus });
+        toast({
+            title: `Notifiche ${isChecked ? 'attivate' : 'in pausa'}`,
+            description: `Riceverai promemoria per "${name}".`,
+        });
+     } catch (error) {
+        console.error("Errore durante l'aggiornamento delle notifiche:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Errore',
+            description: 'Impossibile aggiornare lo stato delle notifiche.',
+        });
+     }
+  };
+
+  const areNotificationsActive = notificationStatus === 'active' || notificationStatus === 'pending';
 
   return (
     <>
@@ -136,15 +163,29 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
               <span>{formattedDays}</span>
             </div>
           </div>
-          <div className="flex justify-end items-center mt-4 gap-2">
-            <Button variant="ghost" size="sm" onClick={handleComplete}>
-              <Archive className="mr-2 h-4 w-4" />
-              Completa
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Modifica
-            </Button>
+          <div className="flex justify-between items-center mt-4 gap-2">
+             <div className="flex items-center space-x-2">
+                <Switch
+                    id={`notifications-${id}`}
+                    checked={areNotificationsActive}
+                    onCheckedChange={handleNotificationToggle}
+                    aria-label="Toggle notifications"
+                />
+                <Label htmlFor={`notifications-${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
+                   {areNotificationsActive ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                   <span>Notifiche</span>
+                </Label>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleComplete}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Completa
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Modifica
+                </Button>
+            </div>
           </div>
         </div>
       </Card>
