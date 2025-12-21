@@ -8,14 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  where,
-  Timestamp,
-} from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline } from '@/lib/types';
@@ -31,10 +24,10 @@ if (getApps().length === 0) {
       credential: cert(serviceAccount),
     };
   } else if (process.env.GOOGLE_CLOUD_PROJECT) {
-     // Development with gcloud auth
-     appOptions = {
-        projectId: process.env.GOOGLE_CLOUD_PROJECT,
-     }
+    // Development with gcloud auth
+    appOptions = {
+      projectId: process.env.GOOGLE_CLOUD_PROJECT,
+    };
   } else {
     // Fallback for local development or environments without standard variables
     appOptions = {
@@ -116,15 +109,13 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       if (!email) continue; // Cannot notify if there's no email
 
       // 3. Query for their deadlines that are active and need notification
-      const deadlinesRef = collection(db, `users/${uid}/deadlines`);
-      const q = query(
-        deadlinesRef,
-        where('isCompleted', '==', false),
-        where('notificationStatus', '!=', 'paused'),
-        where('notificationStartDate', '<=', today.toISOString())
-      );
+      const deadlinesRef = db.collection(`users/${uid}/deadlines`);
+      const q = deadlinesRef
+        .where('isCompleted', '==', false)
+        .where('notificationStatus', '!=', 'paused')
+        .where('notificationStartDate', '<=', today.toISOString());
 
-      const deadlinesSnapshot = await getDocs(q);
+      const deadlinesSnapshot = await q.get();
       if (deadlinesSnapshot.empty) {
         continue;
       }
