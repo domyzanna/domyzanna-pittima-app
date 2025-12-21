@@ -9,36 +9,46 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
 
 // Firebase Admin SDK Initialization
-if (getApps().length === 0) {
-  let appOptions = {};
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-    // Production environment with service account
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    appOptions = {
-      credential: cert(serviceAccount),
-    };
-  } else if (process.env.GOOGLE_CLOUD_PROJECT) {
-    // Development with gcloud auth
-    appOptions = {
-      projectId: process.env.GOOGLE_CLOUD_PROJECT,
-    };
-  } else {
-    // Fallback for local development or environments without standard variables
-    appOptions = {
-      projectId: firebaseConfig.projectId,
-    };
-  }
-  initializeApp(appOptions);
+function initializeAdminApp(): App {
+    if (getApps().some(app => app.name === 'admin')) {
+      return getApps().find(app => app.name === 'admin')!;
+    }
+  
+    let appOptions = {};
+  
+    // Prioritize service account key from environment variable
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
+      try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        appOptions = {
+          credential: cert(serviceAccount),
+        };
+        console.log("Initializing Firebase Admin with Service Account...");
+      } catch (e) {
+        console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.", e);
+        // Fallback if JSON is invalid
+        appOptions = { projectId: firebaseConfig.projectId };
+      }
+    } else {
+        console.log("Initializing Firebase Admin with default project ID (dev environment).");
+        // Fallback for local development or environments without the service key
+        appOptions = {
+            projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
+        };
+    }
+  
+    return initializeApp(appOptions, 'admin');
 }
-
-const db = getFirestore();
-const auth = getAuth();
+  
+const adminApp = initializeAdminApp();
+const db = getFirestore(adminApp);
+const auth = getAuth(adminApp);
 
 // Define Zod schemas for our flow inputs/outputs for type safety.
 
@@ -108,12 +118,10 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       const { uid, email, displayName } = userRecord;
       if (!email) continue; // Cannot notify if there's no email
 
-      // 3. Query for their deadlines that are active and need notification
+      // 3. Query for their active deadlines (simplified query)
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
-      const q = deadlinesRef
-        .where('isCompleted', '==', false)
-        .where('notificationStatus', 'in', ['pending', 'active'])
-        .where('notificationStartDate', '<=', today.toISOString());
+      // Simpler query: just get all non-completed deadlines. We'll filter in code.
+      const q = deadlinesRef.where('isCompleted', '==', false);
 
       const deadlinesSnapshot = await q.get();
       if (deadlinesSnapshot.empty) {
@@ -122,25 +130,31 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       
       foundDeadlines += deadlinesSnapshot.size;
 
-      // 4. For each relevant deadline, trigger the "Hammer"
+      // 4. For each relevant deadline, filter in code and trigger the "Hammer"
       for (const doc of deadlinesSnapshot.docs) {
         const deadline = doc.data() as Deadline;
-        notificationsTriggered++;
 
-        console.log(
-          `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
-        );
+        const notificationStartDate = new Date(deadline.notificationStartDate);
+        const shouldNotify = deadline.notificationStatus !== 'paused' && notificationStartDate <= today;
 
-        // We call the notification flow but don't wait for it to complete.
-        // This allows us to quickly trigger many notifications in parallel.
-        sendEmailNotification({
-          userEmail: email,
-          userName: displayName || email,
-          deadlineName: deadline.name,
-          deadlineExpiration: new Date(
-            deadline.expirationDate
-          ).toLocaleDateString('it-IT'),
-        });
+        if (shouldNotify) {
+            notificationsTriggered++;
+    
+            console.log(
+              `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
+            );
+    
+            // We call the notification flow but don't wait for it to complete.
+            // This allows us to quickly trigger many notifications in parallel.
+            sendEmailNotification({
+              userEmail: email,
+              userName: displayName || email,
+              deadlineName: deadline.name,
+              deadlineExpiration: new Date(
+                deadline.expirationDate
+              ).toLocaleDateString('it-IT'),
+            });
+        }
       }
     }
 
