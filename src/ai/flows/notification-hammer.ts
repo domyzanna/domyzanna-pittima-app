@@ -112,7 +112,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
       const q = deadlinesRef
         .where('isCompleted', '==', false)
-        .where('notificationStatus', '!=', 'paused')
+        .where('notificationStatus', 'in', ['pending', 'active'])
         .where('notificationStartDate', '<=', today.toISOString());
 
       const deadlinesSnapshot = await q.get();
