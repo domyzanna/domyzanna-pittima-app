@@ -115,7 +115,16 @@ export const sendEmailNotification = ai.defineFlow(
     );
 
     const subject = `Promemoria Scadenza: ${payload.deadlineName}`;
-    const body = `Ciao ${payload.userName},\n\nQuesto è un promemoria per la tua scadenza "${payload.deadlineName}" che è prevista per il ${payload.deadlineExpiration}.\n\nControlla la tua app per maggiori dettagli.\n\nSaluti,\nIl team di Pittima App`;
+    const body = `Ciao ${payload.userName},
+
+Ti ricordiamo che la tua scadenza "${payload.deadlineName}" è in arrivo.
+
+**Data di scadenza:** ${payload.deadlineExpiration}
+
+Non dimenticare di gestirla in tempo! Puoi vedere tutti i dettagli e gestire le tue scadenze direttamente dall'app.
+
+Grazie per usare Pittima App,
+Il tuo assistente per le scadenze.`;
 
     const emailResult = await ai.runTool('sendEmail', {
       to: payload.userEmail,
