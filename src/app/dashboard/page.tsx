@@ -94,6 +94,31 @@ export default function DashboardPage() {
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [deadlines, categories]);
   
+  const sortedCategories = useMemo(() => {
+    if (!categories || processedDeadlines.length === 0) {
+      return categories || [];
+    }
+  
+    const categoryUrgency = new Map<string, number>();
+  
+    categories.forEach(cat => {
+      const deadlinesForCat = processedDeadlines.filter(d => d.category.id === cat.id);
+      if (deadlinesForCat.length > 0) {
+        // The deadlines are already sorted, so the first one is the most urgent
+        categoryUrgency.set(cat.id, deadlinesForCat[0].daysRemaining);
+      } else {
+        // Push categories with no deadlines to the end
+        categoryUrgency.set(cat.id, Infinity);
+      }
+    });
+  
+    return [...categories].sort((a, b) => {
+      const urgencyA = categoryUrgency.get(a.id) ?? Infinity;
+      const urgencyB = categoryUrgency.get(b.id) ?? Infinity;
+      return urgencyA - urgencyB;
+    });
+  }, [categories, processedDeadlines]);
+
   const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
 
   if (isLoading) {
@@ -134,8 +159,8 @@ export default function DashboardPage() {
            </CardContent>
          </Card>
         )}
-        {categories &&
-          categories.map((category) => (
+        {sortedCategories &&
+          sortedCategories.map((category) => (
             <CategorySection
               key={category.id}
               category={category}
