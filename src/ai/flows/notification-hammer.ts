@@ -11,8 +11,21 @@ import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import type { Deadline } from '@/lib/types';
+import type { Deadline, User } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
+import webpush from 'web-push';
+
+if (
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+  process.env.VAPID_PRIVATE_KEY
+) {
+  webpush.setVapidDetails(
+    'mailto:you@example.com',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
+
 
 // Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
@@ -90,11 +103,47 @@ const sendEmailTool = ai.defineTool(
   }
 );
 
+
+const sendPushNotificationTool = ai.defineTool(
+  {
+    name: 'sendPushNotification',
+    description: 'Sends a web push notification to a user.',
+    inputSchema: z.object({
+      subscription: z.any(), // This should be the PushSubscription object
+      payload: z.object({
+        title: z.string(),
+        body: z.string(),
+      }),
+    }),
+    outputSchema: z.object({ success: z.boolean(), message: z.string() }),
+  },
+  async ({ subscription, payload }) => {
+    if (!process.env.VAPID_PRIVATE_KEY) {
+      console.warn("VAPID keys not configured. Skipping push notification.");
+      return { success: false, message: "VAPID keys not configured." };
+    }
+    try {
+      await webpush.sendNotification(
+        subscription,
+        JSON.stringify(payload)
+      );
+      return { success: true, message: 'Push notification sent successfully.' };
+    } catch (error: any) {
+      console.error('Error sending push notification:', error);
+      // If the subscription is expired or invalid, we should probably remove it from the database.
+      // This logic can be added later.
+      return { success: false, message: error.message || 'Failed to send push notification.' };
+    }
+  }
+);
+
+
 // Define Zod schemas for our flow inputs/outputs for type safety.
 
 const NotificationPayloadSchema = z.object({
   userEmail: z.string().email(),
   userName: z.string(),
+  user: z.custom<User>(),
   deadlineName: z.string(),
   deadlineExpiration: z.string(),
 });
@@ -102,18 +151,22 @@ const NotificationPayloadSchema = z.object({
 /**
  * The "Hammer": Sends a single notification by calling the email tool.
  */
-export const sendEmailNotification = ai.defineFlow(
+export const sendNotification = ai.defineFlow(
   {
-    name: 'sendEmailNotification',
+    name: 'sendNotification',
     inputSchema: NotificationPayloadSchema,
-    outputSchema: z.object({ success: z.boolean(), message: z.string() }),
-    tools: [sendEmailTool],
+    outputSchema: z.object({ emailSuccess: z.boolean(), pushSuccess: z.boolean() }),
+    tools: [sendEmailTool, sendPushNotificationTool],
   },
   async (payload) => {
     console.log(
       `🔔 HAMMER: Preparing to send notification to ${payload.userEmail} for deadline "${payload.deadlineName}"`
     );
 
+    let emailSuccess = false;
+    let pushSuccess = false;
+
+    // --- Send Email ---
     const subject = `Promemoria Scadenza: ${payload.deadlineName}`;
     const body = `Ciao ${payload.userName},
 
@@ -131,8 +184,24 @@ Il tuo assistente per le scadenze.`;
       subject: subject,
       body: body,
     });
+    emailSuccess = emailResult.success;
 
-    return emailResult;
+    // --- Send Push Notification ---
+    if (payload.user.pushSubscription) {
+      console.log(`-> Found push subscription for user ${payload.userEmail}. Sending push notification.`);
+      const pushPayload = {
+        title: `Promemoria: ${payload.deadlineName}`,
+        body: `La tua scadenza è prevista per il ${payload.deadlineExpiration}. Non dimenticare!`,
+      };
+      const pushResult = await ai.runTool('sendPushNotification', {
+        subscription: payload.user.pushSubscription,
+        payload: pushPayload,
+      });
+      pushSuccess = pushResult.success;
+    }
+
+
+    return { emailSuccess, pushSuccess };
   }
 );
 
@@ -170,16 +239,18 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         console.log(`Skipping user ${uid} - no verified email.`);
         continue;
       }
+      
+      const userDocRef = db.doc(`users/${uid}`);
+      const userDoc = await userDocRef.get();
+      const userData = userDoc.data() as User | undefined;
 
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
-      // Simpler query: only filter by completion status.
-      // The rest of the logic will be handled in code.
       const q = deadlinesRef.where('isCompleted', '==', false);
       const deadlinesSnapshot = await q.get();
 
       if (deadlinesSnapshot.empty) {
         continue;
-      }
+      }
       
       foundDeadlines += deadlinesSnapshot.size;
 
@@ -188,8 +259,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         
         const notificationStartDate = new Date(deadline.notificationStartDate);
         
-        // Logic in code: check status and date.
-        // A deadline is active for notifications if its status is 'pending' or 'active'.
         const isActiveForNotifications = deadline.notificationStatus === 'pending' || deadline.notificationStatus === 'active';
         const isPastNotificationStartDate = notificationStartDate <= today;
 
@@ -200,16 +269,16 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
             `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
           );
 
-          sendEmailNotification({
+          sendNotification({
             userEmail: email,
             userName: displayName || email.split('@')[0],
+            user: { ...userData, id: uid, email, displayName } as User,
             deadlineName: deadline.name,
             deadlineExpiration: new Date(
               deadline.expirationDate
             ).toLocaleDateString('it-IT'),
           });
           
-          // If the status was 'pending', update it to 'active' so we know notifications have started.
           if (deadline.notificationStatus === 'pending') {
             await doc.ref.update({ notificationStatus: 'active' });
           }
