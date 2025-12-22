@@ -57,9 +57,11 @@ export function LoginForm() {
             title: 'Email non verificata',
             description: 'Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.',
         });
+        // Do not proceed with login
         return;
       }
       
+      // If email is verified, proceed to dashboard
       router.push('/dashboard');
 
     } catch (error: any) {
