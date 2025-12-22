@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,9 @@ export function LoginForm() {
             title: 'Email non verificata',
             description: 'Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.',
         });
-        // Do not proceed with login
+        // Sign the user out and stop the login process
+        await signOut(auth);
+        setIsLoading(false);
         return;
       }
       
@@ -81,9 +83,10 @@ export function LoginForm() {
         title: 'Accesso fallito',
         description,
       });
-    } finally {
       setIsLoading(false);
-    }
+    } 
+    // We don't set isLoading to false in a finally block anymore,
+    // because some paths need to set it manually before returning.
   }
 
   return (
