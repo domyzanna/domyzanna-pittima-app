@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -83,7 +84,7 @@ export default function SettingsPage() {
     const registration = await navigator.serviceWorker.ready;
 
     if (isSubscribed) {
-      // Unsubscribe
+      // Unsubscribe logic remains the same
       try {
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
@@ -101,13 +102,17 @@ export default function SettingsPage() {
       } catch (error) {
         console.error('Failed to unsubscribe:', error);
         setNotificationError('Impossibile disattivare le notifiche.');
+      } finally {
+        setIsProcessing(false);
       }
     } else {
-      // Subscribe
+      // Subscribe logic with better permission handling
       try {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-          throw new Error('Permesso per le notifiche non concesso.');
+           setNotificationError("Hai bloccato le notifiche. Per riceverle, devi abilitarle nelle impostazioni del tuo browser.");
+           setIsProcessing(false);
+           return;
         }
         
         const subscription = await registration.pushManager.subscribe({
@@ -129,9 +134,10 @@ export default function SettingsPage() {
       } catch (error: any) {
         console.error('Failed to subscribe:', error);
         setNotificationError(error.message || 'Impossibile attivare le notifiche.');
+      } finally {
+        setIsProcessing(false);
       }
     }
-    setIsProcessing(false);
   };
 
   return (
@@ -170,7 +176,7 @@ export default function SettingsPage() {
           )}
            {notificationError && (
             <Alert variant="destructive" className="mt-4">
-              <AlertTitle>Errore</AlertTitle>
+              <AlertTitle>Operazione non riuscita</AlertTitle>
               <AlertDescription>{notificationError}</AlertDescription>
             </Alert>
           )}
