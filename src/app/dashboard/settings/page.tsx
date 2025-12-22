@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
 import { BellRing, BellOff } from 'lucide-react';
@@ -45,29 +45,36 @@ export default function SettingsPage() {
   const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.error('Service worker registration failed:', err);
+            setNotificationError("Impossibile inizializzare le notifiche (Service Worker fallito).");
+        });
+    }
+  }, []);
+
+  useEffect(() => {
     if (!user || !firestore) return;
 
     const checkSubscription = async () => {
-      // Check for existing push subscription in Firestore
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const docSnap = await getDoc(userDocRef);
-      if (docSnap.exists() && docSnap.data().pushSubscription) {
-        setIsSubscribed(true);
-      } else {
+      setIsSubscriptionLoading(true);
+      try {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists() && docSnap.data().pushSubscription) {
+          setIsSubscribed(true);
+        } else {
+          setIsSubscribed(false);
+        }
+      } catch (error) {
+        console.error("Error checking subscription status:", error);
         setIsSubscribed(false);
+      } finally {
+        setIsSubscriptionLoading(false);
       }
-      setIsSubscriptionLoading(false);
-    }
+    };
     
     checkSubscription();
-    
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => {
-        console.error('Service worker registration failed:', err);
-        setNotificationError("Impossibile inizializzare le notifiche (Service Worker fallito).");
-      });
-    }
 
   }, [user, firestore]);
 
@@ -81,7 +88,7 @@ export default function SettingsPage() {
         await subscription.unsubscribe();
       }
       const userDocRef = doc(firestore, 'users', user.uid);
-      await updateDoc(userDocRef, { pushSubscription: null });
+      updateDocumentNonBlocking(userDocRef, { pushSubscription: null });
       setIsSubscribed(false);
       toast({
         title: 'Notifiche disattivate',
@@ -108,12 +115,6 @@ export default function SettingsPage() {
 
     setIsProcessing(true);
     setNotificationError(null);
-    
-    if (Notification.permission === 'denied') {
-        setNotificationError("Hai bloccato le notifiche. Per riceverle, devi abilitarle nelle impostazioni del tuo browser per questo sito.");
-        setIsProcessing(false);
-        return;
-    }
 
     try {
       const registration = await navigator.serviceWorker.ready;
@@ -124,7 +125,7 @@ export default function SettingsPage() {
 
       if (user) {
         const userDocRef = doc(firestore, 'users', user.uid);
-        await updateDoc(userDocRef, {
+        updateDocumentNonBlocking(userDocRef, {
           pushSubscription: JSON.parse(JSON.stringify(subscription)),
         });
       }
@@ -192,3 +193,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    

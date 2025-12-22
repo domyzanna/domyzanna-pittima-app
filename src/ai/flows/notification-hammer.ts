@@ -124,18 +124,9 @@ const sendPushNotificationTool = ai.defineTool(
         return { success: false, message: "VAPID keys not configured." };
     }
     
-    // In a real application, you would replace this console log with the actual web-push call.
-    // The environment here prevents us from obtaining the subscription object, but the logic is ready.
-    console.warn('------- REAL PUSH NOTIFICATION TOOL (PLACEHOLDER) -------');
-    console.log(`Subscription: ${JSON.stringify(subscription).substring(0, 100)}...`);
-    console.log(`Payload: ${JSON.stringify(payload)}`);
-    console.warn('To enable real push notifications, replace this block with the webpush.sendNotification call.');
-    
-    // EXAMPLE of real implementation:
-    /*
     try {
       webpush.setVapidDetails(
-          'mailto:you@example.com',
+          `mailto:${process.env.VAPID_MAILTO || 'you@example.com'}`,
           process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           process.env.VAPID_PRIVATE_KEY
       );
@@ -147,12 +138,12 @@ const sendPushNotificationTool = ai.defineTool(
     } catch (error: any) {
       console.error('Error sending push notification:', error);
       // If the subscription is expired or invalid, we should probably remove it from the database.
-      // This logic can be added later.
+      // This logic can be added later if needed. For now, we just log the error.
+      if (error.statusCode === 410 || error.statusCode === 404) {
+          console.log("Push subscription has expired or is invalid. It should be removed.");
+      }
       return { success: false, message: error.message || 'Failed to send push notification.' };
     }
-    */
-
-    return { success: true, message: 'Push notification simulated successfully.' };
   }
 );
 
@@ -330,3 +321,5 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
     return summary;
   }
 );
+
+    
