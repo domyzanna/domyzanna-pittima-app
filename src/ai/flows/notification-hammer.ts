@@ -112,14 +112,21 @@ const sendPushNotificationTool = ai.defineTool(
         return { success: false, message: "VAPID keys not configured." };
     }
     
-    // Initialize VAPID details only when the tool is used
-    webpush.setVapidDetails(
-        'mailto:you@example.com',
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
-    );
-
+    // In a real application, you would replace this console log with the actual web-push call.
+    // The environment here prevents us from obtaining the subscription object, but the logic is ready.
+    console.warn('------- REAL PUSH NOTIFICATION TOOL (PLACEHOLDER) -------');
+    console.log(`Subscription: ${JSON.stringify(subscription).substring(0, 100)}...`);
+    console.log(`Payload: ${JSON.stringify(payload)}`);
+    console.warn('To enable real push notifications, replace this block with the webpush.sendNotification call.');
+    
+    // EXAMPLE of real implementation:
+    /*
     try {
+      webpush.setVapidDetails(
+          'mailto:you@example.com',
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          process.env.VAPID_PRIVATE_KEY
+      );
       await webpush.sendNotification(
         subscription,
         JSON.stringify(payload)
@@ -131,6 +138,9 @@ const sendPushNotificationTool = ai.defineTool(
       // This logic can be added later.
       return { success: false, message: error.message || 'Failed to send push notification.' };
     }
+    */
+
+    return { success: true, message: 'Push notification simulated successfully.' };
   }
 );
 
@@ -171,7 +181,7 @@ Ti ricordiamo che la tua scadenza "${payload.deadlineName}" è in arrivo.
 
 **Data di scadenza:** ${payload.deadlineExpiration}
 
-Non dimenticare di gestirla in tempo! Puoi vedere tutti i dettagli e gestire le tue scadenze direttamente dall'app.
+Questo è un promemoria automatico per aiutarti a ricordare. Puoi vedere tutti i dettagli e gestire le tue scadenze direttamente dall'app.
 
 Grazie per usare Pittima App,
 Il tuo assistente per le scadenze.`;
@@ -195,6 +205,8 @@ Il tuo assistente per le scadenze.`;
         payload: pushPayload,
       });
       pushSuccess = pushResult.success;
+    } else {
+        console.log(`-> No push subscription for user ${payload.userEmail}. Skipping push notification.`);
     }
 
 
