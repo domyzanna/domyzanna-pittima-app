@@ -31,8 +31,8 @@ import {
 } from '@/components/ui/select';
 import { PlusCircle } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import type { Category } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -86,7 +86,7 @@ export function AddDeadlineDialog({
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({
         variant: 'destructive',
@@ -95,40 +95,32 @@ export function AddDeadlineDialog({
       });
       return;
     }
-    try {
-      const expirationDate = new Date(values.expirationDate);
-      const notificationStartDate = subDays(expirationDate, values.notificationDays);
 
-      const deadlineData = {
-        ...values,
-        userId: user.uid,
-        isCompleted: false,
-        expirationDate: expirationDate.toISOString(),
-        notificationStartDate: notificationStartDate.toISOString(),
-        notificationStatus: 'pending',
-      };
-      const deadlinesColRef = collection(
-        firestore,
-        'users',
-        user.uid,
-        'deadlines'
-      );
-      await addDoc(deadlinesColRef, deadlineData);
-      toast({
-        title: 'Successo!',
-        description: 'Nuova scadenza aggiunta correttamente.',
-        className: 'bg-green-100 border-green-300',
-      });
-      onOpenChange(false);
-      form.reset();
-    } catch (error) {
-      console.error('Error adding document: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: "Impossibile aggiungere la scadenza. Riprova più tardi.",
-      });
-    }
+    const expirationDate = new Date(values.expirationDate);
+    const notificationStartDate = subDays(expirationDate, values.notificationDays);
+
+    const deadlineData = {
+      ...values,
+      userId: user.uid,
+      isCompleted: false,
+      expirationDate: expirationDate.toISOString(),
+      notificationStartDate: notificationStartDate.toISOString(),
+      notificationStatus: 'pending',
+    };
+    const deadlinesColRef = collection(
+      firestore,
+      'users',
+      user.uid,
+      'deadlines'
+    );
+    addDocumentNonBlocking(deadlinesColRef, deadlineData);
+    toast({
+      title: 'Successo!',
+      description: 'Nuova scadenza aggiunta correttamente.',
+      className: 'bg-green-100 border-green-300',
+    });
+    onOpenChange(false);
+    form.reset();
   }
 
   return (

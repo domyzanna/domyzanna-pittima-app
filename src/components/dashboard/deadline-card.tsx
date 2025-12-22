@@ -7,8 +7,8 @@ import { cn, getNextExpiration } from '@/lib/utils';
 import { Archive, Edit, Bell, BellOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { useFirestore, useUser } from '@/firebase';
-import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { useFirestore, useUser, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { EditDeadlineDialog } from './edit-deadline-dialog';
 import { Switch } from '@/components/ui/switch';
@@ -62,7 +62,7 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
     locale: it,
   });
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -74,58 +74,39 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
 
     const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', id);
 
-    try {
-      if (recurrence === 'una-tantum') {
-        // Delete one-time deadline
-        await deleteDoc(deadlineRef);
-        toast({
-          title: 'Completato!',
-          description: `La scadenza "${name}" è stata rimossa.`,
-        });
-      } else {
-        // Update recurring deadline to next expiration date
-        const nextExpiration = getNextExpiration(
-          new Date(expirationDate),
-          recurrence
-        );
-        await updateDoc(deadlineRef, {
-          expirationDate: nextExpiration.toISOString(),
-          // Reset notification status for the new period
-          notificationStatus: 'pending',
-        });
-        toast({
-          title: 'Rinnovato!',
-          description: `La scadenza "${name}" è stata aggiornata alla prossima data.`,
-        });
-      }
-    } catch (error) {
-      console.error('Errore durante il completamento della scadenza: ', error);
+    if (recurrence === 'una-tantum') {
+      deleteDocumentNonBlocking(deadlineRef);
       toast({
-        variant: 'destructive',
-        title: 'Operazione fallita',
-        description: 'Non è stato possibile completare la scadenza.',
+        title: 'Completato!',
+        description: `La scadenza "${name}" è stata rimossa.`,
+      });
+    } else {
+      const nextExpiration = getNextExpiration(
+        new Date(expirationDate),
+        recurrence
+      );
+      updateDocumentNonBlocking(deadlineRef, {
+        expirationDate: nextExpiration.toISOString(),
+        notificationStatus: 'pending',
+      });
+      toast({
+        title: 'Rinnovato!',
+        description: `La scadenza "${name}" è stata aggiornata alla prossima data.`,
       });
     }
   };
 
-  const handleNotificationToggle = async (isChecked: boolean) => {
+  const handleNotificationToggle = (isChecked: boolean) => {
      if (!user || !firestore) return;
      const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', id);
      const newStatus = isChecked ? 'active' : 'paused';
-     try {
-        await updateDoc(deadlineRef, { notificationStatus: newStatus });
-        toast({
-            title: `Notifiche ${isChecked ? 'attivate' : 'in pausa'}`,
-            description: `Riceverai promemoria per "${name}".`,
-        });
-     } catch (error) {
-        console.error("Errore durante l'aggiornamento delle notifiche:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Errore',
-            description: 'Impossibile aggiornare lo stato delle notifiche.',
-        });
-     }
+     
+     updateDocumentNonBlocking(deadlineRef, { notificationStatus: newStatus });
+     
+     toast({
+         title: `Notifiche ${isChecked ? 'attivate' : 'in pausa'}`,
+         description: `Riceverai promemoria per "${name}".`,
+     });
   };
 
   const areNotificationsActive = notificationStatus === 'active' || notificationStatus === 'pending';

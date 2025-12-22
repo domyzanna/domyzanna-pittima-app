@@ -37,12 +37,12 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   useFirestore,
   useUser,
+  updateDocumentNonBlocking,
+  deleteDocumentNonBlocking
 } from '@/firebase';
 import {
   doc,
-  updateDoc,
   collection,
-  deleteDoc,
   query,
   where,
   getDocs,
@@ -102,46 +102,28 @@ export function EditCategoryDialog({
   }, [open, user, firestore, category.id]);
 
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore) return;
 
     const categoryRef = doc(firestore, 'users', user.uid, 'categories', category.id);
-    try {
-      await updateDoc(categoryRef, values);
-      toast({
-        title: 'Successo!',
-        description: 'Categoria aggiornata correttamente.',
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating category:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Impossibile aggiornare la categoria.',
-      });
-    }
+    updateDocumentNonBlocking(categoryRef, values);
+    toast({
+      title: 'Successo!',
+      description: 'Categoria aggiornata correttamente.',
+    });
+    onOpenChange(false);
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!user || !firestore || (deadlineCount !== null && deadlineCount > 0) ) return;
 
     const categoryRef = doc(firestore, 'users', user.uid, 'categories', category.id);
-    try {
-      await deleteDoc(categoryRef);
-      toast({
-        title: 'Eliminata!',
-        description: `La categoria "${category.name}" è stata eliminata.`,
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Impossibile eliminare la categoria.',
-      });
-    }
+    deleteDocumentNonBlocking(categoryRef);
+    toast({
+      title: 'Eliminata!',
+      description: `La categoria "${category.name}" è stata eliminata.`,
+    });
+    onOpenChange(false);
   };
 
   return (

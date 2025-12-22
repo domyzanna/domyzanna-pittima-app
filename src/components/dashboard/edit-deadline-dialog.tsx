@@ -40,9 +40,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState, type Dispatch, type SetStateAction } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, collection, deleteDoc } from 'firebase/firestore';
+import { type Dispatch, type SetStateAction } from 'react';
+import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -99,28 +99,19 @@ export function EditDeadlineDialog({
     },
   });
 
-    const handleDelete = async () => {
+  const handleDelete = () => {
     if (!user || !firestore) return;
     const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
-    try {
-      await deleteDoc(deadlineRef);
-      toast({
-        title: 'Eliminata!',
-        description: 'La scadenza è stata eliminata definitivamente.',
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error deleting document: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: "Impossibile eliminare la scadenza. Riprova più tardi.",
-      });
-    }
+    deleteDocumentNonBlocking(deadlineRef);
+    toast({
+      title: 'Eliminata!',
+      description: 'La scadenza è stata eliminata definitivamente.',
+    });
+    onOpenChange(false);
   };
 
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({
         variant: 'destructive',
@@ -129,36 +120,27 @@ export function EditDeadlineDialog({
       });
       return;
     }
-    try {
-      const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
-      
-      const expirationDate = new Date(values.expirationDate);
-      const notificationStartDate = subDays(expirationDate, values.notificationDays);
-      
-      const deadlineDataToUpdate = {
-        ...values,
-        expirationDate: expirationDate.toISOString(),
-        notificationStartDate: notificationStartDate.toISOString(),
-        // Potremmo voler resettare lo stato della notifica se la data cambia
-        notificationStatus: 'pending',
-      };
+    
+    const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
+    
+    const expirationDate = new Date(values.expirationDate);
+    const notificationStartDate = subDays(expirationDate, values.notificationDays);
+    
+    const deadlineDataToUpdate = {
+      ...values,
+      expirationDate: expirationDate.toISOString(),
+      notificationStartDate: notificationStartDate.toISOString(),
+      notificationStatus: 'pending',
+    };
 
-      await updateDoc(deadlineRef, deadlineDataToUpdate);
+    updateDocumentNonBlocking(deadlineRef, deadlineDataToUpdate);
 
-      toast({
-        title: 'Successo!',
-        description: 'Scadenza aggiornata correttamente.',
-        className: 'bg-green-100 border-green-300',
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating document: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: "Impossibile aggiornare la scadenza. Riprova più tardi.",
-      });
-    }
+    toast({
+      title: 'Successo!',
+      description: 'Scadenza aggiornata correttamente.',
+      className: 'bg-green-100 border-green-300',
+    });
+    onOpenChange(false);
   }
 
   return (

@@ -23,12 +23,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Dispatch, SetStateAction } from 'react';
-import { useFirestore, useUser } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { IconSelect } from './icon-select';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome della categoria è obbligatorio.'),
@@ -56,7 +54,7 @@ export function AddCategoryDialog({
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
@@ -66,37 +64,26 @@ export function AddCategoryDialog({
       return;
     }
 
-    try {
-      const categoriesColRef = collection(
-        firestore,
-        'users',
-        user.uid,
-        'categories'
-      );
-      // Create a new document reference with an auto-generated ID
-      const newCategoryRef = doc(categoriesColRef);
-      
-      // Use the non-blocking function to set the document
-      setDocumentNonBlocking(newCategoryRef, { 
-        ...values, 
-        userId: user.uid,
-        id: newCategoryRef.id // Add the auto-generated ID to the document data
-      }, { merge: false });
+    const categoriesColRef = collection(
+      firestore,
+      'users',
+      user.uid,
+      'categories'
+    );
+    const newCategoryRef = doc(categoriesColRef);
+    
+    setDocumentNonBlocking(newCategoryRef, { 
+      ...values, 
+      userId: user.uid,
+      id: newCategoryRef.id 
+    }, { merge: false });
 
-      toast({
-        title: 'Successo!',
-        description: `Categoria "${values.name}" creata correttamente.`,
-      });
-      onOpenChange(false);
-      form.reset();
-    } catch (error) {
-      console.error('Error adding category:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Impossibile creare la categoria.',
-      });
-    }
+    toast({
+      title: 'Successo!',
+      description: `Categoria "${values.name}" creata correttamente.`,
+    });
+    onOpenChange(false);
+    form.reset();
   }
 
   return (
