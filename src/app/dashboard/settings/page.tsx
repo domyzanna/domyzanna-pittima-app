@@ -103,9 +103,9 @@ export default function SettingsPage() {
   };
 
   const handleSubscribe = async () => {
-    if (!VAPID_PUBLIC_KEY) {
-      setNotificationError("La configurazione per le notifiche push non è completa. Contatta l'amministratore.");
-      console.error('VAPID public key is not defined.');
+    if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY === null || VAPID_PUBLIC_KEY.trim() === '') {
+      setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata definita. Contatta l'amministratore.");
+      console.error('VAPID public key is not defined or is empty.');
       return;
     }
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
