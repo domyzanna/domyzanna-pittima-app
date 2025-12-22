@@ -14,6 +14,7 @@ import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
 import webpush from 'web-push';
+import { Resend } from 'resend';
 
 // VAPID keys setup is deferred until they are actually used.
 
@@ -70,22 +71,33 @@ const sendEmailTool = ai.defineTool(
     }),
   },
   async (payload) => {
-    // In a real-world scenario, you would integrate with a service like
-    // SendGrid, Mailgun, or AWS SES here.
-    // For now, we are logging it, but this structure is ready for a real provider.
-    console.log('------- REAL EMAIL TOOL -------');
-    console.log(`To: ${payload.to}`);
-    console.log(`Subject: ${payload.subject}`);
-    console.log(`Body: ${payload.body}`);
-    console.log('-----------------------------');
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('Chiave API Resend non trovata. Impossibile inviare email reali.');
+      return { success: false, message: 'Resend API key not configured.' };
+    }
 
-    // Simulate a successful email dispatch
-    const success = true;
-    const message = success
-      ? `Email successfully dispatched to ${payload.to}`
-      : `Failed to send email to ${payload.to}`;
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-    return { success, message };
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'Pittima App <onboarding@resend.dev>', // Importante: devi verificare questo dominio in Resend
+        to: [payload.to],
+        subject: payload.subject,
+        html: payload.body.replace(/\n/g, '<br>'), // Converte i newline in <br> per l'HTML
+      });
+
+      if (error) {
+        console.error('Errore invio email con Resend:', error);
+        return { success: false, message: error.message };
+      }
+
+      console.log('Email inviata con successo, ID:', data?.id);
+      return { success: true, message: `Email successfully dispatched to ${payload.to}` };
+
+    } catch (e: any) {
+      console.error('Eccezione durante invio email:', e);
+      return { success: false, message: e.message || 'Failed to send email.' };
+    }
   }
 );
 
