@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -57,13 +58,11 @@ export function LoginForm() {
             title: 'Email non verificata',
             description: 'Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.',
         });
-        // Sign the user out and stop the login process
         await signOut(auth);
         setIsLoading(false);
         return;
       }
       
-      // If email is verified, proceed to dashboard
       router.push('/dashboard');
 
     } catch (error: any) {
@@ -83,10 +82,9 @@ export function LoginForm() {
         title: 'Accesso fallito',
         description,
       });
+    } finally {
       setIsLoading(false);
-    } 
-    // We don't set isLoading to false in a finally block anymore,
-    // because some paths need to set it manually before returning.
+    }
   }
 
   return (
@@ -110,7 +108,15 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <div className="flex items-center">
+                <FormLabel>Password</FormLabel>
+                <Link
+                  href="/forgot-password"
+                  className="ml-auto inline-block text-sm underline"
+                >
+                  Password dimenticata?
+                </Link>
+              </div>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
