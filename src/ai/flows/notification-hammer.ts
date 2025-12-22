@@ -250,7 +250,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
       if (deadlinesSnapshot.empty) {
         continue;
-      }
+      }
       
       foundDeadlines += deadlinesSnapshot.size;
 
