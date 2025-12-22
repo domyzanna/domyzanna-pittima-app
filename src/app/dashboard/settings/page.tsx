@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -48,95 +47,102 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!user || !firestore) return;
 
-    // Check for existing push subscription in Firestore
-    const userDocRef = doc(firestore, 'users', user.uid);
-    getDoc(userDocRef).then((docSnap) => {
+    const checkSubscription = async () => {
+      // Check for existing push subscription in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const docSnap = await getDoc(userDocRef);
       if (docSnap.exists() && docSnap.data().pushSubscription) {
         setIsSubscribed(true);
       } else {
         setIsSubscribed(false);
       }
       setIsSubscriptionLoading(false);
-    });
+    }
+    
+    checkSubscription();
     
     // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(err => {
         console.error('Service worker registration failed:', err);
+        setNotificationError("Impossibile inizializzare le notifiche (Service Worker fallito).");
       });
     }
 
   }, [user, firestore]);
 
-  const handleSubscriptionToggle = async () => {
+  const handleUnsubscribe = async () => {
+    if (!user) return;
+    setIsProcessing(true);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe();
+      }
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await updateDoc(userDocRef, { pushSubscription: null });
+      setIsSubscribed(false);
+      toast({
+        title: 'Notifiche disattivate',
+        description: 'Non riceverai più notifiche push.',
+      });
+    } catch (error) {
+      console.error('Failed to unsubscribe:', error);
+      setNotificationError('Impossibile disattivare le notifiche.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
     if (!VAPID_PUBLIC_KEY) {
-        setNotificationError("La configurazione per le notifiche push non è completa. Contatta l'amministratore.");
-        console.error('VAPID public key is not defined.');
-        return;
+      setNotificationError("La configurazione per le notifiche push non è completa. Contatta l'amministratore.");
+      console.error('VAPID public key is not defined.');
+      return;
     }
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        setNotificationError("Il tuo browser non supporta le notifiche push.");
-        return;
+      setNotificationError("Il tuo browser non supporta le notifiche push.");
+      return;
     }
 
     setIsProcessing(true);
     setNotificationError(null);
-    const registration = await navigator.serviceWorker.ready;
-
-    if (isSubscribed) {
-      // Unsubscribe logic remains the same
-      try {
-        const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-          await subscription.unsubscribe();
-        }
-        if (user) {
-          const userDocRef = doc(firestore, 'users', user.uid);
-          await updateDoc(userDocRef, { pushSubscription: null });
-        }
-        setIsSubscribed(false);
-        toast({
-          title: 'Notifiche disattivate',
-          description: 'Non riceverai più notifiche push.',
-        });
-      } catch (error) {
-        console.error('Failed to unsubscribe:', error);
-        setNotificationError('Impossibile disattivare le notifiche.');
-      } finally {
+    
+    if (Notification.permission === 'denied') {
+        setNotificationError("Hai bloccato le notifiche. Per riceverle, devi abilitarle nelle impostazioni del tuo browser per questo sito.");
         setIsProcessing(false);
-      }
-    } else {
-      // Subscribe logic with better permission handling
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-           setNotificationError("Hai bloccato le notifiche. Per riceverle, devi abilitarle nelle impostazioni del tuo browser.");
-           setIsProcessing(false);
-           return;
-        }
-        
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-        });
+        return;
+    }
 
-        if (user) {
-          const userDocRef = doc(firestore, 'users', user.uid);
-          await updateDoc(userDocRef, {
-            pushSubscription: JSON.parse(JSON.stringify(subscription)),
-          });
-        }
-        setIsSubscribed(true);
-        toast({
-          title: 'Notifiche attivate!',
-          description: 'Riceverai le notifiche push per le tue scadenze.',
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+
+      if (user) {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userDocRef, {
+          pushSubscription: JSON.parse(JSON.stringify(subscription)),
         });
-      } catch (error: any) {
-        console.error('Failed to subscribe:', error);
-        setNotificationError(error.message || 'Impossibile attivare le notifiche.');
-      } finally {
-        setIsProcessing(false);
       }
+      
+      setIsSubscribed(true);
+      toast({
+        title: 'Notifiche attivate!',
+        description: 'Riceverai le notifiche push per le tue scadenze.',
+      });
+    } catch (error: any) {
+      console.error('Failed to subscribe:', error);
+      if (error.name === 'NotAllowedError') {
+         setNotificationError("Hai bloccato le notifiche. Per riceverle, devi abilitarle nelle impostazioni del tuo browser per questo sito.");
+      } else {
+        setNotificationError(error.message || 'Impossibile attivare le notifiche. Riprova.');
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -154,13 +160,14 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isSubscriptionLoading || isProcessing ? (
+          {isSubscriptionLoading ? (
             <div className='flex items-center gap-2'>
                  <Icons.spinner className="h-5 w-5 animate-spin" />
                  <span>Verifica in corso...</span>
             </div>
           ) : (
-            <Button onClick={handleSubscriptionToggle} disabled={isProcessing}>
+            <Button onClick={isSubscribed ? handleUnsubscribe : handleSubscribe} disabled={isProcessing}>
+              {isProcessing && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
               {isSubscribed ? (
                 <>
                   <BellOff className="mr-2 h-4 w-4" />

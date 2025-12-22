@@ -235,8 +235,8 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
     for (const userRecord of allUsers) {
       const { uid, email, displayName, emailVerified } = userRecord;
 
-      if (!email || !emailVerified) {
-        console.log(`Skipping user ${uid} - no verified email.`);
+      if (!email) {
+        console.log(`Skipping user ${uid} - no email.`);
         continue;
       }
       
@@ -257,12 +257,17 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       for (const doc of deadlinesSnapshot.docs) {
         const deadline = doc.data() as Deadline;
         
+        // We only send emails to verified accounts
+        const shouldSendEmail = emailVerified;
+        // We only send push if there's a subscription
+        const shouldSendPush = !!userData?.pushSubscription;
+
         const notificationStartDate = new Date(deadline.notificationStartDate);
         
         const isActiveForNotifications = deadline.notificationStatus === 'pending' || deadline.notificationStatus === 'active';
         const isPastNotificationStartDate = notificationStartDate <= today;
 
-        if (isActiveForNotifications && isPastNotificationStartDate) {
+        if (isActiveForNotifications && isPastNotificationStartDate && (shouldSendEmail || shouldSendPush)) {
           notificationsTriggered++;
 
           console.log(
