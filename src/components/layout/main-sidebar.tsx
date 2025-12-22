@@ -206,8 +206,12 @@ export function MainSidebar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>Profilo</DropdownMenuItem>
-              <DropdownMenuItem>Impostazioni</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings">Profilo</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                 <Link href="/dashboard/settings">Impostazioni</Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
