@@ -37,6 +37,7 @@ import type { Category } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { subDays } from 'date-fns';
+import { ScrollArea } from '../ui/scroll-area';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -147,121 +148,123 @@ export function AddDeadlineDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 py-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="es. Assicurazione Auto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categoria</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoadingCategories}
-                  >
+          <ScrollArea className="max-h-[calc(100vh-12rem)]">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 py-4 pr-4"
+            >
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} />
-                      </SelectTrigger>
+                      <Input placeholder="es. Assicurazione Auto" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {categories?.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="expirationDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data di Scadenza</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notificationDays"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Giorni di preavviso notifica</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrizione (Opzionale)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Aggiungi dettagli o note..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="recurrence"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ricorrenza</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isLoadingCategories}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories?.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expirationDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data di Scadenza</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona la frequenza" />
-                      </SelectTrigger>
+                      <Input type="date" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="una-tantum">Una tantum</SelectItem>
-                      <SelectItem value="mensile">Mensile</SelectItem>
-                      <SelectItem value="trimestrale">Trimestrale</SelectItem>
-                      <SelectItem value="semestrale">Semestrale</SelectItem>
-                      <SelectItem value="annuale">Annuale</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="submit">Salva Scadenza</Button>
-            </DialogFooter>
-          </form>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="notificationDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Giorni di preavviso notifica</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrizione (Opzionale)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Aggiungi dettagli o note..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="recurrence"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ricorrenza</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleziona la frequenza" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="una-tantum">Una tantum</SelectItem>
+                        <SelectItem value="mensile">Mensile</SelectItem>
+                        <SelectItem value="trimestrale">Trimestrale</SelectItem>
+                        <SelectItem value="semestrale">Semestrale</SelectItem>
+                        <SelectItem value="annuale">Annuale</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="pt-4">
+                <Button type="submit">Salva Scadenza</Button>
+              </DialogFooter>
+            </form>
+          </ScrollArea>
         </Form>
       </DialogContent>
     </Dialog>

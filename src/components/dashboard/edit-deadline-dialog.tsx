@@ -48,6 +48,7 @@ import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
 import { Trash2 } from 'lucide-react';
+import { ScrollArea } from '../ui/scroll-area';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -172,9 +173,10 @@ export function EditDeadlineDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
+          <ScrollArea className="max-h-[calc(100vh-12rem)]">
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 py-4"
+            className="space-y-4 py-4 pr-4"
           >
             <FormField
               control={form.control}
@@ -283,7 +285,7 @@ export function EditDeadlineDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter className="flex justify-between items-center sm:justify-between sm:w-full">
+            <DialogFooter className="flex justify-between items-center sm:justify-between sm:w-full pt-4">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" type="button">
@@ -309,6 +311,7 @@ export function EditDeadlineDialog({
               <Button type="submit">Salva Modifiche</Button>
             </DialogFooter>
           </form>
+          </ScrollArea>
         </Form>
       </DialogContent>
     </Dialog>
