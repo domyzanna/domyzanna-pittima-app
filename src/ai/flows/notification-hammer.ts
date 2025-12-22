@@ -15,17 +15,7 @@ import type { Deadline, User } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
 import webpush from 'web-push';
 
-if (
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-  process.env.VAPID_PRIVATE_KEY
-) {
-  webpush.setVapidDetails(
-    'mailto:you@example.com',
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-}
-
+// VAPID keys setup is deferred until they are actually used.
 
 // Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
@@ -63,10 +53,6 @@ function initializeAdminApp(): App {
 
   return initializeApp(appOptions, adminAppName);
 }
-
-const adminApp = initializeAdminApp();
-const db = getFirestore(adminApp);
-const auth = getAuth(adminApp);
 
 // Define a "Tool" for sending emails. This makes our flow more modular.
 const sendEmailTool = ai.defineTool(
@@ -118,10 +104,21 @@ const sendPushNotificationTool = ai.defineTool(
     outputSchema: z.object({ success: z.boolean(), message: z.string() }),
   },
   async ({ subscription, payload }) => {
-    if (!process.env.VAPID_PRIVATE_KEY) {
-      console.warn("VAPID keys not configured. Skipping push notification.");
-      return { success: false, message: "VAPID keys not configured." };
+    if (
+        !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+        !process.env.VAPID_PRIVATE_KEY
+      ) {
+        console.warn("VAPID keys not configured. Skipping push notification.");
+        return { success: false, message: "VAPID keys not configured." };
     }
+    
+    // Initialize VAPID details only when the tool is used
+    webpush.setVapidDetails(
+        'mailto:you@example.com',
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+
     try {
       await webpush.sendNotification(
         subscription,
@@ -220,6 +217,12 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
   },
   async () => {
     console.log("🛡️ NIGHT'S WATCH: Starting daily deadline check...");
+    
+    // Initialize admin app and services here, only when the flow is run
+    const adminApp = initializeAdminApp();
+    const db = getFirestore(adminApp);
+    const auth = getAuth(adminApp);
+
     let checkedUsers = 0;
     let foundDeadlines = 0;
     let notificationsTriggered = 0;
@@ -274,6 +277,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
             `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
           );
 
+          // We don't await this; let it run in the background
           sendNotification({
             userEmail: email,
             userName: displayName || email.split('@')[0],
