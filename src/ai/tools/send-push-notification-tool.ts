@@ -1,0 +1,60 @@
+'use server';
+import { ai } from '@/ai/genkit';
+import webpush from 'web-push';
+import { z } from 'zod';
+
+export const sendPushNotificationTool = ai.defineTool(
+  {
+    name: 'sendPushNotification',
+    description: 'Sends a web push notification to a user.',
+    inputSchema: z.object({
+      subscription: z.any(), // This should be the PushSubscription object
+      payload: z.object({
+        title: z.string(),
+        body: z.string(),
+      }),
+    }),
+    outputSchema: z.object({ success: z.boolean(), message: z.string() }),
+  },
+  async ({ subscription, payload }) => {
+    if (
+        !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+        !process.env.VAPID_PRIVATE_KEY
+      ) {
+        // This is not an error, but a configuration warning.
+        // The app can function without push notifications.
+        console.warn("VAPID keys not configured. Skipping push notification.");
+        return { success: false, message: "VAPID keys not configured." };
+    }
+    
+    try {
+      // Configure web-push with your VAPID keys.
+      // The mailto: is used by push services to contact you if there's an issue.
+      webpush.setVapidDetails(
+          `mailto:${process.env.VAPID_MAILTO || 'you@example.com'}`,
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          process.env.VAPID_PRIVATE_KEY
+      );
+
+      // Send the notification.
+      await webpush.sendNotification(
+        subscription,
+        JSON.stringify(payload)
+      );
+
+      return { success: true, message: 'Push notification sent successfully.' };
+
+    } catch (error: any) {
+      console.error('Error sending push notification:', error);
+      
+      // If the subscription is expired or invalid (410 or 404),
+      // it should be removed from the database. This logic can be
+      // implemented by the calling flow.
+      if (error.statusCode === 410 || error.statusCode === 404) {
+          console.log("Push subscription has expired or is invalid. It should be removed.");
+      }
+
+      return { success: false, message: error.message || 'Failed to send push notification.' };
+    }
+  }
+);

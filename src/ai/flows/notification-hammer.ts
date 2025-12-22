@@ -13,10 +13,9 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
-import webpush from 'web-push';
 import { Resend } from 'resend';
+import { sendPushNotificationTool } from '@/ai/tools/send-push-notification-tool';
 
-// VAPID keys setup is deferred until they are actually used.
 
 // Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
@@ -97,52 +96,6 @@ const sendEmailTool = ai.defineTool(
     } catch (e: any) {
       console.error('Eccezione durante invio email:', e);
       return { success: false, message: e.message || 'Failed to send email.' };
-    }
-  }
-);
-
-
-const sendPushNotificationTool = ai.defineTool(
-  {
-    name: 'sendPushNotification',
-    description: 'Sends a web push notification to a user.',
-    inputSchema: z.object({
-      subscription: z.any(), // This should be the PushSubscription object
-      payload: z.object({
-        title: z.string(),
-        body: z.string(),
-      }),
-    }),
-    outputSchema: z.object({ success: z.boolean(), message: z.string() }),
-  },
-  async ({ subscription, payload }) => {
-    if (
-        !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-        !process.env.VAPID_PRIVATE_KEY
-      ) {
-        console.warn("VAPID keys not configured. Skipping push notification.");
-        return { success: false, message: "VAPID keys not configured." };
-    }
-    
-    try {
-      webpush.setVapidDetails(
-          `mailto:${process.env.VAPID_MAILTO || 'you@example.com'}`,
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-          process.env.VAPID_PRIVATE_KEY
-      );
-      await webpush.sendNotification(
-        subscription,
-        JSON.stringify(payload)
-      );
-      return { success: true, message: 'Push notification sent successfully.' };
-    } catch (error: any) {
-      console.error('Error sending push notification:', error);
-      // If the subscription is expired or invalid, we should probably remove it from the database.
-      // This logic can be added later if needed. For now, we just log the error.
-      if (error.statusCode === 410 || error.statusCode === 404) {
-          console.log("Push subscription has expired or is invalid. It should be removed.");
-      }
-      return { success: false, message: error.message || 'Failed to send push notification.' };
     }
   }
 );
@@ -321,5 +274,3 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
     return summary;
   }
 );
-
-    
