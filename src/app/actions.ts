@@ -66,3 +66,7 @@ export async function runCheckDeadlinesAndNotify() {
     return { success: false, error: error.message || 'Errore sconosciuto' };
   }
 }
+
+export async function getVapidPublicKey(): Promise<string | undefined> {
+    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+}
