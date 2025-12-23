@@ -94,7 +94,7 @@ export function MainSidebar() {
           </span>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 overflow-y-auto">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
