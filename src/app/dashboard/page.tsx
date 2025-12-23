@@ -40,7 +40,7 @@ export default function DashboardPage() {
   
   useEffect(() => {
     async function seedDefaultCategories() {
-      if (user && firestore && !isSeeding) {
+      if (user && firestore) {
         setIsSeeding(true);
         try {
           const categoriesColRef = collection(firestore, 'users', user.uid, 'categories');
@@ -66,7 +66,8 @@ export default function DashboardPage() {
       }
     }
     
-    // Run this effect only once when user and firestore are available
+    // This effect now ONLY depends on user and firestore. It runs once when they are available
+    // and does not re-run when `deadlines` or `categories` data changes, fixing the infinite loop.
     if (user && firestore) {
         seedDefaultCategories();
     }
