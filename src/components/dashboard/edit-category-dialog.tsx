@@ -78,7 +78,7 @@ export function EditCategoryDialog({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    values: {
+    defaultValues: {
       name: category.name,
       icon: category.icon,
     },

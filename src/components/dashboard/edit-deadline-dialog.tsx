@@ -89,8 +89,8 @@ export function EditDeadlineDialog({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    // Use `values` to handle dynamic initial values. `defaultValues` is only for the first render.
-    values: {
+    // Use `defaultValues` to prevent re-renders. `values` causes infinite loops.
+    defaultValues: {
       name: deadline.name,
       description: deadline.description || '',
       categoryId: deadline.category.id,
@@ -189,7 +189,7 @@ export function EditDeadlineDialog({
                   <FormLabel>Categoria</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value}
+                    defaultValue={field.value}
                     disabled={isLoadingCategories}
                   >
                     <FormControl>
@@ -256,7 +256,7 @@ export function EditDeadlineDialog({
                   <FormLabel>Ricorrenza</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value}
+                    defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
