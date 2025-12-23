@@ -66,9 +66,3 @@ export async function runCheckDeadlinesAndNotify() {
     return { success: false, error: error.message || 'Errore sconosciuto' };
   }
 }
-
-export async function getVapidPublicKey(): Promise<string | undefined> {
-    // This server action securely provides the VAPID public key to the client.
-    // It reads the variable from the server's environment.
-    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-}

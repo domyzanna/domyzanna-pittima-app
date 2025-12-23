@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
 import { BellRing, BellOff } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getVapidPublicKey } from '@/app/actions';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -111,17 +110,17 @@ export default function SettingsPage() {
 
     setIsProcessing(true);
     setNotificationError(null);
+    
+    const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+    if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY.trim() === '') {
+      setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata trovata. Controlla che NEXT_PUBLIC_VAPID_PUBLIC_KEY sia impostata nel tuo file .env e riavvia il server di sviluppo.");
+      console.error('VAPID public key is not defined. Make sure NEXT_PUBLIC_VAPID_PUBLIC_KEY is set in your .env file and that you have restarted the development server.');
+      setIsProcessing(false);
+      return;
+    }
 
     try {
-      const VAPID_PUBLIC_KEY = await getVapidPublicKey();
-      
-      if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY.trim() === '') {
-        setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata trovata sul server. Controlla il tuo file .env e riavvia il server di sviluppo.");
-        console.error('VAPID public key is not defined on the server. Make sure VAPID_PUBLIC_KEY is set in your .env file and that you have restarted the server.');
-        setIsProcessing(false);
-        return;
-      }
-
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,

@@ -19,18 +19,19 @@ export const sendPushNotificationTool = ai.defineTool(
   async ({ subscription, payload }) => {
     const publicKey = process.env.VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
+    const mailto = process.env.VAPID_MAILTO || 'mailto:you@example.com';
 
     if (
       !publicKey ||
       !privateKey
     ) {
-      console.warn("VAPID keys not configured. Skipping push notification.");
+      console.warn("VAPID keys not configured on server. Skipping push notification. Check VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in .env");
       return { success: false, message: "VAPID keys not configured." };
     }
     
     try {
       webpush.setVapidDetails(
-          `mailto:you@example.com`,
+          mailto,
           publicKey,
           privateKey
       );
@@ -47,6 +48,7 @@ export const sendPushNotificationTool = ai.defineTool(
       
       if (error.statusCode === 410 || error.statusCode === 404) {
           console.log("Push subscription has expired or is invalid. It should be removed.");
+          // Here you would typically trigger a cleanup of the invalid subscription from your database
       }
 
       return { success: false, message: error.message || 'Failed to send push notification.' };
