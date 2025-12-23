@@ -100,29 +100,21 @@ export function EditDeadlineDialog({
     },
   });
   
-  // This useEffect syncs the form if the `deadline` prop changes while the dialog is open.
-  // This is safer than the previous implementation in the parent component.
-  useEffect(() => {
-    form.reset({
-        name: deadline.name,
-        description: deadline.description || '',
-        categoryId: deadline.category.id,
-        expirationDate: format(new Date(deadline.expirationDate), 'yyyy-MM-dd'),
-        recurrence: deadline.recurrence,
-        notificationDays: deadline.notificationDays || 30,
-    });
-  }, [deadline, form]);
-
-
   const handleDelete = () => {
     if (!user || !firestore) return;
-    const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
-    deleteDocumentNonBlocking(deadlineRef);
-    toast({
-      title: 'Eliminata!',
-      description: 'La scadenza è stata eliminata definitivamente.',
-    });
+    
+    // First, close the dialog.
     onOpenChange(false);
+    
+    // Then, delete the document after a short delay to prevent race conditions.
+    setTimeout(() => {
+        const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
+        deleteDocumentNonBlocking(deadlineRef);
+        toast({
+          title: 'Eliminata!',
+          description: 'La scadenza è stata eliminata definitivamente.',
+        });
+    }, 150); // A small delay is usually enough.
   };
 
 
