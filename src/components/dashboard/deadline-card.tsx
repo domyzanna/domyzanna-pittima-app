@@ -8,7 +8,7 @@ import { Archive, Edit, Bell, BellOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useFirestore, useUser, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { EditDeadlineDialog } from './edit-deadline-dialog';
 import { Switch } from '@/components/ui/switch';

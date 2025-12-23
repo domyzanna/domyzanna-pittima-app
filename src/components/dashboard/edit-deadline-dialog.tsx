@@ -14,14 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -40,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { type Dispatch, type SetStateAction } from 'react';
+import { type Dispatch, type SetStateAction, useEffect } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
@@ -49,6 +41,14 @@ import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
 import { Trash2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+  } from '@/components/ui/form';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -89,6 +89,7 @@ export function EditDeadlineDialog({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    // Use `values` to handle dynamic initial values. `defaultValues` is only for the first render.
     values: {
       name: deadline.name,
       description: deadline.description || '',
@@ -98,6 +99,20 @@ export function EditDeadlineDialog({
       notificationDays: deadline.notificationDays || 30,
     },
   });
+  
+  // This useEffect syncs the form if the `deadline` prop changes while the dialog is open.
+  // This is safer than the previous implementation in the parent component.
+  useEffect(() => {
+    form.reset({
+        name: deadline.name,
+        description: deadline.description || '',
+        categoryId: deadline.category.id,
+        expirationDate: format(new Date(deadline.expirationDate), 'yyyy-MM-dd'),
+        recurrence: deadline.recurrence,
+        notificationDays: deadline.notificationDays || 30,
+    });
+  }, [deadline, form]);
+
 
   const handleDelete = () => {
     if (!user || !firestore) return;
@@ -130,7 +145,8 @@ export function EditDeadlineDialog({
       ...values,
       expirationDate: expirationDate.toISOString(),
       notificationStartDate: notificationStartDate.toISOString(),
-      notificationStatus: 'pending',
+      // Reset notification status on update, so it re-triggers
+      notificationStatus: 'pending', 
     };
 
     updateDocumentNonBlocking(deadlineRef, deadlineDataToUpdate);
@@ -181,7 +197,7 @@ export function EditDeadlineDialog({
                   <FormLabel>Categoria</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     disabled={isLoadingCategories}
                   >
                     <FormControl>
@@ -248,7 +264,7 @@ export function EditDeadlineDialog({
                   <FormLabel>Ricorrenza</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
