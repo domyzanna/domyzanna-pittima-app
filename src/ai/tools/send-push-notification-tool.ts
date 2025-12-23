@@ -18,20 +18,20 @@ export const sendPushNotificationTool = ai.defineTool(
   },
   async ({ subscription, payload }) => {
     if (
-        !process.env.VAPID_PUBLIC_KEY ||
-        !process.env.VAPID_PRIVATE_KEY
-      ) {
-        // This is not an error, but a configuration warning.
-        // The app can function without push notifications.
-        console.warn("VAPID keys not configured. Skipping push notification.");
-        return { success: false, message: "VAPID keys not configured." };
+      !process.env.VAPID_PUBLIC_KEY ||
+      !process.env.VAPID_PRIVATE_KEY
+    ) {
+      // This is not an error, but a configuration warning.
+      // The app can function without push notifications.
+      console.warn("VAPID keys not configured. Skipping push notification.");
+      return { success: false, message: "VAPID keys not configured." };
     }
     
     try {
       // Configure web-push with your VAPID keys.
       // The mailto: is used by push services to contact you if there's an issue.
       webpush.setVapidDetails(
-          `mailto:${process.env.VAPID_MAILTO || 'you@example.com'}`,
+          `mailto:you@example.com`,
           process.env.VAPID_PUBLIC_KEY,
           process.env.VAPID_PRIVATE_KEY
       );
