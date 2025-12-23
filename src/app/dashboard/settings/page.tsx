@@ -114,10 +114,10 @@ export default function SettingsPage() {
 
     try {
       const VAPID_PUBLIC_KEY = await getVapidPublicKey();
-
+      
       if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY.trim() === '') {
-        setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata trovata sul server. Controlla il tuo file .env, assicurati che la variabile si chiami NEXT_PUBLIC_VAPID_PUBLIC_KEY e riavvia il server di sviluppo.");
-        console.error('VAPID public key is not defined on the server. Make sure NEXT_PUBLIC_VAPID_PUBLIC_KEY is set in your .env file and that you have restarted the server.');
+        setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata trovata sul server. Controlla il tuo file .env e riavvia il server di sviluppo.");
+        console.error('VAPID public key is not defined on the server. Make sure VAPID_PUBLIC_KEY is set in your .env file and that you have restarted the server.');
         setIsProcessing(false);
         return;
       }

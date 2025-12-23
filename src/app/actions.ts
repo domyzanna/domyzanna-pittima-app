@@ -68,5 +68,5 @@ export async function runCheckDeadlinesAndNotify() {
 }
 
 export async function getVapidPublicKey(): Promise<string | undefined> {
-    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    return process.env.VAPID_PUBLIC_KEY;
 }
