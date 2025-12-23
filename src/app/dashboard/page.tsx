@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, writeBatch, doc } from 'firebase/firestore';
+import { collection, writeBatch, doc, getDocs } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
 import { CategorySection } from '@/components/dashboard/category-section';
@@ -36,39 +36,41 @@ export default function DashboardPage() {
   const { data: deadlines, isLoading: isLoadingDeadlines } =
     useCollection<Deadline>(deadlinesQuery);
 
-  const [isSeeding, setIsSeeding] = useState(true);
+  const [isSeeding, setIsSeeding] = useState(false);
   
   useEffect(() => {
-    // This effect runs only when the component mounts and the initial category loading state changes.
-    // It's designed to prevent re-running on every category data update.
-    if (!isLoadingCategories) {
-      async function seedDefaultCategories() {
-        if (user && firestore && categories?.length === 0) {
-          console.log('Nessuna categoria trovata, creazione categorie di default...');
-          setIsSeeding(true); // Set seeding state
-          const batch = writeBatch(firestore);
+    async function seedDefaultCategories() {
+      if (user && firestore && !isSeeding) {
+        setIsSeeding(true);
+        try {
           const categoriesColRef = collection(firestore, 'users', user.uid, 'categories');
-
-          defaultCategories.forEach((categoryData) => {
-            const newCatRef = doc(categoriesColRef); // Create ref with a new ID
-            batch.set(newCatRef, { ...categoryData, userId: user.uid, id: newCatRef.id });
-          });
-
-          try {
+          const existingCategories = await getDocs(categoriesColRef);
+          
+          if (existingCategories.empty) {
+            console.log('Nessuna categoria trovata, creazione categorie di default...');
+            const batch = writeBatch(firestore);
+            
+            defaultCategories.forEach((categoryData) => {
+              const newCatRef = doc(categoriesColRef);
+              batch.set(newCatRef, { ...categoryData, userId: user.uid, id: newCatRef.id });
+            });
+            
             await batch.commit();
             console.log('Categorie di default create con successo.');
-          } catch (error) {
-            console.error("Errore durante la creazione delle categorie di default:", error);
-          } finally {
-            setIsSeeding(false); // Done seeding
           }
-        } else {
-          setIsSeeding(false); // No seeding needed or possible
+        } catch (error) {
+          console.error("Errore durante la creazione delle categorie di default:", error);
+        } finally {
+          setIsSeeding(false);
         }
       }
-      seedDefaultCategories();
     }
-  }, [isLoadingCategories, user, firestore, categories]); // categories added to dependency array
+    
+    // Run this effect only once when user and firestore are available
+    if (user && firestore) {
+        seedDefaultCategories();
+    }
+  }, [user, firestore]);
 
   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
     if (!deadlines || !categories) {
