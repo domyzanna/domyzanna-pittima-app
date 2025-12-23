@@ -18,7 +18,7 @@ export const sendPushNotificationTool = ai.defineTool(
   },
   async ({ subscription, payload }) => {
     if (
-        !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+        !process.env.VAPID_PUBLIC_KEY ||
         !process.env.VAPID_PRIVATE_KEY
       ) {
         // This is not an error, but a configuration warning.
@@ -32,7 +32,7 @@ export const sendPushNotificationTool = ai.defineTool(
       // The mailto: is used by push services to contact you if there's an issue.
       webpush.setVapidDetails(
           `mailto:${process.env.VAPID_MAILTO || 'you@example.com'}`,
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          process.env.VAPID_PUBLIC_KEY,
           process.env.VAPID_PRIVATE_KEY
       );
 
