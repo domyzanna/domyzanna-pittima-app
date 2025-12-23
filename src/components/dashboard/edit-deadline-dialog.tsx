@@ -89,7 +89,6 @@ export function EditDeadlineDialog({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    // Use `defaultValues` to prevent re-renders. `values` causes infinite loops.
     defaultValues: {
       name: deadline.name,
       description: deadline.description || '',
@@ -99,6 +98,21 @@ export function EditDeadlineDialog({
       notificationDays: deadline.notificationDays || 30,
     },
   });
+
+  // When the dialog is opened, reset the form with the current deadline data.
+  // This avoids stale data if the same dialog component is reused for different deadlines.
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: deadline.name,
+        description: deadline.description || '',
+        categoryId: deadline.category.id,
+        expirationDate: format(new Date(deadline.expirationDate), 'yyyy-MM-dd'),
+        recurrence: deadline.recurrence,
+        notificationDays: deadline.notificationDays || 30,
+      });
+    }
+  }, [open, deadline, form]);
   
   const handleDelete = () => {
     if (!user || !firestore) return;

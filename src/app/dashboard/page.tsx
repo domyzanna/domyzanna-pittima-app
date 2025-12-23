@@ -1,6 +1,11 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
-import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import {
+  useUser,
+  useCollection,
+  useFirestore,
+  useMemoFirebase,
+} from '@/firebase';
 import { collection, writeBatch, doc, getDocs } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
@@ -8,6 +13,7 @@ import { CategorySection } from '@/components/dashboard/category-section';
 import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { Icons } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EditDeadlineDialog } from '@/components/dashboard/edit-deadline-dialog';
 
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Veicoli', icon: 'Car' },
@@ -21,9 +27,13 @@ const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [editingDeadline, setEditingDeadline] = useState<ProcessedDeadline | null>(
+    null
+  );
 
   const categoriesQuery = useMemoFirebase(
-    () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
+    () =>
+      user ? collection(firestore, 'users', user.uid, 'categories') : null,
     [firestore, user]
   );
   const deadlinesQuery = useMemoFirebase(
@@ -37,39 +47,50 @@ export default function DashboardPage() {
     useCollection<Deadline>(deadlinesQuery);
 
   const [isSeeding, setIsSeeding] = useState(false);
-  
+
   useEffect(() => {
     async function seedDefaultCategories() {
       if (user && firestore) {
         setIsSeeding(true);
         try {
-          const categoriesColRef = collection(firestore, 'users', user.uid, 'categories');
+          const categoriesColRef = collection(
+            firestore,
+            'users',
+            user.uid,
+            'categories'
+          );
           const existingCategories = await getDocs(categoriesColRef);
-          
+
           if (existingCategories.empty) {
-            console.log('Nessuna categoria trovata, creazione categorie di default...');
+            console.log(
+              'Nessuna categoria trovata, creazione categorie di default...'
+            );
             const batch = writeBatch(firestore);
-            
+
             defaultCategories.forEach((categoryData) => {
               const newCatRef = doc(categoriesColRef);
-              batch.set(newCatRef, { ...categoryData, userId: user.uid, id: newCatRef.id });
+              batch.set(newCatRef, {
+                ...categoryData,
+                userId: user.uid,
+                id: newCatRef.id,
+              });
             });
-            
+
             await batch.commit();
             console.log('Categorie di default create con successo.');
           }
         } catch (error) {
-          console.error("Errore durante la creazione delle categorie di default:", error);
+          console.error(
+            'Errore during la creazione delle categorie di default:',
+            error
+          );
         } finally {
           setIsSeeding(false);
         }
       }
     }
-    
-    // This effect now ONLY depends on user and firestore. It runs once when they are available
-    // and does not re-run when `deadlines` or `categories` data changes, fixing the infinite loop.
     if (user && firestore) {
-        seedDefaultCategories();
+      seedDefaultCategories();
     }
   }, [user, firestore]);
 
@@ -96,25 +117,25 @@ export default function DashboardPage() {
       .filter((d): d is ProcessedDeadline => d !== null)
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [deadlines, categories]);
-  
+
   const sortedCategories = useMemo(() => {
     if (!categories || processedDeadlines.length === 0) {
       return categories || [];
     }
-  
+
     const categoryUrgency = new Map<string, number>();
-  
-    categories.forEach(cat => {
-      const deadlinesForCat = processedDeadlines.filter(d => d.category.id === cat.id);
+
+    categories.forEach((cat) => {
+      const deadlinesForCat = processedDeadlines.filter(
+        (d) => d.category.id === cat.id
+      );
       if (deadlinesForCat.length > 0) {
-        // The deadlines are already sorted, so the first one is the most urgent
         categoryUrgency.set(cat.id, deadlinesForCat[0].daysRemaining);
       } else {
-        // Push categories with no deadlines to the end
         categoryUrgency.set(cat.id, Infinity);
       }
     });
-  
+
     return [...categories].sort((a, b) => {
       const urgencyA = categoryUrgency.get(a.id) ?? Infinity;
       const urgencyB = categoryUrgency.get(b.id) ?? Infinity;
@@ -123,6 +144,10 @@ export default function DashboardPage() {
   }, [categories, processedDeadlines]);
 
   const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
+
+  const handleEditDeadline = (deadline: ProcessedDeadline) => {
+    setEditingDeadline(deadline);
+  };
 
   if (isLoading) {
     return (
@@ -133,51 +158,68 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-2 space-y-8">
-        {(!categories || categories.length === 0) && !isSeeding && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Benvenuto in Pittima!</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                Sembra che tu non abbia ancora nessuna categoria.
-              </p>
-               <p className="mt-2">
-                Le categorie di default verranno create a breve. Se non appaiono, prova a ricaricare la pagina.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-        {categories && categories.length > 0 && processedDeadlines.length === 0 && (
-           <Card>
-           <CardHeader>
-             <CardTitle>Nessuna scadenza trovata</CardTitle>
-           </CardHeader>
-           <CardContent>
-             <p>
-               Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi Scadenza" per iniziare.
-             </p>
-           </CardContent>
-         </Card>
-        )}
-        {sortedCategories &&
-          sortedCategories.map((category) => (
-            <CategorySection
-              key={category.id}
-              category={category}
-              deadlines={processedDeadlines.filter(
-                (d) => d.category.id === category.id
-              )}
-            />
-          ))}
-      </div>
-      <div className="lg:col-span-1">
-        <div className="sticky top-24 space-y-8">
-          <MonthlySummary deadlines={processedDeadlines} />
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2 space-y-8">
+          {(!categories || categories.length === 0) && !isSeeding && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Benvenuto in Pittima!</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Sembra che tu non abbia ancora nessuna categoria.</p>
+                <p className="mt-2">
+                  Le categorie di default verranno create a breve. Se non
+                  appaiono, prova a ricaricare la pagina.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          {categories &&
+            categories.length > 0 &&
+            processedDeadlines.length === 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nessuna scadenza trovata</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>
+                    Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
+                    Scadenza" per iniziare.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          {sortedCategories &&
+            sortedCategories.map((category) => (
+              <CategorySection
+                key={category.id}
+                category={category}
+                deadlines={processedDeadlines.filter(
+                  (d) => d.category.id === category.id
+                )}
+                onEditDeadline={handleEditDeadline}
+              />
+            ))}
+        </div>
+        <div className="lg:col-span-1">
+          <div className="sticky top-24 space-y-8">
+            <MonthlySummary deadlines={processedDeadlines} />
+          </div>
         </div>
       </div>
-    </div>
+
+      {editingDeadline && (
+        <EditDeadlineDialog
+          open={!!editingDeadline}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setEditingDeadline(null);
+            }
+          }}
+          deadline={editingDeadline}
+        />
+      )}
+    </>
   );
 }

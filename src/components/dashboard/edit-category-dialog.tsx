@@ -84,6 +84,17 @@ export function EditCategoryDialog({
     },
   });
 
+  // When the dialog is opened, reset the form with the current category data.
+  // This avoids stale data if the same dialog component is reused for different categories.
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: category.name,
+        icon: category.icon,
+      });
+    }
+  }, [open, category, form]);
+
   useEffect(() => {
     async function checkDeadlines() {
       if (!user || !firestore) return;

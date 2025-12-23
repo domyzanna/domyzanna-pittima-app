@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import type { ProcessedDeadline } from '@/lib/types';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { it } from 'date-fns/locale';
 import { useFirestore, useUser, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { EditDeadlineDialog } from './edit-deadline-dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -38,7 +36,12 @@ const defaultStyle = {
   text: 'text-muted-foreground',
 };
 
-export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
+type DeadlineCardProps = {
+    deadline: ProcessedDeadline;
+    onEdit: () => void;
+}
+
+export function DeadlineCard({ deadline, onEdit }: DeadlineCardProps) {
   const {
     id,
     name,
@@ -53,7 +56,6 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const formattedDays =
     daysRemaining >= 0 ? `${daysRemaining}g` : `${Math.abs(daysRemaining)}g fa`;
@@ -162,7 +164,7 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
                     <Archive className="mr-2 h-4 w-4" />
                     Completa
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
+                <Button variant="outline" size="sm" onClick={onEdit}>
                     <Edit className="mr-2 h-4 w-4" />
                     Modifica
                 </Button>
@@ -170,13 +172,6 @@ export function DeadlineCard({ deadline }: { deadline: ProcessedDeadline }) {
           </div>
         </div>
       </Card>
-      {isEditDialogOpen && (
-        <EditDeadlineDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          deadline={deadline}
-        />
-      )}
     </>
   );
 }

@@ -7,6 +7,7 @@ import Link from 'next/link';
 type CategorySectionProps = {
   category: Category;
   deadlines: ProcessedDeadline[];
+  onEditDeadline: (deadline: ProcessedDeadline) => void;
 };
 
 const getIcon = (iconName: string) => {
@@ -26,6 +27,7 @@ const getIcon = (iconName: string) => {
 export function CategorySection({
   category,
   deadlines,
+  onEditDeadline,
 }: CategorySectionProps) {
   if (deadlines.length === 0) return null;
 
@@ -39,7 +41,7 @@ export function CategorySection({
       </Link>
       <div className="grid gap-4">
         {deadlines.map((deadline) => (
-          <DeadlineCard key={deadline.id} deadline={deadline} />
+          <DeadlineCard key={deadline.id} deadline={deadline} onEdit={() => onEditDeadline(deadline)} />
         ))}
       </div>
     </section>
