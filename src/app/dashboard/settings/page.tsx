@@ -111,11 +111,14 @@ export default function SettingsPage() {
     setIsProcessing(true);
     setNotificationError(null);
     
-    const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    // --- DEFINITIVE FIX ---
+    // Hardcode the public key directly. This is safe as it's public.
+    // Replace the placeholder with your actual key from the .env file.
+    const VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_TUA_CHIAVE_PUBBLICA_VAPID";
 
-    if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY.trim() === '') {
-      setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata trovata. Controlla che NEXT_PUBLIC_VAPID_PUBLIC_KEY sia impostata nel tuo file .env e riavvia il server di sviluppo.");
-      console.error('VAPID public key is not defined. Make sure NEXT_PUBLIC_VAPID_PUBLIC_KEY is set in your .env file and that you have restarted the development server.');
+    if (VAPID_PUBLIC_KEY === 'INCOLLA_QUI_LA_TUA_CHIAVE_PUBBLICA_VAPID' || VAPID_PUBLIC_KEY.trim() === '') {
+      setNotificationError("La chiave pubblica VAPID non è stata inserita nel codice. Modifica il file src/app/dashboard/settings/page.tsx e sostituisci il placeholder.");
+      console.error('VAPID public key is a placeholder. You must edit the file and replace it.');
       setIsProcessing(false);
       return;
     }
