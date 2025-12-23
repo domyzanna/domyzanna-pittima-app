@@ -42,7 +42,9 @@ export default function SettingsPage() {
   const [notificationError, setNotificationError] = useState<string | null>(
     null
   );
+  // This is how you access public environment variables in Next.js client components
   const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -103,9 +105,9 @@ export default function SettingsPage() {
   };
 
   const handleSubscribe = async () => {
-    if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY === null || VAPID_PUBLIC_KEY.trim() === '') {
-      setNotificationError("La configurazione per le notifiche push non è completa. La VAPID key pubblica non è stata definita. Contatta l'amministratore.");
-      console.error('VAPID public key is not defined or is empty.');
+    if (typeof VAPID_PUBLIC_KEY === 'undefined' || VAPID_PUBLIC_KEY.trim() === '') {
+      setNotificationError("La configurazione per le notifiche push non è completa sul client. La VAPID key pubblica non è stata definita o non è accessibile. Controlla la tua configurazione .env e il nome della variabile (deve essere NEXT_PUBLIC_VAPID_PUBLIC_KEY).");
+      console.error('VAPID public key is not defined or is empty in the client environment.');
       return;
     }
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -193,5 +195,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

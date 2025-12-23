@@ -17,26 +17,24 @@ export const sendPushNotificationTool = ai.defineTool(
     outputSchema: z.object({ success: z.boolean(), message: z.string() }),
   },
   async ({ subscription, payload }) => {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const privateKey = process.env.VAPID_PRIVATE_KEY;
+
     if (
-      !process.env.VAPID_PUBLIC_KEY ||
-      !process.env.VAPID_PRIVATE_KEY
+      !publicKey ||
+      !privateKey
     ) {
-      // This is not an error, but a configuration warning.
-      // The app can function without push notifications.
       console.warn("VAPID keys not configured. Skipping push notification.");
       return { success: false, message: "VAPID keys not configured." };
     }
     
     try {
-      // Configure web-push with your VAPID keys.
-      // The mailto: is used by push services to contact you if there's an issue.
       webpush.setVapidDetails(
           `mailto:you@example.com`,
-          process.env.VAPID_PUBLIC_KEY,
-          process.env.VAPID_PRIVATE_KEY
+          publicKey,
+          privateKey
       );
 
-      // Send the notification.
       await webpush.sendNotification(
         subscription,
         JSON.stringify(payload)
@@ -47,9 +45,6 @@ export const sendPushNotificationTool = ai.defineTool(
     } catch (error: any) {
       console.error('Error sending push notification:', error);
       
-      // If the subscription is expired or invalid (410 or 404),
-      // it should be removed from the database. This logic can be
-      // implemented by the calling flow.
       if (error.statusCode === 410 || error.statusCode === 404) {
           console.log("Push subscription has expired or is invalid. It should be removed.");
       }
