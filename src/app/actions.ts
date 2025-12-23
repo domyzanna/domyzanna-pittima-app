@@ -68,5 +68,7 @@ export async function runCheckDeadlinesAndNotify() {
 }
 
 export async function getVapidPublicKey(): Promise<string | undefined> {
-    return process.env.VAPID_PUBLIC_KEY;
+    // This server action securely provides the VAPID public key to the client.
+    // It reads the variable from the server's environment.
+    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 }
