@@ -113,15 +113,7 @@ export default function SettingsPage() {
     
     // --- DEFINITIVE FIX ---
     // Hardcode the public key directly. This is safe as it's public.
-    // Replace the placeholder with your actual key from the .env file.
-    const VAPID_PUBLIC_KEY = "INCOLLA_QUI_LA_TUA_CHIAVE_PUBBLICA_VAPID";
-
-    if (VAPID_PUBLIC_KEY === 'INCOLLA_QUI_LA_TUA_CHIAVE_PUBBLICA_VAPID' || VAPID_PUBLIC_KEY.trim() === '') {
-      setNotificationError("La chiave pubblica VAPID non è stata inserita nel codice. Modifica il file src/app/dashboard/settings/page.tsx e sostituisci il placeholder.");
-      console.error('VAPID public key is a placeholder. You must edit the file and replace it.');
-      setIsProcessing(false);
-      return;
-    }
+    const VAPID_PUBLIC_KEY = "BHlzENF_MAU5UWAL1zxT89jZvSPg36r72FtLOhHoRawcr1uEPdVQ6LC7xki3qgGXD4i1lGQhxjS2nHkvw18BWgc";
 
     try {
       const registration = await navigator.serviceWorker.ready;
