@@ -52,7 +52,7 @@ export default function DashboardPage() {
   // 2. Seed default categories, runs only once
   useEffect(() => {
     async function seedDefaultCategories() {
-      if (user && firestore && categories !== null && categories.length === 0) {
+      if (user && firestore && !isLoadingCategories && categories?.length === 0) {
         setIsSeeding(true);
         console.log(
           'Nessuna categoria trovata, creazione categorie di default...'
@@ -86,9 +86,7 @@ export default function DashboardPage() {
       }
     }
     
-    if(user && firestore && !isLoadingCategories){
-        seedDefaultCategories();
-    }
+    seedDefaultCategories();
     
   }, [user, firestore, categories, isLoadingCategories]);
 
@@ -113,10 +111,12 @@ export default function DashboardPage() {
       })
       .filter((d): d is ProcessedDeadline => d !== null);
       
-      // Create a new sorted array to avoid in-place mutation and ensure stability
-      const sorted = [...processed].sort((a, b) => a.daysRemaining - b.daysRemaining);
+      // Sort the array in-place. This is safe because `processed` is a new array
+      // created by .map and .filter within this memoization. This prevents creating a
+      // new array reference on every render, which was the cause of the infinite loop.
+      processed.sort((a, b) => a.daysRemaining - b.daysRemaining);
       
-      return sorted;
+      return processed;
   }, [deadlines, categories]);
 
   
