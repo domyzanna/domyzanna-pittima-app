@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect } from 'react';
 import {
   useFirestore,
   useUser,
@@ -33,8 +33,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
 import { IconSelect } from './icon-select';
-import { Trash2 } from 'lucide-react';
-import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 
 
 const formSchema = z.object({
@@ -56,25 +54,23 @@ export function EditCategoryDialog({
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: category.name,
-      icon: category.icon,
+      name: category?.name || '',
+      icon: category?.icon || 'Folder',
     },
   });
 
   useEffect(() => {
-    if (open) {
+    if (category) {
       form.reset({
         name: category.name,
         icon: category.icon,
       });
     }
-  }, [open, category, form]);
+  }, [category, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore || !category) return;
@@ -88,26 +84,11 @@ export function EditCategoryDialog({
     onOpenChange(false);
   }
   
-  const handleDelete = () => {
-    if (!user || !firestore || !category) return;
-
-    const categoryRef = doc(firestore, 'users', user.uid, 'categories', category.id);
-    // Note: This doesn't delete the deadlines within the category.
-    // That would require a more complex batch operation or a cloud function.
-    updateDocumentNonBlocking(categoryRef, {isDeleted: true}); // Soft delete for now
-    toast({
-      variant: 'destructive',
-      title: 'Categoria Eliminata',
-      description: `La categoria "${category.name}" è stata eliminata.`,
-    });
-    
-    setIsDeleteConfirmOpen(false);
-    onOpenChange(false);
+  if (!category) {
+    return null;
   }
 
-
   return (
-    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -148,26 +129,12 @@ export function EditCategoryDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter className="pt-4 justify-between">
-               <Button type="button" variant="destructive" onClick={() => setIsDeleteConfirmOpen(true)}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Elimina
-              </Button>
+            <DialogFooter className="pt-4">
               <Button type="submit">Salva Modifiche</Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-     {category && (
-        <DeleteConfirmationDialog
-            open={isDeleteConfirmOpen}
-            onOpenChange={setIsDeleteConfirmOpen}
-            itemName={category.name}
-            onConfirm={handleDelete}
-        />
-    )}
-    </>
   );
 }
-
