@@ -51,8 +51,8 @@ export default function DashboardPage() {
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesQuery);
   const { data: deadlines, isLoading: isLoadingDeadlines } = useCollection<Deadline>(deadlinesQuery);
 
-  // --- DATA PROCESSING (STABILIZED) ---
-  const processedDeadlines = useMemo((): ProcessedDeadline[] => {
+  // --- DATA PROCESSING ---
+   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
     if (!deadlines || !categories) return [];
     
     const processed = deadlines.map((d) => {
@@ -72,9 +72,14 @@ export default function DashboardPage() {
   }, [deadlines, categories]);
   
   const sortedDeadlines = useMemo(() => {
-     // Create a new sorted array to avoid in-place mutation of the memoized `processedDeadlines`
-    const sorted = [...processedDeadlines].sort((a, b) => a.daysRemaining - b.daysRemaining);
-    return sorted;
+    return [...processedDeadlines].sort((a, b) => {
+        // Primary sort: by days remaining (ascending)
+        if (a.daysRemaining < b.daysRemaining) return -1;
+        if (a.daysRemaining > b.daysRemaining) return 1;
+        
+        // Secondary sort: by name (alphabetical) if days are equal
+        return a.name.localeCompare(b.name);
+    });
   }, [processedDeadlines]);
 
 
