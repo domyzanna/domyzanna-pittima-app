@@ -6,7 +6,7 @@ import {
   useFirestore,
   useMemoFirebase,
 } from '@/firebase';
-import { collection, writeBatch, doc, getDocs } from 'firebase/firestore';
+import { collection, writeBatch, doc } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
 import { CategorySection } from '@/components/dashboard/category-section';
@@ -86,8 +86,6 @@ export default function DashboardPage() {
       }
     }
     
-    // This effect runs when user, firestore, or categories change.
-    // It will seed only if categories is an empty array.
     if(user && firestore && !isLoadingCategories){
         seedDefaultCategories();
     }
@@ -115,11 +113,10 @@ export default function DashboardPage() {
       })
       .filter((d): d is ProcessedDeadline => d !== null);
       
-      // IMPORTANT: Sort in place to avoid creating a new array reference if the order is the same.
-      // A new sorted array instance would cause an infinite loop.
-      processed.sort((a, b) => a.daysRemaining - b.daysRemaining);
+      // Create a new sorted array to avoid in-place mutation and ensure stability
+      const sorted = [...processed].sort((a, b) => a.daysRemaining - b.daysRemaining);
       
-      return processed;
+      return sorted;
   }, [deadlines, categories]);
 
   
