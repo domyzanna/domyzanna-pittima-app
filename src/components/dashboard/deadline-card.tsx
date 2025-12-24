@@ -114,7 +114,6 @@ export function DeadlineCard({ deadline, onEdit }: DeadlineCardProps) {
   const areNotificationsActive = notificationStatus === 'active' || notificationStatus === 'pending';
 
   return (
-    <>
       <Card className="flex transition-shadow hover:shadow-md">
         <div
           className={cn('w-2 flex-shrink-0 rounded-l-lg', style.indicator)}
@@ -172,6 +171,5 @@ export function DeadlineCard({ deadline, onEdit }: DeadlineCardProps) {
           </div>
         </div>
       </Card>
-    </>
   );
 }

@@ -5,6 +5,8 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
+  setDocumentNonBlocking,
+  addDocumentNonBlocking,
 } from '@/firebase';
 import { collection, writeBatch, doc, getDocs } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
@@ -31,6 +33,7 @@ export default function DashboardPage() {
     null
   );
 
+  // 1. Fetch raw data from Firestore
   const categoriesQuery = useMemoFirebase(
     () =>
       user ? collection(firestore, 'users', user.uid, 'categories') : null,
@@ -48,6 +51,7 @@ export default function DashboardPage() {
 
   const [isSeeding, setIsSeeding] = useState(false);
 
+  // 2. Seed default categories, runs only once
   useEffect(() => {
     async function seedDefaultCategories() {
       if (user && firestore) {
@@ -66,7 +70,6 @@ export default function DashboardPage() {
               'Nessuna categoria trovata, creazione categorie di default...'
             );
             const batch = writeBatch(firestore);
-
             defaultCategories.forEach((categoryData) => {
               const newCatRef = doc(categoriesColRef);
               batch.set(newCatRef, {
@@ -75,7 +78,6 @@ export default function DashboardPage() {
                 id: newCatRef.id,
               });
             });
-
             await batch.commit();
             console.log('Categorie di default create con successo.');
           }
@@ -94,16 +96,15 @@ export default function DashboardPage() {
     }
   }, [user, firestore]);
 
+  // 3. Process data (memoized)
   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
     if (!deadlines || !categories) {
       return [];
     }
-
     return deadlines
       .map((d) => {
         const category = categories.find((c) => c.id === d.categoryId);
         if (!category) return null;
-
         const daysRemaining = calculateDaysRemaining(
           new Date(d.expirationDate)
         );
@@ -118,20 +119,37 @@ export default function DashboardPage() {
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [deadlines, categories]);
 
+  const deadlinesByCategory = useMemo(() => {
+    if (!categories) return new Map<string, ProcessedDeadline[]>();
+    
+    const map = new Map<string, ProcessedDeadline[]>();
+    categories.forEach(cat => map.set(cat.id, []));
+    
+    processedDeadlines.forEach(d => {
+        if(map.has(d.category.id)) {
+            map.get(d.category.id)!.push(d);
+        }
+    });
+
+    return map;
+
+  }, [categories, processedDeadlines]);
+
+
   const sortedCategories = useMemo(() => {
-    if (!categories || processedDeadlines.length === 0) {
-      return categories || [];
+    if (!categories) {
+      return [];
     }
 
     const categoryUrgency = new Map<string, number>();
 
     categories.forEach((cat) => {
-      const deadlinesForCat = processedDeadlines.filter(
-        (d) => d.category.id === cat.id
-      );
+      const deadlinesForCat = deadlinesByCategory.get(cat.id) || [];
       if (deadlinesForCat.length > 0) {
+        // Urgency is the minimum days remaining in the category
         categoryUrgency.set(cat.id, deadlinesForCat[0].daysRemaining);
       } else {
+        // Categories with no deadlines go to the bottom
         categoryUrgency.set(cat.id, Infinity);
       }
     });
@@ -141,8 +159,8 @@ export default function DashboardPage() {
       const urgencyB = categoryUrgency.get(b.id) ?? Infinity;
       return urgencyA - urgencyB;
     });
-  }, [categories, processedDeadlines]);
-
+  }, [categories, deadlinesByCategory]);
+  
   const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
 
   const handleEditDeadline = (deadline: ProcessedDeadline) => {
@@ -190,17 +208,14 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             )}
-          {sortedCategories &&
-            sortedCategories.map((category) => (
-              <CategorySection
+          {sortedCategories.map((category) => (
+             <CategorySection
                 key={category.id}
                 category={category}
-                deadlines={processedDeadlines.filter(
-                  (d) => d.category.id === category.id
-                )}
+                deadlines={deadlinesByCategory.get(category.id) || []}
                 onEditDeadline={handleEditDeadline}
               />
-            ))}
+          ))}
         </div>
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-8">
