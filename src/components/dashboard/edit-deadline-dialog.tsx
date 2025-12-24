@@ -13,17 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -33,13 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type Dispatch, type SetStateAction, useEffect } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
 import { Textarea } from '../ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
-import { Trash2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import {
     Form,
@@ -99,8 +87,6 @@ export function EditDeadlineDialog({
     },
   });
 
-  // When the dialog is opened, reset the form with the current deadline data.
-  // This avoids stale data if the same dialog component is reused for different deadlines.
   useEffect(() => {
     if (open) {
       form.reset({
@@ -114,24 +100,6 @@ export function EditDeadlineDialog({
     }
   }, [open, deadline, form]);
   
-  const handleDelete = () => {
-    if (!user || !firestore) return;
-    
-    // First, close the dialog.
-    onOpenChange(false);
-    
-    // Then, delete the document after a short delay to prevent race conditions.
-    setTimeout(() => {
-        const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
-        deleteDocumentNonBlocking(deadlineRef);
-        toast({
-          title: 'Eliminata!',
-          description: 'La scadenza è stata eliminata definitivamente.',
-        });
-    }, 150); // A small delay is usually enough.
-  };
-
-
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({
@@ -151,7 +119,6 @@ export function EditDeadlineDialog({
       ...values,
       expirationDate: expirationDate.toISOString(),
       notificationStartDate: notificationStartDate.toISOString(),
-      // Reset notification status on update, so it re-triggers
       notificationStatus: 'pending', 
     };
 
@@ -289,29 +256,7 @@ export function EditDeadlineDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter className="flex justify-between items-center sm:justify-between sm:w-full pt-4">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" type="button">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Questa azione è irreversibile. La scadenza verrà eliminata permanentemente
-                      dai nostri server.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                      Sì, elimina
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+            <DialogFooter className="pt-4">
               <Button type="submit">Salva Modifiche</Button>
             </DialogFooter>
           </form>

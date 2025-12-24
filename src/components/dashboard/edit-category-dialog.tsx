@@ -14,17 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
   Form,
   FormControl,
   FormField,
@@ -37,20 +26,13 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   useFirestore,
   useUser,
-  updateDocumentNonBlocking,
-  deleteDocumentNonBlocking
+  updateDocumentNonBlocking
 } from '@/firebase';
 import {
   doc,
-  collection,
-  query,
-  where,
-  getDocs,
 } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
-import { Trash2 } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import { IconSelect } from './icon-select';
 
 const formSchema = z.object({
@@ -73,9 +55,6 @@ export function EditCategoryDialog({
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const [deadlineCount, setDeadlineCount] = useState<number | null>(null);
-  const [isChecking, setIsChecking] = useState(true);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,8 +63,6 @@ export function EditCategoryDialog({
     },
   });
 
-  // When the dialog is opened, reset the form with the current category data.
-  // This avoids stale data if the same dialog component is reused for different categories.
   useEffect(() => {
     if (open) {
       form.reset({
@@ -94,24 +71,6 @@ export function EditCategoryDialog({
       });
     }
   }, [open, category, form]);
-
-  useEffect(() => {
-    async function checkDeadlines() {
-      if (!user || !firestore) return;
-      setIsChecking(true);
-      const deadlinesQuery = query(
-        collection(firestore, 'users', user.uid, 'deadlines'),
-        where('categoryId', '==', category.id)
-      );
-      const snapshot = await getDocs(deadlinesQuery);
-      setDeadlineCount(snapshot.size);
-      setIsChecking(false);
-    }
-    if (open) {
-      checkDeadlines();
-    }
-  }, [open, user, firestore, category.id]);
-
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore) return;
@@ -124,18 +83,6 @@ export function EditCategoryDialog({
     });
     onOpenChange(false);
   }
-
-  const handleDelete = () => {
-    if (!user || !firestore || (deadlineCount !== null && deadlineCount > 0) ) return;
-
-    const categoryRef = doc(firestore, 'users', user.uid, 'categories', category.id);
-    deleteDocumentNonBlocking(categoryRef);
-    toast({
-      title: 'Eliminata!',
-      description: `La categoria "${category.name}" è stata eliminata.`,
-    });
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -178,45 +125,11 @@ export function EditCategoryDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter className="flex justify-between items-center sm:justify-between sm:w-full">
-               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    type="button"
-                    disabled={isChecking || (deadlineCount !== null && deadlineCount > 0)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Questa azione è irreversibile e la categoria verrà eliminata permanentemente.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                      Sì, elimina
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+            <DialogFooter>
               <Button type="submit">Salva Modifiche</Button>
             </DialogFooter>
           </form>
         </Form>
-        {isChecking && <p className="text-sm text-muted-foreground">Controllo scadenze collegate...</p>}
-        {!isChecking && deadlineCount !== null && deadlineCount > 0 && (
-            <Alert variant="destructive">
-                <AlertTitle>Impossibile eliminare</AlertTitle>
-                <AlertDescription>
-                    Ci sono {deadlineCount} scadenze collegate a questa categoria. Per poterla eliminare, sposta o cancella prima le scadenze associate.
-                </AlertDescription>
-            </Alert>
-        )}
       </DialogContent>
     </Dialog>
   );
