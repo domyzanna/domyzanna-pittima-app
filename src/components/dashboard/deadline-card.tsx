@@ -23,8 +23,8 @@ const defaultStyle = { indicator: 'bg-muted', text: 'text-muted-foreground' };
 
 type DeadlineCardProps = {
     deadline: ProcessedDeadline;
-    onEdit: () => void;
-    onDelete: () => void;
+    onEdit: (deadline: ProcessedDeadline) => void;
+    onDelete: (deadline: ProcessedDeadline) => void;
 }
 
 export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) {
@@ -88,11 +88,11 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
                 </Label>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={onDelete}>
+                <Button variant="ghost" size="icon" onClick={() => onDelete(deadline)}>
                     <Trash2 className="h-4 w-4" />
                     <span className="sr-only">Elimina</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={onEdit}>
+                <Button variant="outline" size="sm" onClick={() => onEdit(deadline)}>
                     <Edit className="mr-2 h-4 w-4" />
                     Modifica
                 </Button>

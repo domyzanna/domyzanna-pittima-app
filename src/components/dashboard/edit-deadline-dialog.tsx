@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { type Dispatch, type SetStateAction, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
@@ -55,7 +55,7 @@ const formSchema = z.object({
 type EditDeadlineDialogProps = {
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  deadline: ProcessedDeadline;
+  deadline: ProcessedDeadline | null;
 };
 
 export function EditDeadlineDialog({
@@ -77,17 +77,17 @@ export function EditDeadlineDialog({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: deadline.name,
-      description: deadline.description || '',
-      categoryId: deadline.category.id,
-      expirationDate: format(new Date(deadline.expirationDate), 'yyyy-MM-dd'),
-      recurrence: deadline.recurrence,
-      notificationDays: deadline.notificationDays || 30,
+      name: '',
+      description: '',
+      categoryId: '',
+      expirationDate: '',
+      recurrence: 'una-tantum',
+      notificationDays: 30,
     },
   });
 
   useEffect(() => {
-    if (open) {
+    if (deadline) {
       form.reset({
         name: deadline.name,
         description: deadline.description || '',
@@ -97,7 +97,7 @@ export function EditDeadlineDialog({
         notificationDays: deadline.notificationDays || 30,
       });
     }
-  }, [open, deadline, form]);
+  }, [deadline, form]);
   
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !deadline) return;
@@ -139,7 +139,7 @@ export function EditDeadlineDialog({
             <FormField control={form.control} name="categoryId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCategories}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCategories}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} /></SelectTrigger>
                     </FormControl>
@@ -178,7 +178,7 @@ export function EditDeadlineDialog({
             <FormField control={form.control} name="recurrence" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ricorrenza</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Seleziona la frequenza" /></SelectTrigger>
                     </FormControl>

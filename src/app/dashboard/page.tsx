@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   // --- STATE MANAGEMENT ---
   const [editingDeadline, setEditingDeadline] = useState<ProcessedDeadline | null>(null);
-  const [deletingItem, setDeletingItem] = useState<{ id: string; name: string; type: 'deadline' | 'category' } | null>(null);
+  const [deletingItem, setDeletingItem] = useState<{ id: string; name: string; type: 'deadline' } | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
 
 
@@ -68,10 +68,14 @@ export default function DashboardPage() {
       })
       .filter((d): d is ProcessedDeadline => d !== null);
 
-    processed.sort((a, b) => a.daysRemaining - b.daysRemaining);
     return processed;
-
   }, [deadlines, categories]);
+  
+  const sortedDeadlines = useMemo(() => {
+     // Create a new sorted array to avoid in-place mutation of the memoized `processedDeadlines`
+    const sorted = [...processedDeadlines].sort((a, b) => a.daysRemaining - b.daysRemaining);
+    return sorted;
+  }, [processedDeadlines]);
 
 
   // --- SEEDING LOGIC ---
@@ -112,22 +116,14 @@ export default function DashboardPage() {
   const confirmDeletion = () => {
     if (!deletingItem || !user || !firestore) return;
 
-    let docRef;
     if (deletingItem.type === 'deadline') {
-        docRef = doc(firestore, 'users', user.uid, 'deadlines', deletingItem.id);
-    } 
-    // Extend with 'category' if needed, for now only deadlines
-    // else if (deletingItem.type === 'category') {
-    //    docRef = doc(firestore, 'users', user.uid, 'categories', deletingItem.id);
-    // }
-
-    if (docRef) {
+        const docRef = doc(firestore, 'users', user.uid, 'deadlines', deletingItem.id);
         deleteDocumentNonBlocking(docRef);
         toast({
             title: 'Successo!',
             description: `"${deletingItem.name}" è stato eliminato.`,
         });
-    }
+    } 
 
     setDeletingItem(null);
   };
@@ -155,7 +151,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           )}
-          {categories && categories.length > 0 && processedDeadlines.length === 0 && (
+          {categories && categories.length > 0 && sortedDeadlines.length === 0 && (
             <Card>
               <CardHeader><CardTitle>Nessuna scadenza trovata</CardTitle></CardHeader>
               <CardContent>
@@ -167,7 +163,7 @@ export default function DashboardPage() {
              <CategorySection
                 key={category.id}
                 category={category}
-                deadlines={processedDeadlines.filter(d => d.categoryId === category.id)}
+                deadlines={sortedDeadlines.filter(d => d.categoryId === category.id)}
                 onEditDeadline={handleEditDeadline}
                 onDeleteDeadline={handleDeleteDeadline}
               />
@@ -175,7 +171,7 @@ export default function DashboardPage() {
         </div>
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-8">
-            <MonthlySummary deadlines={processedDeadlines} />
+            <MonthlySummary deadlines={sortedDeadlines} />
           </div>
         </div>
       </div>
