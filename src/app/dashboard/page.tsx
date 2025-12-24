@@ -5,8 +5,6 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
-  setDocumentNonBlocking,
-  addDocumentNonBlocking,
 } from '@/firebase';
 import { collection, writeBatch, doc, getDocs } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
@@ -119,47 +117,6 @@ export default function DashboardPage() {
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [deadlines, categories]);
 
-  const deadlinesByCategory = useMemo(() => {
-    if (!categories) return new Map<string, ProcessedDeadline[]>();
-    
-    const map = new Map<string, ProcessedDeadline[]>();
-    categories.forEach(cat => map.set(cat.id, []));
-    
-    processedDeadlines.forEach(d => {
-        if(map.has(d.category.id)) {
-            map.get(d.category.id)!.push(d);
-        }
-    });
-
-    return map;
-
-  }, [categories, processedDeadlines]);
-
-
-  const sortedCategories = useMemo(() => {
-    if (!categories) {
-      return [];
-    }
-
-    const categoryUrgency = new Map<string, number>();
-
-    categories.forEach((cat) => {
-      const deadlinesForCat = deadlinesByCategory.get(cat.id) || [];
-      if (deadlinesForCat.length > 0) {
-        // Urgency is the minimum days remaining in the category
-        categoryUrgency.set(cat.id, deadlinesForCat[0].daysRemaining);
-      } else {
-        // Categories with no deadlines go to the bottom
-        categoryUrgency.set(cat.id, Infinity);
-      }
-    });
-
-    return [...categories].sort((a, b) => {
-      const urgencyA = categoryUrgency.get(a.id) ?? Infinity;
-      const urgencyB = categoryUrgency.get(b.id) ?? Infinity;
-      return urgencyA - urgencyB;
-    });
-  }, [categories, deadlinesByCategory]);
   
   const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
 
@@ -208,11 +165,11 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             )}
-          {sortedCategories.map((category) => (
+          {categories?.map((category) => (
              <CategorySection
                 key={category.id}
                 category={category}
-                deadlines={deadlinesByCategory.get(category.id) || []}
+                deadlines={processedDeadlines}
                 onEditDeadline={handleEditDeadline}
               />
           ))}
