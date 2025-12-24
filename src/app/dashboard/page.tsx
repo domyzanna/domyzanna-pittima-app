@@ -52,33 +52,29 @@ export default function DashboardPage() {
   // 2. Seed default categories, runs only once
   useEffect(() => {
     async function seedDefaultCategories() {
-      if (user && firestore) {
+      if (user && firestore && categories !== null && categories.length === 0) {
         setIsSeeding(true);
+        console.log(
+          'Nessuna categoria trovata, creazione categorie di default...'
+        );
+        const categoriesColRef = collection(
+          firestore,
+          'users',
+          user.uid,
+          'categories'
+        );
+        const batch = writeBatch(firestore);
+        defaultCategories.forEach((categoryData) => {
+          const newCatRef = doc(categoriesColRef);
+          batch.set(newCatRef, {
+            ...categoryData,
+            userId: user.uid,
+            id: newCatRef.id,
+          });
+        });
         try {
-          const categoriesColRef = collection(
-            firestore,
-            'users',
-            user.uid,
-            'categories'
-          );
-          const existingCategories = await getDocs(categoriesColRef);
-
-          if (existingCategories.empty) {
-            console.log(
-              'Nessuna categoria trovata, creazione categorie di default...'
-            );
-            const batch = writeBatch(firestore);
-            defaultCategories.forEach((categoryData) => {
-              const newCatRef = doc(categoriesColRef);
-              batch.set(newCatRef, {
-                ...categoryData,
-                userId: user.uid,
-                id: newCatRef.id,
-              });
-            });
-            await batch.commit();
-            console.log('Categorie di default create con successo.');
-          }
+          await batch.commit();
+          console.log('Categorie di default create con successo.');
         } catch (error) {
           console.error(
             'Errore during la creazione delle categorie di default:',
@@ -89,17 +85,21 @@ export default function DashboardPage() {
         }
       }
     }
-    if (user && firestore) {
-      seedDefaultCategories();
+    
+    // This effect runs when user, firestore, or categories change.
+    // It will seed only if categories is an empty array.
+    if(user && firestore && !isLoadingCategories){
+        seedDefaultCategories();
     }
-  }, [user, firestore]);
+    
+  }, [user, firestore, categories, isLoadingCategories]);
 
   // 3. Process data (memoized)
   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
     if (!deadlines || !categories) {
       return [];
     }
-    return deadlines
+    const processed = deadlines
       .map((d) => {
         const category = categories.find((c) => c.id === d.categoryId);
         if (!category) return null;
@@ -113,8 +113,13 @@ export default function DashboardPage() {
           urgency: getUrgency(daysRemaining),
         };
       })
-      .filter((d): d is ProcessedDeadline => d !== null)
-      .sort((a, b) => a.daysRemaining - b.daysRemaining);
+      .filter((d): d is ProcessedDeadline => d !== null);
+      
+      // IMPORTANT: Sort in place to avoid creating a new array reference if the order is the same.
+      // A new sorted array instance would cause an infinite loop.
+      processed.sort((a, b) => a.daysRemaining - b.daysRemaining);
+      
+      return processed;
   }, [deadlines, categories]);
 
   
@@ -169,7 +174,7 @@ export default function DashboardPage() {
              <CategorySection
                 key={category.id}
                 category={category}
-                deadlines={processedDeadlines}
+                deadlines={processedDeadlines.filter(d => d.categoryId === category.id)}
                 onEditDeadline={handleEditDeadline}
               />
           ))}

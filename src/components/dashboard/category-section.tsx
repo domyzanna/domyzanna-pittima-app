@@ -29,9 +29,7 @@ export function CategorySection({
   deadlines,
   onEditDeadline,
 }: CategorySectionProps) {
-  const deadlinesForCategory = deadlines.filter(d => d.category.id === category.id);
-
-  if (deadlinesForCategory.length === 0) return null;
+  if (deadlines.length === 0) return null;
 
   return (
     <section>
@@ -42,7 +40,7 @@ export function CategorySection({
         </h2>
       </Link>
       <div className="grid gap-4">
-        {deadlinesForCategory.map((deadline) => (
+        {deadlines.map((deadline) => (
           <DeadlineCard key={deadline.id} deadline={deadline} onEdit={() => onEditDeadline(deadline)} />
         ))}
       </div>
