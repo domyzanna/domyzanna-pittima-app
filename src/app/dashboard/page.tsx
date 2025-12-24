@@ -92,7 +92,7 @@ export default function DashboardPage() {
     
   }, [user, firestore, categories, isLoadingCategories]);
 
-  // 3. Process data (memoized)
+  // 3. Process and sort data (memoized)
   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
     if (!deadlines || !categories) {
       return [];
