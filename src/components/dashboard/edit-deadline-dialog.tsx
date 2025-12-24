@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,7 +54,7 @@ const formSchema = z.object({
 
 type EditDeadlineDialogProps = {
   open: boolean;
-  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  onOpenChange: (isOpen: boolean) => void;
   deadline: ProcessedDeadline;
 };
 
@@ -101,17 +100,9 @@ export function EditDeadlineDialog({
   }, [open, deadline, form]);
   
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Devi essere autenticato per aggiornare una scadenza.',
-      });
-      return;
-    }
+    if (!user || !deadline) return;
     
     const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', deadline.id);
-    
     const expirationDate = new Date(values.expirationDate);
     const notificationStartDate = subDays(expirationDate, values.notificationDays);
     
@@ -123,12 +114,7 @@ export function EditDeadlineDialog({
     };
 
     updateDocumentNonBlocking(deadlineRef, deadlineDataToUpdate);
-
-    toast({
-      title: 'Successo!',
-      description: 'Scadenza aggiornata correttamente.',
-      className: 'bg-green-100 border-green-300',
-    });
+    toast({ title: 'Successo!', description: 'Scadenza aggiornata correttamente.' });
     onOpenChange(false);
   }
 
@@ -136,113 +122,65 @@ export function EditDeadlineDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">
-            Aggiorna Scadenza
-          </DialogTitle>
-          <DialogDescription>
-            Modifica i dettagli della tua scadenza.
-          </DialogDescription>
+          <DialogTitle className="font-headline">Aggiorna Scadenza</DialogTitle>
+          <DialogDescription>Modifica i dettagli della tua scadenza.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <ScrollArea className="max-h-[calc(100vh-12rem)]">
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4 py-4 pr-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 pr-4">
+            <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="es. Assicurazione Auto" {...field} />
-                  </FormControl>
+                  <FormControl><Input placeholder="es. Assicurazione Auto" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
+            <FormField control={form.control} name="categoryId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoadingCategories}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCategories}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories?.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
+                      {categories?.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="expirationDate"
-              render={({ field }) => (
+            <FormField control={form.control} name="expirationDate" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Data di Scadenza</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
+                  <FormControl><Input type="date" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="notificationDays"
-              render={({ field }) => (
+            <FormField control={form.control} name="notificationDays" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Giorni di preavviso notifica</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
+                  <FormControl><Input type="number" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-             <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
+             <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Descrizione (Opzionale)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Aggiungi dettagli o note..." {...field} />
-                  </FormControl>
+                  <FormControl><Textarea placeholder="Aggiungi dettagli o note..." {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="recurrence"
-              render={({ field }) => (
+            <FormField control={form.control} name="recurrence" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ricorrenza</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona la frequenza" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Seleziona la frequenza" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="una-tantum">Una tantum</SelectItem>

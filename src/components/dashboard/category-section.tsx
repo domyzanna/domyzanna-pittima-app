@@ -8,6 +8,7 @@ type CategorySectionProps = {
   category: Category;
   deadlines: ProcessedDeadline[];
   onEditDeadline: (deadline: ProcessedDeadline) => void;
+  onDeleteDeadline: (deadline: ProcessedDeadline) => void;
 };
 
 const getIcon = (iconName: string) => {
@@ -17,8 +18,6 @@ const getIcon = (iconName: string) => {
       return <IconComponent className="h-6 w-6 text-primary" />;
     }
   }
-
-  // Fallback Icon
   const FallbackIcon = (LucideIcons as any)['Folder'];
   return <FallbackIcon className="h-6 w-6 text-primary" />;
 };
@@ -28,6 +27,7 @@ export function CategorySection({
   category,
   deadlines,
   onEditDeadline,
+  onDeleteDeadline,
 }: CategorySectionProps) {
   if (deadlines.length === 0) return null;
 
@@ -41,7 +41,12 @@ export function CategorySection({
       </Link>
       <div className="grid gap-4">
         {deadlines.map((deadline) => (
-          <DeadlineCard key={deadline.id} deadline={deadline} onEdit={() => onEditDeadline(deadline)} />
+          <DeadlineCard 
+            key={deadline.id} 
+            deadline={deadline} 
+            onEdit={() => onEditDeadline(deadline)}
+            onDelete={() => onDeleteDeadline(deadline)}
+          />
         ))}
       </div>
     </section>

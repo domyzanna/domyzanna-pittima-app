@@ -5,6 +5,7 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
+  deleteDocumentNonBlocking,
 } from '@/firebase';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
@@ -14,6 +15,8 @@ import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { Icons } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditDeadlineDialog } from '@/components/dashboard/edit-deadline-dialog';
+import { DeleteConfirmationDialog } from '@/components/dashboard/delete-confirmation-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Veicoli', icon: 'Car' },
@@ -27,14 +30,17 @@ const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [editingDeadline, setEditingDeadline] = useState<ProcessedDeadline | null>(
-    null
-  );
+  const { toast } = useToast();
 
-  // 1. Fetch raw data from Firestore
+  // --- STATE MANAGEMENT ---
+  const [editingDeadline, setEditingDeadline] = useState<ProcessedDeadline | null>(null);
+  const [deletingItem, setDeletingItem] = useState<{ id: string; name: string; type: 'deadline' | 'category' } | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
+
+
+  // --- DATA FETCHING ---
   const categoriesQuery = useMemoFirebase(
-    () =>
-      user ? collection(firestore, 'users', user.uid, 'categories') : null,
+    () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
     [firestore, user]
   );
   const deadlinesQuery = useMemoFirebase(
@@ -42,66 +48,17 @@ export default function DashboardPage() {
     [firestore, user]
   );
 
-  const { data: categories, isLoading: isLoadingCategories } =
-    useCollection<Category>(categoriesQuery);
-  const { data: deadlines, isLoading: isLoadingDeadlines } =
-    useCollection<Deadline>(deadlinesQuery);
+  const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesQuery);
+  const { data: deadlines, isLoading: isLoadingDeadlines } = useCollection<Deadline>(deadlinesQuery);
 
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  // 2. Seed default categories, runs only once
-  useEffect(() => {
-    async function seedDefaultCategories() {
-      if (user && firestore && !isLoadingCategories && categories?.length === 0) {
-        setIsSeeding(true);
-        console.log(
-          'Nessuna categoria trovata, creazione categorie di default...'
-        );
-        const categoriesColRef = collection(
-          firestore,
-          'users',
-          user.uid,
-          'categories'
-        );
-        const batch = writeBatch(firestore);
-        defaultCategories.forEach((categoryData) => {
-          const newCatRef = doc(categoriesColRef);
-          batch.set(newCatRef, {
-            ...categoryData,
-            userId: user.uid,
-            id: newCatRef.id,
-          });
-        });
-        try {
-          await batch.commit();
-          console.log('Categorie di default create con successo.');
-        } catch (error) {
-          console.error(
-            'Errore during la creazione delle categorie di default:',
-            error
-          );
-        } finally {
-          setIsSeeding(false);
-        }
-      }
-    }
-    
-    seedDefaultCategories();
-    
-  }, [user, firestore, categories, isLoadingCategories]);
-
-  // 3. Process and sort data (memoized)
+  // --- DATA PROCESSING (STABILIZED) ---
   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
-    if (!deadlines || !categories) {
-      return [];
-    }
-    const processed = deadlines
-      .map((d) => {
+    if (!deadlines || !categories) return [];
+    
+    const processed = deadlines.map((d) => {
         const category = categories.find((c) => c.id === d.categoryId);
         if (!category) return null;
-        const daysRemaining = calculateDaysRemaining(
-          new Date(d.expirationDate)
-        );
+        const daysRemaining = calculateDaysRemaining(new Date(d.expirationDate));
         return {
           ...d,
           category,
@@ -110,21 +67,73 @@ export default function DashboardPage() {
         };
       })
       .filter((d): d is ProcessedDeadline => d !== null);
-      
-      // Sort the array in-place. This is safe because `processed` is a new array
-      // created by .map and .filter within this memoization. This prevents creating a
-      // new array reference on every render, which was the cause of the infinite loop.
-      processed.sort((a, b) => a.daysRemaining - b.daysRemaining);
-      
-      return processed;
+
+    processed.sort((a, b) => a.daysRemaining - b.daysRemaining);
+    return processed;
+
   }, [deadlines, categories]);
 
-  
-  const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
 
+  // --- SEEDING LOGIC ---
+  useEffect(() => {
+    async function seedDefaultCategories() {
+      if (user && firestore && !isLoadingCategories && categories?.length === 0 && !isSeeding) {
+        setIsSeeding(true);
+        console.log('Nessuna categoria trovata, creazione categorie di default...');
+        const categoriesColRef = collection(firestore, 'users', user.uid, 'categories');
+        const batch = writeBatch(firestore);
+        defaultCategories.forEach((categoryData) => {
+          const newCatRef = doc(categoriesColRef);
+          batch.set(newCatRef, { ...categoryData, userId: user.uid, id: newCatRef.id });
+        });
+        try {
+          await batch.commit();
+          console.log('Categorie di default create con successo.');
+        } catch (error) {
+          console.error('Errore during la creazione delle categorie di default:', error);
+        } finally {
+          setIsSeeding(false);
+        }
+      }
+    }
+    seedDefaultCategories();
+  }, [user, firestore, categories, isLoadingCategories, isSeeding]);
+
+
+  // --- EVENT HANDLERS ---
   const handleEditDeadline = (deadline: ProcessedDeadline) => {
     setEditingDeadline(deadline);
   };
+
+  const handleDeleteDeadline = (deadline: ProcessedDeadline) => {
+    setDeletingItem({ id: deadline.id, name: deadline.name, type: 'deadline' });
+  };
+  
+  const confirmDeletion = () => {
+    if (!deletingItem || !user || !firestore) return;
+
+    let docRef;
+    if (deletingItem.type === 'deadline') {
+        docRef = doc(firestore, 'users', user.uid, 'deadlines', deletingItem.id);
+    } 
+    // Extend with 'category' if needed, for now only deadlines
+    // else if (deletingItem.type === 'category') {
+    //    docRef = doc(firestore, 'users', user.uid, 'categories', deletingItem.id);
+    // }
+
+    if (docRef) {
+        deleteDocumentNonBlocking(docRef);
+        toast({
+            title: 'Successo!',
+            description: `"${deletingItem.name}" è stato eliminato.`,
+        });
+    }
+
+    setDeletingItem(null);
+  };
+
+
+  const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
 
   if (isLoading) {
     return (
@@ -140,39 +149,27 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-8">
           {(!categories || categories.length === 0) && !isSeeding && (
             <Card>
-              <CardHeader>
-                <CardTitle>Benvenuto in Pittima!</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Benvenuto in Pittima!</CardTitle></CardHeader>
               <CardContent>
-                <p>Sembra che tu non abbia ancora nessuna categoria.</p>
-                <p className="mt-2">
-                  Le categorie di default verranno create a breve. Se non
-                  appaiono, prova a ricaricare la pagina.
-                </p>
+                <p>Sembra che tu non abbia ancora nessuna categoria. Le categorie di default verranno create a breve.</p>
               </CardContent>
             </Card>
           )}
-          {categories &&
-            categories.length > 0 &&
-            processedDeadlines.length === 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Nessuna scadenza trovata</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
-                    Scadenza" per iniziare.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+          {categories && categories.length > 0 && processedDeadlines.length === 0 && (
+            <Card>
+              <CardHeader><CardTitle>Nessuna scadenza trovata</CardTitle></CardHeader>
+              <CardContent>
+                <p>Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi Scadenza" per iniziare.</p>
+              </CardContent>
+            </Card>
+          )}
           {categories?.map((category) => (
              <CategorySection
                 key={category.id}
                 category={category}
                 deadlines={processedDeadlines.filter(d => d.categoryId === category.id)}
                 onEditDeadline={handleEditDeadline}
+                onDeleteDeadline={handleDeleteDeadline}
               />
           ))}
         </div>
@@ -183,15 +180,20 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* --- DIALOGS --- */}
       {editingDeadline && (
         <EditDeadlineDialog
           open={!!editingDeadline}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setEditingDeadline(null);
-            }
-          }}
+          onOpenChange={(isOpen) => !isOpen && setEditingDeadline(null)}
           deadline={editingDeadline}
+        />
+      )}
+      {deletingItem && (
+         <DeleteConfirmationDialog
+            open={!!deletingItem}
+            onOpenChange={(isOpen) => !isOpen && setDeletingItem(null)}
+            itemName={deletingItem.name}
+            onConfirm={confirmDeletion}
         />
       )}
     </>
