@@ -75,11 +75,8 @@ export default function DashboardPage() {
 
   const sortedDeadlines = useMemo(() => {
     return [...processedDeadlines].sort((a, b) => {
-        // Primary sort: by days remaining (ascending)
         if (a.daysRemaining < b.daysRemaining) return -1;
         if (a.daysRemaining > b.daysRemaining) return 1;
-        
-        // Secondary sort: by name (alphabetical) if days are equal
         return a.name.localeCompare(b.name);
     });
   }, [processedDeadlines]);
@@ -115,8 +112,6 @@ export default function DashboardPage() {
 
     return sorted;
   }, [categories, sortedDeadlines]);
-
-
 
   useEffect(() => {
     async function seedDefaultCategories() {
