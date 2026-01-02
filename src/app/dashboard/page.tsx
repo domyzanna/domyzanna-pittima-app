@@ -32,13 +32,13 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // --- STATE MANAGEMENT ---
-  const [editingDeadline, setEditingDeadline] = useState<ProcessedDeadline | null>(null);
-  const [deletingItem, setDeletingItem] = useState<{ id: string; name: string; type: 'deadline' } | null>(null);
+  const [dialogState, setDialogState] = useState<{
+    editingDeadline?: ProcessedDeadline;
+    deletingDeadline?: ProcessedDeadline;
+  }>({});
+
   const [isSeeding, setIsSeeding] = useState(false);
 
-
-  // --- DATA FETCHING ---
   const categoriesQuery = useMemoFirebase(
     () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
     [firestore, user]
@@ -48,14 +48,18 @@ export default function DashboardPage() {
     [firestore, user]
   );
 
-  const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesQuery);
-  const { data: deadlines, isLoading: isLoadingDeadlines } = useCollection<Deadline>(deadlinesQuery);
+  const { data: categories, isLoading: isLoadingCategories } =
+    useCollection<Category>(categoriesQuery);
+  const { data: deadlines, isLoading: isLoadingDeadlines } =
+    useCollection<Deadline>(deadlinesQuery);
 
-  // --- DATA PROCESSING ---
-   const processedDeadlines = useMemo((): ProcessedDeadline[] => {
-    if (!deadlines || !categories) return [];
-    
-    const processed = deadlines.map((d) => {
+  const processedDeadlines = useMemo((): ProcessedDeadline[] => {
+    if (!deadlines || !categories) {
+      return [];
+    }
+
+    return deadlines
+      .map((d) => {
         const category = categories.find((c) => c.id === d.categoryId);
         if (!category) return null;
         const daysRemaining = calculateDaysRemaining(new Date(d.expirationDate));
@@ -67,10 +71,8 @@ export default function DashboardPage() {
         };
       })
       .filter((d): d is ProcessedDeadline => d !== null);
-
-    return processed;
   }, [deadlines, categories]);
-  
+
   const sortedDeadlines = useMemo(() => {
     return [...processedDeadlines].sort((a, b) => {
         // Primary sort: by days remaining (ascending)
@@ -82,24 +84,74 @@ export default function DashboardPage() {
     });
   }, [processedDeadlines]);
 
+  const deadlinesByCategory = useMemo(() => {
+    return sortedDeadlines.reduce((acc, deadline) => {
+      if (!acc[deadline.category.id]) {
+        acc[deadline.category.id] = [];
+      }
+      acc[deadline.category.id].push(deadline);
+      return acc;
+    }, {} as Record<string, ProcessedDeadline[]>);
+  }, [sortedDeadlines]);
 
-  // --- SEEDING LOGIC ---
+  const sortedCategories = useMemo(() => {
+     if (!categories || sortedDeadlines.length === 0) {
+      return categories || [];
+    }
+
+    const categoryOrder = sortedDeadlines.map(d => d.category.id);
+    const uniqueCategoryOrder = [...new Set(categoryOrder)];
+
+    const sorted = [...categories].sort((a, b) => {
+      const indexA = uniqueCategoryOrder.indexOf(a.id);
+      const indexB = uniqueCategoryOrder.indexOf(b.id);
+      
+      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      
+      return indexA - indexB;
+    });
+
+    return sorted;
+  }, [categories, sortedDeadlines]);
+
+
+
   useEffect(() => {
     async function seedDefaultCategories() {
-      if (user && firestore && !isLoadingCategories && categories?.length === 0 && !isSeeding) {
+      if (
+        user &&
+        firestore &&
+        !isLoadingCategories &&
+        categories?.length === 0 &&
+        !isSeeding
+      ) {
         setIsSeeding(true);
         console.log('Nessuna categoria trovata, creazione categorie di default...');
-        const categoriesColRef = collection(firestore, 'users', user.uid, 'categories');
+        const categoriesColRef = collection(
+          firestore,
+          'users',
+          user.uid,
+          'categories'
+        );
         const batch = writeBatch(firestore);
         defaultCategories.forEach((categoryData) => {
           const newCatRef = doc(categoriesColRef);
-          batch.set(newCatRef, { ...categoryData, userId: user.uid, id: newCatRef.id });
+          batch.set(newCatRef, {
+            ...categoryData,
+            userId: user.uid,
+            id: newCatRef.id,
+          });
         });
         try {
           await batch.commit();
           console.log('Categorie di default create con successo.');
         } catch (error) {
-          console.error('Errore during la creazione delle categorie di default:', error);
+          console.error(
+            'Errore during la creazione delle categorie di default:',
+            error
+          );
         } finally {
           setIsSeeding(false);
         }
@@ -108,31 +160,33 @@ export default function DashboardPage() {
     seedDefaultCategories();
   }, [user, firestore, categories, isLoadingCategories, isSeeding]);
 
-
-  // --- EVENT HANDLERS ---
   const handleEditDeadline = (deadline: ProcessedDeadline) => {
-    setEditingDeadline(deadline);
+    setDialogState({ editingDeadline: deadline });
   };
 
   const handleDeleteDeadline = (deadline: ProcessedDeadline) => {
-    setDeletingItem({ id: deadline.id, name: deadline.name, type: 'deadline' });
+    setDialogState({ deletingDeadline: deadline });
   };
-  
+
   const confirmDeletion = () => {
-    if (!deletingItem || !user || !firestore) return;
+    const { deletingDeadline } = dialogState;
+    if (!deletingDeadline || !user || !firestore) return;
 
-    if (deletingItem.type === 'deadline') {
-        const docRef = doc(firestore, 'users', user.uid, 'deadlines', deletingItem.id);
-        deleteDocumentNonBlocking(docRef);
-        toast({
-            title: 'Successo!',
-            description: `"${deletingItem.name}" è stato eliminato.`,
-        });
-    } 
+    const docRef = doc(
+      firestore,
+      'users',
+      user.uid,
+      'deadlines',
+      deletingDeadline.id
+    );
+    deleteDocumentNonBlocking(docRef);
+    toast({
+      title: 'Successo!',
+      description: `"${deletingDeadline.name}" è stato eliminato.`,
+    });
 
-    setDeletingItem(null);
+    setDialogState({});
   };
-
 
   const isLoading = isLoadingCategories || isLoadingDeadlines || isSeeding;
 
@@ -150,28 +204,38 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-8">
           {(!categories || categories.length === 0) && !isSeeding && (
             <Card>
-              <CardHeader><CardTitle>Benvenuto in Pittima!</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Benvenuto in Pittima!</CardTitle>
+              </CardHeader>
               <CardContent>
-                <p>Sembra che tu non abbia ancora nessuna categoria. Le categorie di default verranno create a breve.</p>
+                <p>
+                  Sembra che tu non abbia ancora nessuna categoria. Le categorie
+                  di default verranno create a breve.
+                </p>
               </CardContent>
             </Card>
           )}
           {categories && categories.length > 0 && sortedDeadlines.length === 0 && (
             <Card>
-              <CardHeader><CardTitle>Nessuna scadenza trovata</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Nessuna scadenza trovata</CardTitle>
+              </CardHeader>
               <CardContent>
-                <p>Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi Scadenza" per iniziare.</p>
+                <p>
+                  Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
+                  Scadenza" per iniziare.
+                </p>
               </CardContent>
             </Card>
           )}
-          {categories?.map((category) => (
-             <CategorySection
-                key={category.id}
-                category={category}
-                deadlines={sortedDeadlines.filter(d => d.categoryId === category.id)}
-                onEditDeadline={handleEditDeadline}
-                onDeleteDeadline={handleDeleteDeadline}
-              />
+          {sortedCategories?.map((category) => (
+            <CategorySection
+              key={category.id}
+              category={category}
+              deadlines={deadlinesByCategory[category.id] || []}
+              onEditDeadline={handleEditDeadline}
+              onDeleteDeadline={handleDeleteDeadline}
+            />
           ))}
         </div>
         <div className="lg:col-span-1">
@@ -181,20 +245,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* --- DIALOGS --- */}
-      {editingDeadline && (
+      {dialogState.editingDeadline && (
         <EditDeadlineDialog
-          open={!!editingDeadline}
-          onOpenChange={(isOpen) => !isOpen && setEditingDeadline(null)}
-          deadline={editingDeadline}
+          open={!!dialogState.editingDeadline}
+          onOpenChange={(isOpen) => !isOpen && setDialogState({})}
+          deadline={dialogState.editingDeadline}
         />
       )}
-      {deletingItem && (
-         <DeleteConfirmationDialog
-            open={!!deletingItem}
-            onOpenChange={(isOpen) => !isOpen && setDeletingItem(null)}
-            itemName={deletingItem.name}
-            onConfirm={confirmDeletion}
+      {dialogState.deletingDeadline && (
+        <DeleteConfirmationDialog
+          open={!!dialogState.deletingDeadline}
+          onOpenChange={(isOpen) => !isOpen && setDialogState({})}
+          itemName={dialogState.deletingDeadline.name}
+          onConfirm={confirmDeletion}
         />
       )}
     </>
