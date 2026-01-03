@@ -17,6 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditDeadlineDialog } from '@/components/dashboard/edit-deadline-dialog';
 import { DeleteConfirmationDialog } from '@/components/dashboard/delete-confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
+import ClientDashboardHeader from '@/components/dashboard/client-dashboard-header';
+import dynamic from 'next/dynamic';
 
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Veicoli', icon: 'Car' },
@@ -40,7 +42,8 @@ export default function DashboardPage() {
   const [isSeeding, setIsSeeding] = useState(false);
 
   const categoriesQuery = useMemoFirebase(
-    () => (user ? collection(firestore, 'users', user.uid, 'categories') : null),
+    () =>
+      user ? collection(firestore, 'users', user.uid, 'categories') : null,
     [firestore, user]
   );
   const deadlinesQuery = useMemoFirebase(
@@ -62,7 +65,9 @@ export default function DashboardPage() {
       .map((d) => {
         const category = categories.find((c) => c.id === d.categoryId);
         if (!category) return null;
-        const daysRemaining = calculateDaysRemaining(new Date(d.expirationDate));
+        const daysRemaining = calculateDaysRemaining(
+          new Date(d.expirationDate)
+        );
         return {
           ...d,
           category,
@@ -75,38 +80,41 @@ export default function DashboardPage() {
 
   const sortedDeadlines = useMemo(() => {
     return [...processedDeadlines].sort((a, b) => {
-        if (a.daysRemaining < b.daysRemaining) return -1;
-        if (a.daysRemaining > b.daysRemaining) return 1;
-        return a.name.localeCompare(b.name);
+      if (a.daysRemaining < b.daysRemaining) return -1;
+      if (a.daysRemaining > b.daysRemaining) return 1;
+      return a.name.localeCompare(b.name);
     });
   }, [processedDeadlines]);
 
   const deadlinesByCategory = useMemo(() => {
-    return sortedDeadlines.reduce((acc, deadline) => {
-      if (!acc[deadline.category.id]) {
-        acc[deadline.category.id] = [];
-      }
-      acc[deadline.category.id].push(deadline);
-      return acc;
-    }, {} as Record<string, ProcessedDeadline[]>);
+    return sortedDeadlines.reduce(
+      (acc, deadline) => {
+        if (!acc[deadline.category.id]) {
+          acc[deadline.category.id] = [];
+        }
+        acc[deadline.category.id].push(deadline);
+        return acc;
+      },
+      {} as Record<string, ProcessedDeadline[]>
+    );
   }, [sortedDeadlines]);
 
   const sortedCategories = useMemo(() => {
-     if (!categories || sortedDeadlines.length === 0) {
+    if (!categories || sortedDeadlines.length === 0) {
       return categories || [];
     }
 
-    const categoryOrder = sortedDeadlines.map(d => d.category.id);
+    const categoryOrder = sortedDeadlines.map((d) => d.category.id);
     const uniqueCategoryOrder = [...new Set(categoryOrder)];
 
     const sorted = [...categories].sort((a, b) => {
       const indexA = uniqueCategoryOrder.indexOf(a.id);
       const indexB = uniqueCategoryOrder.indexOf(b.id);
-      
+
       if (indexA === -1 && indexB === -1) return 0;
       if (indexA === -1) return 1;
       if (indexB === -1) return -1;
-      
+
       return indexA - indexB;
     });
 
@@ -123,7 +131,9 @@ export default function DashboardPage() {
         !isSeeding
       ) {
         setIsSeeding(true);
-        console.log('Nessuna categoria trovata, creazione categorie di default...');
+        console.log(
+          'Nessuna categoria trovata, creazione categorie di default...'
+        );
         const categoriesColRef = collection(
           firestore,
           'users',
@@ -195,6 +205,7 @@ export default function DashboardPage() {
 
   return (
     <>
+      <ClientDashboardHeader totalDeadlines={sortedDeadlines.length} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-8">
           {(!categories || categories.length === 0) && !isSeeding && (
@@ -210,19 +221,21 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           )}
-          {categories && categories.length > 0 && sortedDeadlines.length === 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Nessuna scadenza trovata</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
-                  Scadenza" per iniziare.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {categories &&
+            categories.length > 0 &&
+            sortedDeadlines.length === 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nessuna scadenza trovata</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>
+                    Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
+                    Scadenza" per iniziare.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           {sortedCategories?.map((category) => (
             <CategorySection
               key={category.id}
