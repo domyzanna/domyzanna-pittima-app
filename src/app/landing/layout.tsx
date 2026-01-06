@@ -2,7 +2,7 @@
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser, FirebaseClientProvider } from '@/firebase';
 
 
 function LandingNav() {
@@ -41,19 +41,21 @@ export default function LandingLayout({
 
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 flex">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
-              <Icons.logo className="h-6 w-6 text-primary" />
-              <span className="font-bold font-headline">Pittima App</span>
-            </Link>
-          </div>
-          <LandingNav />
+    <FirebaseClientProvider>
+        <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-14 items-center">
+            <div className="mr-4 flex">
+                <Link href="/" className="mr-6 flex items-center space-x-2">
+                <Icons.logo className="h-6 w-6 text-primary" />
+                <span className="font-bold font-headline">Pittima App</span>
+                </Link>
+            </div>
+            <LandingNav />
+            </div>
+        </header>
+        <main className="flex-1">{children}</main>
         </div>
-      </header>
-      <main className="flex-1">{children}</main>
-    </div>
+    </FirebaseClientProvider>
   );
 }
