@@ -18,7 +18,6 @@ import { EditDeadlineDialog } from '@/components/dashboard/edit-deadline-dialog'
 import { DeleteConfirmationDialog } from '@/components/dashboard/delete-confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
 import ClientDashboardHeader from '@/components/dashboard/client-dashboard-header';
-import dynamic from 'next/dynamic';
 
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Veicoli', icon: 'Car' },
@@ -206,52 +205,54 @@ export default function DashboardPage() {
   return (
     <>
       <ClientDashboardHeader totalDeadlines={sortedDeadlines.length} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-8">
-          {(!categories || categories.length === 0) && !isSeeding && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Benvenuto in Pittima!</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  Sembra che tu non abbia ancora nessuna categoria. Le categorie
-                  di default verranno create a breve.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-          {categories &&
-            categories.length > 0 &&
-            sortedDeadlines.length === 0 && (
+      <main className="p-4 sm:p-6 lg:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-8">
+            {(!categories || categories.length === 0) && !isSeeding && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Nessuna scadenza trovata</CardTitle>
+                  <CardTitle>Benvenuto in Pittima!</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p>
-                    Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
-                    Scadenza" per iniziare.
+                    Sembra che tu non abbia ancora nessuna categoria. Le categorie
+                    di default verranno create a breve.
                   </p>
                 </CardContent>
               </Card>
             )}
-          {sortedCategories?.map((category) => (
-            <CategorySection
-              key={category.id}
-              category={category}
-              deadlines={deadlinesByCategory[category.id] || []}
-              onEditDeadline={handleEditDeadline}
-              onDeleteDeadline={handleDeleteDeadline}
-            />
-          ))}
-        </div>
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 space-y-8">
-            <MonthlySummary deadlines={sortedDeadlines} />
+            {categories &&
+              categories.length > 0 &&
+              sortedDeadlines.length === 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Nessuna scadenza trovata</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>
+                      Non hai ancora aggiunto nessuna scadenza. Clicca su "Aggiungi
+                      Scadenza" per iniziare.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            {sortedCategories?.map((category) => (
+              <CategorySection
+                key={category.id}
+                category={category}
+                deadlines={deadlinesByCategory[category.id] || []}
+                onEditDeadline={handleEditDeadline}
+                onDeleteDeadline={handleDeleteDeadline}
+              />
+            ))}
+          </div>
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 space-y-8">
+              <MonthlySummary deadlines={sortedDeadlines} />
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {dialogState.editingDeadline && (
         <EditDeadlineDialog

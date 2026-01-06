@@ -2,13 +2,46 @@
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useUser } from '@/firebase';
+import { FirebaseClientProvider } from '@/firebase';
+
+function LandingNav() {
+    const { user, isUserLoading } = useUser();
+
+    if (isUserLoading) {
+        return <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />;
+    }
+
+    return (
+        <div className="flex flex-1 items-center justify-end space-x-2">
+        {user ? (
+             <Button asChild>
+                <Link href="/dashboard">Vai alla Dashboard</Link>
+            </Button>
+        ) : (
+            <>
+                <Button asChild variant="ghost">
+                    <Link href="/login">Accedi</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/signup">Registrati Gratis</Link>
+                </Button>
+            </>
+        )}
+        </div>
+    )
+}
+
 
 export default function LandingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+
   return (
+    <FirebaseClientProvider>
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
@@ -18,17 +51,11 @@ export default function LandingLayout({
               <span className="font-bold font-headline">Pittima App</span>
             </Link>
           </div>
-          <div className="flex flex-1 items-center justify-end space-x-2">
-            <Button asChild variant="ghost">
-              <Link href="/login">Accedi</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Registrati Gratis</Link>
-            </Button>
-          </div>
+          <LandingNav />
         </div>
       </header>
       <main className="flex-1">{children}</main>
     </div>
+    </FirebaseClientProvider>
   );
 }

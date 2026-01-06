@@ -6,6 +6,7 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Icons } from '@/components/icons';
+import ClientDashboardHeader from '@/components/dashboard/client-dashboard-header';
 
 export default function DashboardLayout({
   children,
@@ -33,7 +34,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <MainSidebar />
       <SidebarInset>
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );
