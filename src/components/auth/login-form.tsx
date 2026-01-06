@@ -66,7 +66,6 @@ export function LoginForm() {
       router.push('/dashboard');
 
     } catch (error: any) {
-      console.error('Error signing in', error);
       let description = 'Credenziali non valide. Riprova.';
       if (
         error.code === 'auth/user-not-found' ||
