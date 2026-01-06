@@ -2,17 +2,13 @@
 
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/layout/main-sidebar';
-import { useUser } from '@/firebase';
+import { useUser, FirebaseClientProvider } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Icons } from '@/components/icons';
 import ClientDashboardHeader from '@/components/dashboard/client-dashboard-header';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -38,4 +34,17 @@ export default function DashboardLayout({
       </SidebarInset>
     </SidebarProvider>
   );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <FirebaseClientProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </FirebaseClientProvider>
+  )
 }

@@ -3,7 +3,7 @@ import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
-import { FirebaseClientProvider } from '@/firebase';
+
 
 function LandingNav() {
     const { user, isUserLoading } = useUser();
@@ -41,7 +41,6 @@ export default function LandingLayout({
 
 
   return (
-    <FirebaseClientProvider>
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
@@ -56,6 +55,5 @@ export default function LandingLayout({
       </header>
       <main className="flex-1">{children}</main>
     </div>
-    </FirebaseClientProvider>
   );
 }
