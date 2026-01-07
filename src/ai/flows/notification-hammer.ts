@@ -19,41 +19,41 @@ import { sendEmailTool } from '@/ai/tools/send-email-tool';
 
 // Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
-  const adminAppName = 'admin-notifications';
-  const existingApp = getApps().find((app) => app.name === adminAppName);
-  if (existingApp) {
-    return existingApp;
-  }
-
-  let appOptions = {};
-
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
-    try {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      appOptions = {
-        credential: cert(serviceAccount),
-        projectId: serviceAccount.project_id || firebaseConfig.projectId,
-      };
-      console.log('Initializing Firebase Admin for Notifications with Service Account...');
-    } catch (e) {
-      console.error(
-        'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
-        e
-      );
-      // Fallback if parsing fails but key exists
-      appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
+    const adminAppName = 'admin-notifications';
+    const existingApp = getApps().find((app) => app.name === adminAppName);
+    if (existingApp) {
+      return existingApp;
     }
-  } else {
-    console.log(
-      'Initializing Firebase Admin for Notifications with default project ID (dev environment).'
-    );
-    // Fallback for dev or environments without the service account key
-    appOptions = {
-      projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
-    };
-  }
-
-  return initializeApp(appOptions, adminAppName);
+  
+    let appOptions: any = {};
+  
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
+      try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        appOptions = {
+          credential: cert(serviceAccount),
+          projectId: serviceAccount.project_id || firebaseConfig.projectId,
+        };
+        console.log('Initializing Firebase Admin for Notifications with Service Account...');
+      } catch (e) {
+        console.error(
+          'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
+          e
+        );
+        // Fallback if parsing fails but key exists
+        appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
+      }
+    } else {
+        console.log(
+            'Initializing Firebase Admin for Notifications with default project ID (dev environment).'
+        );
+        // Fallback for dev or environments without the service account key
+        appOptions = {
+            projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
+        };
+    }
+  
+    return initializeApp(appOptions, adminAppName);
 }
 
 // Define Zod schemas for our flow inputs/outputs for type safety.
@@ -97,12 +97,21 @@ Questo è un promemoria automatico per aiutarti a ricordare. Puoi vedere tutti i
 Grazie per usare Pittima App,
 Il tuo assistente per le scadenze.`;
 
-    const emailResult = await ai.runTool('sendEmail', {
-      to: payload.userEmail,
-      subject: subject,
-      body: body,
-    });
-    emailSuccess = emailResult.success;
+    try {
+      const emailResult = await sendEmailTool( {
+          to: payload.userEmail,
+          subject: subject,
+          body: body,
+        });
+      emailSuccess = emailResult.success;
+      if (!emailSuccess) {
+          console.warn(`Email sending failed for ${payload.userEmail}: ${emailResult.message}`);
+      }
+    } catch (e: any) {
+        console.error(`Exception during email sending for ${payload.userEmail}:`, e);
+        emailSuccess = false;
+    }
+
 
     // --- Send Push Notification ---
     if (payload.user.pushSubscription) {
@@ -111,11 +120,20 @@ Il tuo assistente per le scadenze.`;
         title: `Promemoria: ${payload.deadlineName}`,
         body: `La tua scadenza è prevista per il ${payload.deadlineExpiration}. Non dimenticare!`,
       };
-      const pushResult = await ai.runTool('sendPushNotification', {
-        subscription: payload.user.pushSubscription,
-        payload: pushPayload,
-      });
-      pushSuccess = pushResult.success;
+      try {
+        const pushResult = await sendPushNotificationTool({
+            subscription: payload.user.pushSubscription,
+            payload: pushPayload,
+          });
+        pushSuccess = pushResult.success;
+        if(!pushSuccess) {
+            console.warn(`Push notification failed for ${payload.userEmail}: ${pushResult.message}`);
+        }
+      } catch (e: any) {
+        console.error(`Exception during push notification for ${payload.userEmail}:`, e);
+        pushSuccess = false;
+      }
+
     } else {
         console.log(`-> No push subscription for user ${payload.userEmail}. Skipping push notification.`);
     }
@@ -194,14 +212,11 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         const isPastNotificationStartDate = notificationStartDate <= today;
 
         if (isActiveForNotifications && isPastNotificationStartDate && (shouldSendEmail || shouldSendPush)) {
-          notificationsTriggered++;
-
           console.log(
             `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
           );
-
-          // We don't await this; let it run in the background
-          sendNotification({
+          
+          await sendNotification({
             userEmail: email,
             userName: displayName || email.split('@')[0],
             user: { ...userData, id: uid, email, displayName } as User,
@@ -210,10 +225,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
               deadline.expirationDate
             ).toLocaleDateString('it-IT'),
           });
-          
-          if (deadline.notificationStatus === 'pending') {
-            await doc.ref.update({ notificationStatus: 'active' });
-          }
+          notificationsTriggered++;
         }
       }
     }
