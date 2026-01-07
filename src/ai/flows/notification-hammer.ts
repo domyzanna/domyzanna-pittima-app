@@ -40,12 +40,14 @@ function initializeAdminApp(): App {
         'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
         e
       );
+      // Fallback if parsing fails but key exists
       appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
     }
   } else {
     console.log(
       'Initializing Firebase Admin for Notifications with default project ID (dev environment).'
     );
+    // Fallback for dev or environments without the service account key
     appOptions = {
       projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
     };
