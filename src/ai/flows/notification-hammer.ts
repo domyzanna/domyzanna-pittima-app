@@ -13,8 +13,8 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
-import { Resend } from 'resend';
 import { sendPushNotificationTool } from '@/ai/tools/send-push-notification-tool';
+import { sendEmailTool } from '@/ai/tools/send-email-tool';
 
 
 // Firebase Admin SDK Initialization
@@ -55,53 +55,6 @@ function initializeAdminApp(): App {
 
   return initializeApp(appOptions, adminAppName);
 }
-
-// Define a "Tool" for sending emails. This makes our flow more modular.
-const sendEmailTool = ai.defineTool(
-  {
-    name: 'sendEmail',
-    description: 'Sends a transactional email to a user.',
-    inputSchema: z.object({
-      to: z.string().email(),
-      subject: z.string(),
-      body: z.string(),
-    }),
-    outputSchema: z.object({
-      success: z.boolean(),
-      message: z.string(),
-    }),
-  },
-  async (payload) => {
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('Chiave API Resend non trovata. Impossibile inviare email reali.');
-      return { success: false, message: 'Resend API key not configured.' };
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    try {
-      const { data, error } = await resend.emails.send({
-        from: 'Pittima App <info@zannalabs.com>', // Importante: devi verificare questo dominio in Resend
-        to: [payload.to],
-        subject: payload.subject,
-        html: payload.body.replace(/\n/g, '<br>'), // Converte i newline in <br> per l'HTML
-      });
-
-      if (error) {
-        console.error('Errore invio email con Resend:', error);
-        return { success: false, message: error.message };
-      }
-
-      console.log('Email inviata con successo, ID:', data?.id);
-      return { success: true, message: `Email successfully dispatched to ${payload.to}` };
-
-    } catch (e: any) {
-      console.error('Eccezione durante invio email:', e);
-      return { success: false, message: e.message || 'Failed to send email.' };
-    }
-  }
-);
-
 
 // Define Zod schemas for our flow inputs/outputs for type safety.
 
