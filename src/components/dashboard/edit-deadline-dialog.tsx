@@ -110,7 +110,6 @@ export function EditDeadlineDialog({
       ...values,
       expirationDate: expirationDate.toISOString(),
       notificationStartDate: notificationStartDate.toISOString(),
-      notificationStatus: 'pending', 
     };
 
     updateDocumentNonBlocking(deadlineRef, deadlineDataToUpdate);
