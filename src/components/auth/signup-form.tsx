@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { Checkbox } from '../ui/checkbox';
 
 const formSchema = z
   .object({
@@ -36,10 +38,15 @@ const formSchema = z
       .string()
       .min(6, 'La password deve contenere almeno 6 caratteri.'),
     confirmPassword: z.string(),
+    acceptTerms: z.boolean().default(false),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Le password non coincidono.',
     path: ['confirmPassword'],
+  })
+  .refine((data) => data.acceptTerms, {
+    message: 'Devi accettare i termini e la privacy policy.',
+    path: ['acceptTerms'],
   });
 
 export function SignupForm() {
@@ -55,6 +62,7 @@ export function SignupForm() {
       email: '',
       password: '',
       confirmPassword: '',
+      acceptTerms: false,
     },
   });
 
@@ -69,7 +77,6 @@ export function SignupForm() {
       await sendEmailVerification(userCredential.user);
       setIsSubmitted(true);
     } catch (error: any) {
-      console.error('Error creating user', error);
       let description = "Impossibile creare l'account. Riprova più tardi.";
       if (error.code === 'auth/email-already-in-use') {
         description = 'Questo indirizzo email è già in uso. Prova ad accedere.';
@@ -88,20 +95,21 @@ export function SignupForm() {
     return (
       <div className="space-y-4">
         <Alert variant="default" className="border-green-500 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-700" />
-          <AlertTitle className="text-green-800">Registrazione completata!</AlertTitle>
+          <CheckCircle className="h-4 w-4 text-green-700" />
+          <AlertTitle className="text-green-800">
+            Registrazione completata!
+          </AlertTitle>
           <AlertDescription className="text-green-700">
             Ti abbiamo inviato un'email. Clicca sul link di conferma per
             attivare il tuo account e poter accedere.
           </AlertDescription>
         </Alert>
         <Button asChild className="w-full">
-            <Link href="/login">Torna al Login</Link>
+          <Link href="/login">Torna al Login</Link>
         </Button>
       </div>
     );
   }
-
 
   return (
     <Form {...form}>
@@ -142,6 +150,43 @@ export function SignupForm() {
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="acceptTerms"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>Accetta termini e condizioni</FormLabel>
+                <FormDescription>
+                  Dichiari di aver letto e accettato i{' '}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="underline text-primary"
+                  >
+                    Termini di Servizio
+                  </Link>{' '}
+                  e la{' '}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="underline text-primary"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </FormDescription>
+                 <FormMessage />
+              </div>
             </FormItem>
           )}
         />
