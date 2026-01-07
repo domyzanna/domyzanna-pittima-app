@@ -81,7 +81,7 @@ const sendEmailTool = ai.defineTool(
 
     try {
       const { data, error } = await resend.emails.send({
-        from: 'Pittima App <onboarding@resend.dev>', // Importante: devi verificare questo dominio in Resend
+        from: 'Pittima App <info@zannalabs.com>', // Importante: devi verificare questo dominio in Resend
         to: [payload.to],
         subject: payload.subject,
         html: payload.body.replace(/\n/g, '<br>'), // Converte i newline in <br> per l'HTML
