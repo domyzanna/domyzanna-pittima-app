@@ -205,8 +205,8 @@ export default function DashboardPage() {
   return (
     <>
       <ClientDashboardHeader totalDeadlines={sortedDeadlines.length} />
-      <main className="p-4 sm:p-6 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <main className="py-4 sm:py-6 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start px-4 sm:px-6 lg:px-8">
           <div className="lg:col-span-2 space-y-8">
             {(!categories || categories.length === 0) && !isSeeding && (
               <Card>
