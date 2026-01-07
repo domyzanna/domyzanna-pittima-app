@@ -13,7 +13,7 @@ import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Icons } from '@/components/icons';
-import { BellRing, BellOff } from 'lucide-react';
+import { BellRing, BellOff, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -42,14 +42,26 @@ export default function SettingsPage() {
   const [notificationError, setNotificationError] = useState<string | null>(
     null
   );
+  const [permissionState, setPermissionState] = useState<PermissionState>('prompt');
 
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
         navigator.serviceWorker.register('/sw.js').catch(err => {
             console.error('Service worker registration failed:', err);
             setNotificationError("Impossibile inizializzare le notifiche (Service Worker fallito).");
         });
+
+        navigator.permissions.query({name: 'push', userVisibleOnly:true}).then(permissionResult => {
+            setPermissionState(permissionResult.state);
+            permissionResult.onchange = () => {
+                setPermissionState(permissionResult.state);
+            };
+        });
+
+    } else {
+        setPermissionState('denied');
+        setNotificationError("Il tuo browser non supporta le notifiche push.");
     }
   }, []);
 
@@ -111,8 +123,6 @@ export default function SettingsPage() {
     setIsProcessing(true);
     setNotificationError(null);
     
-    // --- DEFINITIVE FIX ---
-    // Hardcode the public key directly. This is safe as it's public.
     const VAPID_PUBLIC_KEY = "BHlzENF_MAU5UWAL1zxT89jZvSPg36r72FtLOhHoRawcr1uEPdVQ6LC7xki3qgGXD4i1lGQhxjS2nHkvw18BWgc";
 
     try {
@@ -146,6 +156,8 @@ export default function SettingsPage() {
     }
   };
 
+  const isButtonDisabled = isProcessing || permissionState === 'denied';
+
   return (
     <div className="space-y-8">
       <h2 className="text-xl font-headline font-semibold mb-4">
@@ -166,7 +178,7 @@ export default function SettingsPage() {
                  <span>Verifica in corso...</span>
             </div>
           ) : (
-            <Button onClick={isSubscribed ? handleUnsubscribe : handleSubscribe} disabled={isProcessing}>
+            <Button onClick={isSubscribed ? handleUnsubscribe : handleSubscribe} disabled={isButtonDisabled}>
               {isProcessing && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
               {isSubscribed ? (
                 <>
@@ -180,6 +192,15 @@ export default function SettingsPage() {
                 </>
               )}
             </Button>
+          )}
+          {permissionState === 'denied' && !isSubscriptionLoading && (
+               <Alert variant="destructive" className="mt-4">
+                 <AlertTriangle className="h-4 w-4" />
+                 <AlertTitle>Permessi Negati</AlertTitle>
+                 <AlertDescription>
+                    Hai bloccato le notifiche per questo sito. Per poterle attivare, devi modificare i permessi nelle impostazioni del tuo browser.
+                 </AlertDescription>
+               </Alert>
           )}
            {notificationError && (
             <Alert variant="destructive" className="mt-4">
