@@ -198,14 +198,15 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       
       foundDeadlines += deadlinesSnapshot.size;
 
+      // Step 1: Collect all deadlines that need notifications for the current user
+      const notificationsToSend: NotificationPayloadSchema[] = [];
+
       for (const doc of deadlinesSnapshot.docs) {
         const deadline = doc.data() as Deadline;
         
-        // We only send emails to verified accounts
         const shouldSendEmail = emailVerified;
-        // We only send push if there's a subscription
         const shouldSendPush = !!userData?.pushSubscription;
-
+        
         const notificationStartDate = new Date(deadline.notificationStartDate);
         
         const isActiveForNotifications = deadline.notificationStatus === 'pending' || deadline.notificationStatus === 'active';
@@ -213,10 +214,9 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
         if (isActiveForNotifications && isPastNotificationStartDate && (shouldSendEmail || shouldSendPush)) {
           console.log(
-            `-> Found active deadline "${deadline.name}" for user ${email}. Triggering hammer.`
+            `-> Found eligible deadline "${deadline.name}" for user ${email}. Adding to queue.`
           );
-          
-          await sendNotification({
+          notificationsToSend.push({
             userEmail: email,
             userName: displayName || email.split('@')[0],
             user: { ...userData, id: uid, email, displayName } as User,
@@ -225,7 +225,19 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
               deadline.expirationDate
             ).toLocaleDateString('it-IT'),
           });
-          notificationsTriggered++;
+        }
+      }
+
+      // Step 2: Process the collected notifications
+      if (notificationsToSend.length > 0) {
+        console.log(`-> Processing ${notificationsToSend.length} notifications for user ${email}.`);
+        for (const payload of notificationsToSend) {
+          try {
+            await sendNotification(payload);
+            notificationsTriggered++;
+          } catch (e: any) {
+            console.error(`Failed to trigger notification for "${payload.deadlineName}" for user ${email}:`, e);
+          }
         }
       }
     }
