@@ -4,7 +4,7 @@ import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn, getNextExpiration } from '@/lib/utils';
 import { Archive, Edit, Bell, BellOff, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useFirestore, useUser, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -28,7 +28,7 @@ type DeadlineCardProps = {
 }
 
 export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) {
-  const { id, name, description, daysRemaining, urgency, expirationDate, recurrence, notificationStatus } = deadline;
+  const { id, name, description, daysRemaining, urgency, expirationDate, recurrence, notificationStatus, notificationDays } = deadline;
   const style = urgencyStyles[urgency] || defaultStyle;
   const firestore = useFirestore();
   const { user } = useUser();
@@ -42,12 +42,15 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
     const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', id);
 
     if (recurrence === 'una-tantum') {
-      deleteDocumentNonBlocking(deadlineRef);
-      toast({ title: 'Completato!', description: `La scadenza "${name}" è stata rimossa.` });
+      updateDocumentNonBlocking(deadlineRef, { isCompleted: true });
+      toast({ title: 'Completato!', description: `La scadenza "${name}" è stata archiviata.` });
     } else {
       const nextExpiration = getNextExpiration(new Date(expirationDate), recurrence);
+      const newNotificationStartDate = subDays(nextExpiration, notificationDays);
+      
       updateDocumentNonBlocking(deadlineRef, {
         expirationDate: nextExpiration.toISOString(),
+        notificationStartDate: newNotificationStartDate.toISOString(),
         notificationStatus: 'pending',
       });
       toast({ title: 'Rinnovato!', description: `La scadenza "${name}" è stata aggiornata.` });

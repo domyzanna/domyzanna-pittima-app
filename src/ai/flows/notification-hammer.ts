@@ -25,7 +25,9 @@ function initializeAdminApp(): App {
       return existingApp;
     }
   
-    let appOptions: any = {};
+    let appOptions: any = {
+      projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
+    };
   
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
       try {
@@ -40,17 +42,12 @@ function initializeAdminApp(): App {
           'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
           e
         );
-        // Fallback if parsing fails but key exists
-        appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
+        // Fallback if parsing fails but key exists, projectId is already set
       }
     } else {
         console.log(
-            'Initializing Firebase Admin for Notifications with default project ID (dev environment).'
+            'Initializing Firebase Admin for Notifications with default project ID (dev environment or scheduled run).'
         );
-        // Fallback for dev or environments without the service account key
-        appOptions = {
-            projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
-        };
     }
   
     return initializeApp(appOptions, adminAppName);
@@ -65,6 +62,8 @@ const NotificationPayloadSchema = z.object({
   deadlineName: z.string(),
   deadlineExpiration: z.string(),
 });
+type NotificationPayloadSchema = z.infer<typeof NotificationPayloadSchema>;
+
 
 /**
  * The "Hammer": Sends a single notification by calling the email tool.
@@ -159,7 +158,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
   async () => {
     console.log("🛡️ NIGHT'S WATCH: Starting daily deadline check...");
     
-    // Initialize admin app and services here, only when the flow is run
     const adminApp = initializeAdminApp();
     const db = getFirestore(adminApp);
     const auth = getAuth(adminApp);
@@ -188,6 +186,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       const userDoc = await userDocRef.get();
       const userData = userDoc.data() as User | undefined;
 
+      // Fetch ALL non-completed deadlines. We will filter them in the code.
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
       const q = deadlinesRef.where('isCompleted', '==', false);
       const deadlinesSnapshot = await q.get();
@@ -198,7 +197,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       
       foundDeadlines += deadlinesSnapshot.size;
 
-      // Step 1: Collect all deadlines that need notifications for the current user
       const notificationsToSend: NotificationPayloadSchema[] = [];
 
       for (const doc of deadlinesSnapshot.docs) {
@@ -206,13 +204,18 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         
         const shouldSendEmail = emailVerified;
         const shouldSendPush = !!userData?.pushSubscription;
+
+        // Skip if user has no way of receiving notifications
+        if (!shouldSendEmail && !shouldSendPush) {
+            continue;
+        }
         
         const notificationStartDate = new Date(deadline.notificationStartDate);
         
         const isActiveForNotifications = deadline.notificationStatus === 'pending' || deadline.notificationStatus === 'active';
         const isPastNotificationStartDate = notificationStartDate <= today;
 
-        if (isActiveForNotifications && isPastNotificationStartDate && (shouldSendEmail || shouldSendPush)) {
+        if (isActiveForNotifications && isPastNotificationStartDate) {
           console.log(
             `-> Found eligible deadline "${deadline.name}" for user ${email}. Adding to queue.`
           );
@@ -228,7 +231,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         }
       }
 
-      // Step 2: Process the collected notifications
       if (notificationsToSend.length > 0) {
         console.log(`-> Processing ${notificationsToSend.length} notifications for user ${email}.`);
         for (const payload of notificationsToSend) {
