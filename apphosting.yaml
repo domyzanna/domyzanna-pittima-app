@@ -14,3 +14,17 @@ scheduledJobs:
   task:
     type: genkit
     flowName: checkDeadlinesAndNotify
+
+# Define environment variables and secrets
+# https://firebase.google.com/docs/app-hosting/configure-backend#environment-variables
+env:
+  - variable: RESEND_API_KEY
+    secret: resend-api-key # You need to create this secret in Secret Manager
+  - variable: FIREBASE_SERVICE_ACCOUNT_KEY
+    secret: firebase-service-account-key # You need to create this secret
+  - variable: VAPID_PUBLIC_KEY
+    secret: vapid-public-key
+  - variable: VAPID_PRIVATE_KEY
+    secret: vapid-private-key
+  - variable: VAPID_MAILTO
+    secret: vapid-mailto

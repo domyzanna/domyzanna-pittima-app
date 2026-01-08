@@ -8,45 +8,44 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { initializeApp, getApps, App, ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
-import { firebaseConfig } from '@/firebase/config';
 import { sendPushNotificationTool } from '@/ai/tools/send-push-notification-tool';
 import { sendEmailTool } from '@/ai/tools/send-email-tool';
-import { GoogleAuth } from 'google-auth-library';
+import { credential } from 'firebase-admin';
 
 
-// Firebase Admin SDK Initialization using Application Default Credentials
+// Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
-    const adminAppName = 'admin-notifications';
-    const existingApp = getApps().find((app) => app.name === adminAppName);
-    if (existingApp) {
-      return existingApp;
-    }
-  
-    // Use Google Application Default Credentials
-    const auth = new GoogleAuth({
-        scopes: [
-            'https://www.googleapis.com/auth/cloud-platform',
-            'https://www.googleapis.com/auth/datastore',
-            'https://www.googleapis.com/auth/devstorage.full_control',
-            'https://www.googleapis.com/auth/firebase',
-            'https://www.googleapis.com/auth/identitytoolkit',
-            'https://www.googleapis.com/auth/userinfo.email',
-        ],
-    });
+  const adminAppName = 'admin-notifications';
+  const existingApp = getApps().find((app) => app.name === adminAppName);
+  if (existingApp) {
+    return existingApp;
+  }
 
-    const appOptions = {
-        credential: auth.getCredential(),
-        projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
-    };
+  console.log('Initializing Firebase Admin for Notifications...');
 
-    console.log(
-        'Initializing Firebase Admin for Notifications with Application Default Credentials...'
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  if (!serviceAccountKey) {
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. The scheduled job cannot run.'
     );
-  
-    return initializeApp(appOptions, adminAppName);
+  }
+
+  let serviceAccount: ServiceAccount;
+  try {
+     serviceAccount = JSON.parse(serviceAccountKey);
+  } catch (e) {
+    throw new Error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Make sure it's a valid JSON string.");
+  }
+
+  const appOptions = {
+    credential: credential.cert(serviceAccount),
+  };
+
+  return initializeApp(appOptions, adminAppName);
 }
 
 
