@@ -3,7 +3,7 @@
  * @fileOverview The "Night's Watchman" and the "Hammer" for sending deadline notifications.
  *
  * - checkDeadlinesAndNotify - A scheduled flow that checks all deadlines and triggers notifications.
- * - sendEmailNotification - A flow that sends a single email notification for a deadline.
+ * - sendNotification - A flow that sends a single email notification for a deadline.
  */
 
 import { ai } from '@/ai/genkit';
@@ -25,9 +25,7 @@ function initializeAdminApp(): App {
       return existingApp;
     }
   
-    let appOptions: any = {
-      projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId,
-    };
+    let appOptions: any = {};
   
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
       try {
@@ -42,12 +40,13 @@ function initializeAdminApp(): App {
           'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
           e
         );
-        // Fallback if parsing fails but key exists, projectId is already set
+         appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
       }
     } else {
         console.log(
             'Initializing Firebase Admin for Notifications with default project ID (dev environment or scheduled run).'
         );
+        appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
     }
   
     return initializeApp(appOptions, adminAppName);
@@ -186,10 +185,10 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       const userDoc = await userDocRef.get();
       const userData = userDoc.data() as User | undefined;
 
-      // Fetch ALL non-completed deadlines. We will filter them in the code.
+      // Fetch ALL deadlines for the user
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
-      const q = deadlinesRef.where('isCompleted', '==', false);
-      const deadlinesSnapshot = await q.get();
+      const deadlinesSnapshot = await deadlinesRef.get();
+
 
       if (deadlinesSnapshot.empty) {
         continue;
@@ -201,6 +200,11 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
       for (const doc of deadlinesSnapshot.docs) {
         const deadline = doc.data() as Deadline;
+
+        // Skip completed deadlines
+        if (deadline.isCompleted) {
+          continue;
+        }
         
         const shouldSendEmail = emailVerified;
         const shouldSendPush = !!userData?.pushSubscription;
@@ -233,14 +237,17 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
       if (notificationsToSend.length > 0) {
         console.log(`-> Processing ${notificationsToSend.length} notifications for user ${email}.`);
-        for (const payload of notificationsToSend) {
-          try {
-            await sendNotification(payload);
-            notificationsTriggered++;
-          } catch (e: any) {
+        
+        // Use Promise.all to send all notifications in parallel for the current user.
+        const notificationPromises = notificationsToSend.map(payload => {
+          return sendNotification(payload).catch(e => {
             console.error(`Failed to trigger notification for "${payload.deadlineName}" for user ${email}:`, e);
-          }
-        }
+            return null; // Return null on failure so Promise.all doesn't reject early
+          });
+        });
+
+        const results = await Promise.all(notificationPromises);
+        notificationsTriggered += results.filter(r => r !== null).length;
       }
     }
 
