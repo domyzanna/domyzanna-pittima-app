@@ -25,7 +25,7 @@ function initializeAdminApp(): App {
       return existingApp;
     }
   
-    let appOptions: any = {};
+    let appOptions: any = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
   
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY !== 'INCOLLA_QUI_IL_JSON_DELLA_CHIAVE_DI_SERVIZIO') {
       try {
@@ -40,13 +40,11 @@ function initializeAdminApp(): App {
           'Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Check your .env file.',
           e
         );
-         appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
       }
     } else {
         console.log(
             'Initializing Firebase Admin for Notifications with default project ID (dev environment or scheduled run).'
         );
-        appOptions = { projectId: process.env.GOOGLE_CLOUD_PROJECT || firebaseConfig.projectId };
     }
   
     return initializeApp(appOptions, adminAppName);
@@ -163,7 +161,7 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
     let checkedUsers = 0;
     let foundDeadlines = 0;
-    let notificationsTriggered = 0;
+    let totalNotifications = 0;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -176,8 +174,8 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
     for (const userRecord of allUsers) {
       const { uid, email, displayName, emailVerified } = userRecord;
 
-      if (!email) {
-        console.log(`Skipping user ${uid} - no email.`);
+      if (!email || !emailVerified) {
+        console.log(`Skipping user ${uid} - no verified email.`);
         continue;
       }
       
@@ -185,10 +183,8 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       const userDoc = await userDocRef.get();
       const userData = userDoc.data() as User | undefined;
 
-      // Fetch ALL deadlines for the user
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
       const deadlinesSnapshot = await deadlinesRef.get();
-
 
       if (deadlinesSnapshot.empty) {
         continue;
@@ -196,65 +192,74 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       
       foundDeadlines += deadlinesSnapshot.size;
 
-      const notificationsToSend: NotificationPayloadSchema[] = [];
+      const deadlinesToNotify: Deadline[] = [];
 
       for (const doc of deadlinesSnapshot.docs) {
         const deadline = doc.data() as Deadline;
 
-        // Skip completed deadlines
         if (deadline.isCompleted) {
           continue;
         }
         
-        const shouldSendEmail = emailVerified;
-        const shouldSendPush = !!userData?.pushSubscription;
-
-        // Skip if user has no way of receiving notifications
-        if (!shouldSendEmail && !shouldSendPush) {
-            continue;
-        }
-        
         const notificationStartDate = new Date(deadline.notificationStartDate);
-        
         const isActiveForNotifications = deadline.notificationStatus === 'pending' || deadline.notificationStatus === 'active';
         const isPastNotificationStartDate = notificationStartDate <= today;
 
         if (isActiveForNotifications && isPastNotificationStartDate) {
-          console.log(
-            `-> Found eligible deadline "${deadline.name}" for user ${email}. Adding to queue.`
-          );
-          notificationsToSend.push({
-            userEmail: email,
-            userName: displayName || email.split('@')[0],
-            user: { ...userData, id: uid, email, displayName } as User,
-            deadlineName: deadline.name,
-            deadlineExpiration: new Date(
-              deadline.expirationDate
-            ).toLocaleDateString('it-IT'),
-          });
+          deadlinesToNotify.push(deadline);
         }
       }
 
-      if (notificationsToSend.length > 0) {
-        console.log(`-> Processing ${notificationsToSend.length} notifications for user ${email}.`);
-        
-        // Use Promise.all to send all notifications in parallel for the current user.
-        const notificationPromises = notificationsToSend.map(payload => {
-          return sendNotification(payload).catch(e => {
-            console.error(`Failed to trigger notification for "${payload.deadlineName}" for user ${email}:`, e);
-            return null; // Return null on failure so Promise.all doesn't reject early
-          });
-        });
+      if (deadlinesToNotify.length > 0) {
+        totalNotifications += deadlinesToNotify.length;
+        console.log(`-> User ${email} has ${deadlinesToNotify.length} deadlines to be notified about. Preparing summary email.`);
 
-        const results = await Promise.all(notificationPromises);
-        notificationsTriggered += results.filter(r => r !== null).length;
+        // Construct one email with all deadlines
+        const subject = `Hai ${deadlinesToNotify.length} scadenze in avvicinamento!`;
+        let body = `Ciao ${displayName || email.split('@')[0]},<br><br>Questo è un promemoria per le tue prossime scadenze:<br><br>`;
+        
+        body += '<ul>';
+        deadlinesToNotify
+          .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime())
+          .forEach(d => {
+            body += `<li><strong>${d.name}</strong> - Scade il: ${new Date(d.expirationDate).toLocaleDateString('it-IT')}</li>`;
+        });
+        body += '</ul>';
+
+        body += "<br>Controlla l'app per tutti i dettagli.<br><br>Grazie per usare Pittima App.";
+
+        try {
+          await sendEmailTool({ to: email, subject, body });
+          console.log(`-> Summary email sent successfully to ${email}.`);
+        } catch (e) {
+          console.error(`-> Failed to send summary email to ${email}:`, e);
+        }
+
+        // We can also still send individual push notifications
+        if (userData?.pushSubscription) {
+            console.log(`-> Sending ${deadlinesToNotify.length} individual push notifications to ${email}.`);
+            for (const deadline of deadlinesToNotify) {
+                 const pushPayload = {
+                    title: `Promemoria: ${deadline.name}`,
+                    body: `La tua scadenza è prevista per il ${new Date(deadline.expirationDate).toLocaleDateString('it-IT')}. Non dimenticare!`,
+                };
+                try {
+                    await sendPushNotificationTool({
+                        subscription: userData.pushSubscription,
+                        payload: pushPayload,
+                    });
+                } catch(e) {
+                    console.error(`-> Failed to send push notification for ${deadline.name} to ${email}:`, e);
+                }
+            }
+        }
       }
     }
 
     const summary = {
       checkedUsers,
       foundDeadlines,
-      notificationsTriggered,
+      notificationsTriggered: totalNotifications,
     };
 
     console.log("✅ NIGHT'S WATCH: Daily check complete. Summary:", summary);
@@ -262,3 +267,5 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
     return summary;
   }
 );
+
+    
