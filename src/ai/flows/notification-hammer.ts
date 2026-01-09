@@ -18,34 +18,19 @@ import { credential } from 'firebase-admin';
 
 // Firebase Admin SDK Initialization
 function initializeAdminApp(): App {
-  const adminAppName = 'admin-notifications';
-  const existingApp = getApps().find((app) => app.name === adminAppName);
-  if (existingApp) {
-    return existingApp;
-  }
-
-  console.log('Initializing Firebase Admin for Notifications...');
-
-  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-
-  if (!serviceAccountKey) {
-    throw new Error(
-      'FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. The scheduled job cannot run.'
-    );
-  }
-
-  let serviceAccount: ServiceAccount;
-  try {
-     serviceAccount = JSON.parse(serviceAccountKey);
-  } catch (e) {
-    throw new Error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Make sure it's a valid JSON string.");
-  }
-
-  const appOptions = {
-    credential: credential.cert(serviceAccount),
-  };
-
-  return initializeApp(appOptions, adminAppName);
+    const adminAppName = 'admin-notifications';
+    const existingApp = getApps().find((app) => app.name === adminAppName);
+    if (existingApp) {
+      return existingApp;
+    }
+    
+    console.log('Initializing Firebase Admin for Notifications using ADC...');
+    
+    // Usa Application Default Credentials (ADC)
+    // Funziona automaticamente in Google Cloud quando i permessi IAM sono corretti.
+    return initializeApp({
+      projectId: process.env.GOOGLE_CLOUD_PROJECT || 'studio-1765347057-3bb5c',
+    }, adminAppName);
 }
 
 
