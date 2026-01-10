@@ -9,7 +9,7 @@ runConfig:
 # Schedules a Genkit flow to run on a recurring basis.
 # This will automatically trigger the "checkDeadlinesAndNotify" flow every morning.
 scheduledJobs:
-- schedule: "every day 06:00"
+- schedule: "every day 16:00"
   timeZone: "Europe/Rome"
   task:
     type: genkit
@@ -17,11 +17,12 @@ scheduledJobs:
 
 # Define environment variables and secrets
 # https://firebase.google.com/docs/app-hosting/configure-backend#environment-variables
+# NOTE: Secrets defined here are managed via the .env file in Firebase Studio.
 env:
   - variable: RESEND_API_KEY
-    secret: resend-api-key # Managed by Firebase Studio. Set in .env
+    secret: resend-api-key
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
-    secret: firebase-service-account-key # Managed by Firebase Studio. Set in .env
+    secret: firebase-service-account-key
   - variable: VAPID_PUBLIC_KEY
     secret: vapid-public-key
   - variable: VAPID_PRIVATE_KEY
