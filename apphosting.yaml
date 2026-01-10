@@ -24,8 +24,8 @@ env:
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     value: ${FIREBASE_SERVICE_ACCOUNT_KEY}
   - variable: VAPID_PUBLIC_KEY
-    secret: vapid-public-key
+    value: ${VAPID_PUBLIC_KEY}
   - variable: VAPID_PRIVATE_KEY
-    secret: vapid-private-key
+    value: ${VAPID_PRIVATE_KEY}
   - variable: VAPID_MAILTO
-    secret: vapid-mailto
+    value: ${VAPID_MAILTO}
