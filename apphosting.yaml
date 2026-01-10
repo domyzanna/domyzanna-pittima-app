@@ -20,9 +20,9 @@ scheduledJobs:
 # NOTE: Secrets defined here are managed via the .env file in Firebase Studio.
 env:
   - variable: RESEND_API_KEY
-    secret: resend-api-key
+    value: ${RESEND_API_KEY}
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
-    secret: firebase-service-account-key
+    value: ${FIREBASE_SERVICE_ACCOUNT_KEY}
   - variable: VAPID_PUBLIC_KEY
     secret: vapid-public-key
   - variable: VAPID_PRIVATE_KEY
