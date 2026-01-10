@@ -1,31 +1,21 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
-
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
   maxInstances: 1
 
-# Schedules a Genkit flow to run on a recurring basis.
-# This will automatically trigger the "checkDeadlinesAndNotify" flow every morning.
 scheduledJobs:
-- schedule: "every day 16:00"
+- schedule: "every day 06:00"
   timeZone: "Europe/Rome"
   task:
     type: genkit
     flowName: checkDeadlinesAndNotify
 
-# Define environment variables and secrets
-# https://firebase.google.com/docs/app-hosting/configure-backend#environment-variables
-# NOTE: Secrets defined here are managed via the .env file in Firebase Studio.
 env:
   - variable: RESEND_API_KEY
-    value: ${RESEND_API_KEY}
-  - variable: FIREBASE_SERVICE_ACCOUNT_KEY
-    value: ${FIREBASE_SERVICE_ACCOUNT_KEY}
+    secret: RESEND_API_KEY
   - variable: VAPID_PUBLIC_KEY
-    value: ${VAPID_PUBLIC_KEY}
+    secret: VAPID_PUBLIC_KEY
   - variable: VAPID_PRIVATE_KEY
-    value: ${VAPID_PRIVATE_KEY}
+    secret: VAPID_PRIVATE_KEY
   - variable: VAPID_MAILTO
-    value: ${VAPID_MAILTO}
+    secret: VAPID_MAILTO
