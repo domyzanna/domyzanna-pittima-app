@@ -72,7 +72,7 @@ export function MainSidebar() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      router.push('/login');
+      router.push('/landing');
     } catch (error) {
       console.error('Errore durante il logout:', error);
     }
