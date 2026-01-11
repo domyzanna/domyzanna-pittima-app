@@ -13,7 +13,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings, Shield } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -149,19 +149,6 @@ export function MainSidebar() {
                 Aggiungi Categoria
             </SidebarMenuButton>
           </SidebarMenuItem>
-           <SidebarSeparator />
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                asChild
-                tooltip="Admin"
-                isActive={pathname === '/dashboard/admin'}
-                >
-                <Link href="/dashboard/admin">
-                    <Shield />
-                    Admin
-                </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t">
