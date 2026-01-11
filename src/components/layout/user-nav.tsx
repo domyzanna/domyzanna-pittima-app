@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -23,7 +22,7 @@ export function UserNav() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      router.push('/login');
+      router.push('/landing');
     } catch (error) {
       console.error('Errore durante il logout:', error);
     }
@@ -62,11 +61,6 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Profilo</DropdownMenuItem>
-          <DropdownMenuItem>Impostazioni</DropdownMenuItem>
-        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
       </DropdownMenuContent>
