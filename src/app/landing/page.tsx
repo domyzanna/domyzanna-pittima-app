@@ -40,9 +40,7 @@ export default function LandingPage() {
   const heroImage = placeholderImages.placeholderImages.find(
     (p) => p.id === 'landing-hero'
   );
-  const pittimaImage = placeholderImages.placeholderImages.find(
-    (p) => p.id === 'pittima-story'
-  );
+  
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -115,29 +113,19 @@ export default function LandingPage() {
         {/* Pittima Story Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-card">
           <div className="container px-4 md:px-6">
-            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 items-center">
-              {pittimaImage && (
-                <Image
-                  src={pittimaImage.imageUrl}
-                  alt={pittimaImage.description}
-                  width={800}
-                  height={800}
-                  className="mx-auto aspect-square overflow-hidden rounded-xl object-cover"
-                  data-ai-hint={pittimaImage.imageHint}
-                />
-              )}
-              <div className="space-y-4">
-                 <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
-                    L'Origine del Nome
-                  </div>
-                <h2 className="text-3xl font-bold font-headline tracking-tighter md:text-4xl/tight flex items-center gap-3">
-                  <History className="h-8 w-8 text-primary" />
-                  Perché "Pittima"?
-                </h2>
-                <p className="text-muted-foreground md:text-lg">
+            <div className="mx-auto max-w-3xl text-center space-y-4">
+               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
+                  L'Origine del Nome
+                </div>
+              <h2 className="text-3xl font-bold font-headline tracking-tighter md:text-4xl/tight flex items-center justify-center gap-3">
+                <History className="h-8 w-8 text-primary" />
+                Perché "Pittima"?
+              </h2>
+              <div className="space-y-4 text-left md:text-center text-muted-foreground md:text-lg">
+                <p>
                   Nella Repubblica di Venezia, la "pittima" era una figura incaricata dai creditori di seguire i debitori ovunque andassero, ricordando loro costantemente e pubblicamente il debito non pagato. Era un promemoria umano, implacabile e impossibile da ignorare.
                 </p>
-                <p className="text-muted-foreground md:text-lg">
+                <p>
                   La nostra app si ispira a questa figura storica, ma con uno scopo moderno e positivo: essere il tuo **promemoria digitale instancabile**. Ci prendiamo carico del "fastidio" di dover ricordare, avvisandoti al momento giusto e con l'insistenza necessaria, così tu puoi vivere senza l'ansia di dimenticare una scadenza importante.
                 </p>
               </div>

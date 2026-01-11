@@ -11,12 +11,6 @@
       "description": "Mockup of the Deadline Dynamo app on a laptop and phone",
       "imageUrl": "https://images.unsplash.com/photo-1609406316639-f7112845cbe0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YXBwJTIwbW9ja3VwfGVufDB8fHx8MTc2NzczNDU5Mnww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "app mockup"
-    },
-    {
-      "id": "pittima-story",
-      "description": "A mysterious figure in a red cloak and Venetian mask, representing the historical 'pittima'.",
-      "imageUrl": "https://images.unsplash.com/photo-1549236286-9b514a17c699?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx2ZW5ldGlhbiUyMG1hc2slMjByZWQlMjBjbG9ha3xlbnwwfHx8fDE3Njg1MDkwMjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "venetian mask"
     }
   ]
 }
