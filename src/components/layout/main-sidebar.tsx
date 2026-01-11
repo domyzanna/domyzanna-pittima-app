@@ -194,9 +194,6 @@ export function MainSidebar() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">Profilo</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
                  <Link href="/dashboard/settings">Impostazioni</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
