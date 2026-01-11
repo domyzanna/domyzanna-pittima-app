@@ -11,6 +11,7 @@ import {
   CheckCircle,
   BarChart,
   BellRing,
+  History,
 } from 'lucide-react';
 import { Icons } from '@/components/icons';
 
@@ -38,6 +39,9 @@ const features = [
 export default function LandingPage() {
   const heroImage = placeholderImages.placeholderImages.find(
     (p) => p.id === 'landing-hero'
+  );
+  const pittimaImage = placeholderImages.placeholderImages.find(
+    (p) => p.id === 'pittima-story'
   );
 
   return (
@@ -108,8 +112,41 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* AI Feature Section */}
+        {/* Pittima Story Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-card">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 items-center">
+              {pittimaImage && (
+                <Image
+                  src={pittimaImage.imageUrl}
+                  alt={pittimaImage.description}
+                  width={800}
+                  height={800}
+                  className="mx-auto aspect-square overflow-hidden rounded-xl object-cover"
+                  data-ai-hint={pittimaImage.imageHint}
+                />
+              )}
+              <div className="space-y-4">
+                 <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
+                    L'Origine del Nome
+                  </div>
+                <h2 className="text-3xl font-bold font-headline tracking-tighter md:text-4xl/tight flex items-center gap-3">
+                  <History className="h-8 w-8 text-primary" />
+                  Perché "Pittima"?
+                </h2>
+                <p className="text-muted-foreground md:text-lg">
+                  Nella Repubblica di Venezia, la "pittima" era una figura incaricata dai creditori di seguire i debitori ovunque andassero, ricordando loro costantemente e pubblicamente il debito non pagato. Era un promemoria umano, implacabile e impossibile da ignorare.
+                </p>
+                <p className="text-muted-foreground md:text-lg">
+                  La nostra app si ispira a questa figura storica, ma con uno scopo moderno e positivo: essere il tuo **promemoria digitale instancabile**. Ci prendiamo carico del "fastidio" di dover ricordare, avvisandoti al momento giusto e con l'insistenza necessaria, così tu puoi vivere senza l'ansia di dimenticare una scadenza importante.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* AI Feature Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold font-headline tracking-tighter md:text-4xl/tight">
@@ -149,7 +186,7 @@ export default function LandingPage() {
         </section>
 
         {/* Social Proof Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-card">
           <div className="container px-4 md:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <blockquote className="text-lg font-semibold leading-snug lg:text-xl lg:leading-normal xl:text-2xl">
