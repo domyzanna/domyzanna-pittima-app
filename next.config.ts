@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  devIndicators: {
+    allowedDevOrigins: [
+        // This allows requests from the Firebase Studio development environment.
+      'https://*.cloudworkstations.dev',
+    ]
+  },
   images: {
     remotePatterns: [
       {
