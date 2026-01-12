@@ -1,7 +1,6 @@
 'use client';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AddDeadlineDialog } from './add-deadline-dialog';
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 type ClientDashboardHeaderProps = {
@@ -11,7 +10,6 @@ type ClientDashboardHeaderProps = {
 export default function ClientDashboardHeader({
   totalDeadlines,
 }: ClientDashboardHeaderProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 mb-4 md:mb-6">
       <SidebarTrigger className="md:hidden" />
@@ -22,7 +20,7 @@ export default function ClientDashboardHeader({
         </Badge>
       </div>
       <div className="flex items-center gap-4">
-        <AddDeadlineDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
+        <AddDeadlineDialog />
       </div>
     </header>
   );

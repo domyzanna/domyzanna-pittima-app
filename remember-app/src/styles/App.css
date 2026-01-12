@@ -500,7 +500,7 @@ body {
 
 .deadlines-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-md);
 }
 
@@ -1045,5 +1045,20 @@ body {
 
   .nav-link.btn-accent span {
     display: inline;
+  }
+}
+
+@media (max-width: 360px) {
+  .deadlines-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card {
+    min-width: 120px;
+    padding: var(--space-md);
+  }
+  
+  .deadline-card {
+    padding: var(--space-md);
   }
 }
