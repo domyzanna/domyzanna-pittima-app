@@ -41,6 +41,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { UpgradeProDialog } from './upgrade-pro-dialog';
 
 const FREE_PLAN_LIMIT = 6;
+const PRO_USERS = ['domyzmail@gmail.com']; // VIP list
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -68,7 +69,9 @@ export function AddDeadlineDialog() {
   );
   const { data: activeDeadlines, isLoading: isLoadingDeadlines } = useCollection<Deadline>(deadlinesQuery);
 
-  const isLimitReached = (activeDeadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
+  const isProUser = user?.email ? PRO_USERS.includes(user.email) : false;
+  const isLimitReached = !isProUser && (activeDeadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
+
 
   const handleOpenChange = (open: boolean) => {
     if (open && isLimitReached) {
@@ -236,46 +239,33 @@ function AddDeadlineForm({ onFinished }: { onFinished: () => void }) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descrizione (Opzionale)</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Aggiungi dettagli o note..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="recurrence"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ricorrenza</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona la frequenza" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="una-tantum">Una tantum</SelectItem>
-                    <SelectItem value="mensile">Mensile</SelectItem>
-                    <SelectItem value="trimestrale">Trimestrale</SelectItem>
-                    <SelectItem value="semestrale">Semestrale</SelectItem>
-                    <SelectItem value="annuale">Annuale</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+           <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrizione (Opzionale)</FormLabel>
+                  <FormControl><Textarea placeholder="Aggiungi dettagli o note..." {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField control={form.control} name="recurrence" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ricorrenza</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Seleziona la frequenza" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="una-tantum">Una tantum</SelectItem>
+                      <SelectItem value="mensile">Mensile</SelectItem>
+                      <SelectItem value="trimestrale">Trimestrale</SelectItem>
+                      <SelectItem value="semestrale">Semestrale</SelectItem>
+                      <SelectItem value="annuale">Annuale</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           <DialogFooter className="pt-4">
             <Button type="submit">Salva Scadenza</Button>
           </DialogFooter>
