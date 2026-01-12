@@ -7,21 +7,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 function LandingNav() {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isUserLoading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, isUserLoading, router]);
-
-  if (isUserLoading || user) {
-    // Mostra uno scheletro di caricamento mentre si verifica lo stato o durante il reindirizzamento
-    return <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />;
-  }
-
-  // Mostra i pulsanti di login/signup solo se l'utente non è loggato
   return (
     <div className="flex flex-1 items-center justify-end space-x-2">
       <Button asChild variant="ghost">
