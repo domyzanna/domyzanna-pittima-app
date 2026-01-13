@@ -11,7 +11,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, App, ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
-import { sendPushNotificationTool } from '@/ai/tools/send-push-notification-tool';
 import { sendEmailTool } from '@/ai/tools/send-email-tool';
 import { credential } from 'firebase-admin';
 
@@ -74,10 +73,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
         continue;
       }
       
-      const userDocRef = db.doc(`users/${uid}`);
-      const userDoc = await userDocRef.get();
-      const userData = userDoc.data() as User | undefined;
-
       const deadlinesRef = db.collection(`users/${uid}/deadlines`);
       const deadlinesSnapshot = await deadlinesRef.get();
 
@@ -140,26 +135,6 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
           console.log(`-> Summary email sent successfully to ${email}.`);
         } catch (e) {
           console.error(`-> Failed to send summary email to ${email}:`, e);
-        }
-
-        // We can also still send individual push notifications
-        if (userData?.pushSubscription) {
-            console.log(`-> Sending ${deadlinesToNotify.length} individual push notifications to ${email}.`);
-            const pushPromises = deadlinesToNotify.map(deadline => {
-                const pushPayload = {
-                    title: `Promemoria: ${deadline.name}`,
-                    body: `La tua scadenza è prevista per il ${new Date(deadline.expirationDate).toLocaleDateString('it-IT')}. Non dimenticare!`,
-                };
-                // Return the promise from the tool
-                return sendPushNotificationTool({
-                    subscription: userData.pushSubscription!,
-                    payload: pushPayload,
-                }).catch(e => { // Catch errors individually
-                    console.error(`-> Failed to send push notification for ${deadline.name} to ${email}:`, e);
-                });
-            });
-            // Wait for all push notifications to be sent
-            await Promise.all(pushPromises);
         }
       }
     }

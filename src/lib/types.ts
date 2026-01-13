@@ -24,7 +24,6 @@ export type User = {
   id: string; // This will be the Firebase Auth UID
   email: string | null;
   displayName: string | null;
-  pushSubscription?: PushSubscriptionJSON; // Stores the web push subscription object
 };
 
 // Firestore document for a user's deadline

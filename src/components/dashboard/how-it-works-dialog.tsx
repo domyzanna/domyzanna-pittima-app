@@ -29,7 +29,7 @@ const steps = [
     {
         icon: <Bell className="h-6 w-6 text-primary" />,
         title: "3. Ricevi notifiche incessanti",
-        description: "A partire dal giorno che hai impostato, Pittima ti invierà notifiche email e push ogni giorno, assicurandosi che tu non possa dimenticare la scadenza."
+        description: "A partire dal giorno che hai impostato, Pittima ti invierà notifiche email ogni giorno, assicurandosi che tu non possa dimenticare la scadenza."
     },
     {
         icon: <Wand2 className="h-6 w-6 text-primary" />,

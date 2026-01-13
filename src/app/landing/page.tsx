@@ -32,7 +32,7 @@ const features = [
     icon: <BellRing className="h-8 w-8 text-primary" />,
     title: 'Dimentica di Dover Ricordare',
     description:
-      "Pittima ti avviserà via email e notifiche push al momento giusto, così potrai dedicarti ad altro senza ansie.",
+      "Pittima ti avviserà via email al momento giusto, così potrai dedicarti ad altro senza ansie.",
   },
 ];
 
