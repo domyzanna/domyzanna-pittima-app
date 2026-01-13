@@ -58,12 +58,12 @@ export default {
         sidebar: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
+          primary: 'hsl(var(--primary))',
+          'primary-foreground': 'hsl(var(--primary-foreground))',
+          accent: 'hsl(var(--secondary))',
+          'accent-foreground': 'hsl(var(--secondary-foreground))',
+          border: 'hsl(var(--border))',
+          ring: 'hsl(var(--ring))',
         },
         status: {
           low: 'hsl(var(--status-low))',

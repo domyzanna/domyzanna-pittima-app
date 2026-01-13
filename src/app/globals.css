@@ -4,58 +4,58 @@
 
 @layer base {
   :root {
-    --background: 174 51% 91%;
-    --foreground: 174 25% 20%;
-    --card: 174 50% 97%;
-    --card-foreground: 174 25% 20%;
-    --popover: 174 51% 91%;
-    --popover-foreground: 174 25% 20%;
-    --primary: 174 45% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 174 30% 75%;
-    --secondary-foreground: 174 25% 20%;
-    --muted: 174 30% 85%;
-    --muted-foreground: 174 25% 40%;
-    --accent: 42 100% 50%;
-    --accent-foreground: 0 0% 3.9%;
+    --background: 210 17% 95%; /* Very Light Gray */
+    --foreground: 200 15% 25%; /* Dark Slate Blue for text */
+    --card: 0 0% 100%;
+    --card-foreground: 200 15% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 15% 25%;
+    --primary: 200 20% 33%; /* Slate Blue/Night */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 16% 85%;
+    --secondary-foreground: 200 15% 25%;
+    --muted: 210 16% 90%;
+    --muted-foreground: 200 15% 45%;
+    --accent: 16 100% 63%; /* Burnt Orange */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 174 20% 70%;
-    --input: 174 20% 80%;
-    --ring: 174 45% 51%;
+    --border: 210 10% 80%;
+    --input: 210 10% 85%;
+    --ring: 200 20% 33%;
     --radius: 0.5rem;
     
-    --status-low: 120 73% 47%;
-    --status-medium: 42 100% 50%;
-    --status-high: 0 84% 60%;
-    --status-expired: 259 52% 47%;
+    --status-low: 120 73% 47%;      /* Green - Unchanged */
+    --status-medium: 42 100% 50%; /* Yellow/Amber - Unchanged */
+    --status-high: 16 100% 63%;     /* Orange for high urgency */
+    --status-expired: 0 84% 60%;  /* Red for expired */
   }
   
   .dark {
-    --background: 174 15% 10%;
-    --foreground: 174 20% 90%;
-    --card: 174 15% 15%;
-    --card-foreground: 174 20% 90%;
-    --popover: 174 15% 10%;
-    --popover-foreground: 174 20% 90%;
-    --primary: 174 45% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 174 20% 25%;
-    --secondary-foreground: 174 20% 90%;
-    --muted: 174 15% 20%;
-    --muted-foreground: 174 20% 60%;
-    --accent: 42 100% 50%;
-    --accent-foreground: 0 0% 3.9%;
+    --background: 200 15% 12%; /* Dark Slate */
+    --foreground: 210 17% 95%;
+    --card: 200 15% 17%;
+    --card-foreground: 210 17% 95%;
+    --popover: 200 15% 12%;
+    --popover-foreground: 210 17% 95%;
+    --primary: 200 20% 45%; /* Lighter Slate Blue for dark mode */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 200 15% 25%;
+    --secondary-foreground: 210 17% 95%;
+    --muted: 200 15% 20%;
+    --muted-foreground: 210 17% 70%;
+    --accent: 16 100% 63%; /* Burnt Orange */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 174 15% 30%;
-    --input: 174 15% 30%;
-    --ring: 174 45% 51%;
+    --border: 200 15% 30%;
+    --input: 200 15% 30%;
+    --ring: 200 20% 45%;
     
     --status-low: 120 63% 57%;
     --status-medium: 42 100% 55%;
-    --status-high: 0 94% 70%;
-    --status-expired: 259 62% 67%;
+    --status-high: 16 100% 63%;
+    --status-expired: 0 84% 70%;
   }
 }
 
