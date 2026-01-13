@@ -4,57 +4,57 @@
 
 @layer base {
   :root {
-    --background: 210 17% 95%; /* Very Light Gray */
-    --foreground: 200 15% 25%; /* Dark Slate Blue for text */
+    --background: 210 20% 98%; /* Lighter Gray for more contrast */
+    --foreground: 215 28% 17%; /* Deep Sapphire for text */
     --card: 0 0% 100%;
-    --card-foreground: 200 15% 25%;
+    --card-foreground: 215 28% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 200 15% 25%;
-    --primary: 200 20% 33%; /* Slate Blue/Night */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 16% 85%;
-    --secondary-foreground: 200 15% 25%;
-    --muted: 210 16% 90%;
-    --muted-foreground: 200 15% 45%;
-    --accent: 16 100% 63%; /* Burnt Orange */
+    --popover-foreground: 215 28% 17%;
+    --primary: 215 91% 49%; /* Vibrant Sapphire Blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 92%;
+    --secondary-foreground: 215 28% 17%;
+    --muted: 210 20% 92%;
+    --muted-foreground: 215 20% 45%;
+    --accent: 25 95% 53%; /* Vibrant Orange */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 10% 80%;
-    --input: 210 10% 85%;
-    --ring: 200 20% 33%;
+    --border: 210 10% 88%;
+    --input: 210 10% 92%;
+    --ring: 215 91% 49%;
     --radius: 0.5rem;
     
-    --status-low: 120 73% 47%;      /* Green - Unchanged */
-    --status-medium: 42 100% 50%; /* Yellow/Amber - Unchanged */
-    --status-high: 16 100% 63%;     /* Orange for high urgency */
-    --status-expired: 0 84% 60%;  /* Red for expired */
+    --status-low: 120 73% 47%;
+    --status-medium: 42 100% 50%;
+    --status-high: 25 95% 53%;   /* Using Accent color */
+    --status-expired: 0 84% 60%;
   }
   
   .dark {
-    --background: 200 15% 12%; /* Dark Slate */
-    --foreground: 210 17% 95%;
-    --card: 200 15% 17%;
-    --card-foreground: 210 17% 95%;
-    --popover: 200 15% 12%;
-    --popover-foreground: 210 17% 95%;
-    --primary: 200 20% 45%; /* Lighter Slate Blue for dark mode */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 200 15% 25%;
-    --secondary-foreground: 210 17% 95%;
-    --muted: 200 15% 20%;
-    --muted-foreground: 210 17% 70%;
-    --accent: 16 100% 63%; /* Burnt Orange */
-    --accent-foreground: 0 0% 100%;
+    --background: 215 28% 12%; /* Deep Navy Blue */
+    --foreground: 210 20% 98%;
+    --card: 215 28% 17%;
+    --card-foreground: 210 20% 98%;
+    --popover: 215 28% 12%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 215 91% 60%; /* Lighter Sapphire for dark mode */
+    --primary-foreground: 210 20% 5%;
+    --secondary: 215 28% 22%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 22%;
+    --muted-foreground: 210 20% 65%;
+    --accent: 25 95% 53%; /* Vibrant Orange */
+    --accent-foreground: 210 20% 5%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 200 15% 30%;
-    --input: 200 15% 30%;
-    --ring: 200 20% 45%;
+    --border: 215 28% 25%;
+    --input: 215 28% 25%;
+    --ring: 215 91% 60%;
     
     --status-low: 120 63% 57%;
     --status-medium: 42 100% 55%;
-    --status-high: 16 100% 63%;
+    --status-high: 25 95% 53%;
     --status-expired: 0 84% 70%;
   }
 }
