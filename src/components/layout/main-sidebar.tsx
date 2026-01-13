@@ -13,7 +13,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, HelpCircle } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -41,6 +41,7 @@ import { useState } from 'react';
 import { AddCategoryDialog } from '../dashboard/add-category-dialog';
 import { iconNames } from '@/lib/icons';
 import { EditCategoryDialog } from '../dashboard/edit-category-dialog';
+import { HowItWorksDialog } from '../dashboard/how-it-works-dialog';
 
 const getIcon = (iconName: string) => {
   const IconComponent = (LucideIcons as any)[iconName];
@@ -59,6 +60,7 @@ export function MainSidebar() {
   const router = useRouter();
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
 
 
   const categoriesQuery = useMemoFirebase(
@@ -148,6 +150,18 @@ export function MainSidebar() {
                 Aggiungi Categoria
             </SidebarMenuButton>
           </SidebarMenuItem>
+
+          <SidebarSeparator />
+
+          <SidebarMenuItem>
+             <SidebarMenuButton
+                tooltip="Come funziona"
+                onClick={() => setIsHowItWorksOpen(true)}
+              >
+                <HelpCircle />
+                Come funziona
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t">
@@ -208,6 +222,7 @@ export function MainSidebar() {
             category={editingCategory}
         />
     )}
+    <HowItWorksDialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
     </>
   );
 }
