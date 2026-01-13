@@ -41,7 +41,13 @@ import { ScrollArea } from '../ui/scroll-area';
 import { UpgradeProDialog } from './upgrade-pro-dialog';
 
 const FREE_PLAN_LIMIT = 6;
-const PRO_USERS = ['domyzmail@gmail.com']; // VIP list
+// Lista VIP per i beta tester. Sostituisci con le loro email reali.
+const PRO_USERS = [
+    'domyzmail@gmail.com',
+    'tester1@example.com',
+    'tester2@example.com',
+    'tester3@example.com',
+];
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
