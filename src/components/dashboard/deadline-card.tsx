@@ -62,7 +62,10 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
      const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', id);
      const newStatus = isChecked ? 'active' : 'paused';
      updateDocumentNonBlocking(deadlineRef, { notificationStatus: newStatus });
-     toast({ title: `Notifiche ${isChecked ? 'attivate' : 'in pausa'}`, description: `Riceverai promemoria per "${name}".` });
+     toast({
+        title: `Notifiche ${isChecked ? 'attivate' : 'in pausa'}`,
+        description: `${isChecked ? 'Riceverai' : 'Non riceverai più'} promemoria per "${name}".`
+      });
   };
 
   const areNotificationsActive = notificationStatus === 'active' || notificationStatus === 'pending';
