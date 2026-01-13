@@ -12,6 +12,7 @@ import {
   BarChart,
   BellRing,
   History,
+  Mail,
 } from 'lucide-react';
 import { Icons } from '@/components/icons';
 
@@ -215,7 +216,14 @@ export default function LandingPage() {
           &copy; {new Date().getFullYear()} Pittima App. Tutti i diritti
           riservati.
         </p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+        <nav className="sm:ml-auto flex gap-4 sm:gap-6 items-center">
+          <a
+            href="mailto:info@zannalabs.com"
+            className="text-xs hover:underline underline-offset-4 flex items-center gap-1"
+          >
+            <Mail className="h-3 w-3" />
+            Contatti
+          </a>
           <Link
             href="/terms"
             className="text-xs hover:underline underline-offset-4"
