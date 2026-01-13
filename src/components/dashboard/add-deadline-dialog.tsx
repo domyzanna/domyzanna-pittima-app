@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,6 +45,8 @@ const FREE_PLAN_LIMIT = 6;
 // Lista VIP per i beta tester. Sostituisci con le loro email reali.
 const PRO_USERS = [
     'domyzmail@gmail.com',
+    'sheila99@virgilio.it',
+    'samanthagiampapa495@gmail.com',
     'tester1@example.com',
     'tester2@example.com',
     'tester3@example.com',
