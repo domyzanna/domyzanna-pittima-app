@@ -22,12 +22,18 @@ import ClientDashboardHeader from '@/components/dashboard/client-dashboard-heade
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Bollo Auto', icon: 'Car' },
   { name: 'Revisione Auto', icon: 'Wrench' },
+  { name: 'Assicurazione Auto', icon: 'Shield' },
+  { name: 'Tagliando Auto', icon: 'Wrench' },
   { name: 'Assicurazioni', icon: 'Shield' },
   { name: 'Documenti Personali', icon: 'FileText' },
   { name: 'Abbonamenti', icon: 'Repeat' },
+  { name: 'Abbonamenti Tv', icon: 'Tv' },
   { name: 'Casa', icon: 'Home' },
   { name: 'Tasse e Pagamenti', icon: 'Landmark' },
+  { name: 'Agenzia delle Entrate', icon: 'Landmark' },
   { name: 'Animali', icon: 'Dog' },
+  { name: 'Compleanni', icon: 'Cake' },
+  { name: 'Concerti ed eventi', icon: 'Ticket' },
 ];
 
 export default function DashboardPage() {
