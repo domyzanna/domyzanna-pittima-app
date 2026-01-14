@@ -39,7 +39,7 @@ Overdue deadlines: {{{overdueDeadlines}}}
 
 Prioritize overdue deadlines based on the real-world cost of missing them (e.g., insurance/road tax over streaming subscriptions).
 
-Generate a concise and informative monthly summary, including all deadlines for the current month, first days of next month, and AI-prioritized overdue items.
+Generate a concise and informative monthly summary using a bulleted list format. Include all deadlines for the current month, the first days of the next month, and the AI-prioritized overdue items.
 `,
 });
 
