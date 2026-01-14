@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   // This allows requests from the Firebase Studio development environment.
-  allowedDevOrigins: ['https://*.cloudworkstations.dev'],
+  experimental: {
+    allowedDevOrigins: ['https://*.cloudworkstations.dev'],
+  },
   images: {
     remotePatterns: [
       {
