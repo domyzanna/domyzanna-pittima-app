@@ -113,7 +113,7 @@ export function EditDeadlineDialog({
     };
 
     updateDocumentNonBlocking(deadlineRef, deadlineDataToUpdate);
-    toast({ title: 'Successo!', description: 'Scadenza aggiornata correttamente.' });
+    toast({ title: 'Successo!', description: 'Scadenza aggiornata correttamente.', duration: 5000 });
     onOpenChange(false);
   }
 

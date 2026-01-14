@@ -81,6 +81,7 @@ export function AddCategoryDialog({
     toast({
       title: 'Successo!',
       description: `Categoria "${values.name}" creata correttamente.`,
+      duration: 5000,
     });
     onOpenChange(false);
     form.reset();

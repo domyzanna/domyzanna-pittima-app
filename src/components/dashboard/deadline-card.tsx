@@ -43,7 +43,7 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
 
     if (recurrence === 'una-tantum') {
       updateDocumentNonBlocking(deadlineRef, { isCompleted: true });
-      toast({ title: 'Completato!', description: `La scadenza "${name}" è stata archiviata.` });
+      toast({ title: 'Completato!', description: `La scadenza "${name}" è stata archiviata.`, duration: 5000 });
     } else {
       const nextExpiration = getNextExpiration(new Date(expirationDate), recurrence);
       const newNotificationStartDate = subDays(nextExpiration, notificationDays);
@@ -53,7 +53,7 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
         notificationStartDate: newNotificationStartDate.toISOString(),
         notificationStatus: 'pending',
       });
-      toast({ title: 'Rinnovato!', description: `La scadenza "${name}" è stata aggiornata.` });
+      toast({ title: 'Rinnovato!', description: `La scadenza "${name}" è stata aggiornata.`, duration: 5000 });
     }
   };
 
@@ -64,7 +64,8 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
      updateDocumentNonBlocking(deadlineRef, { notificationStatus: newStatus });
      toast({
         title: `Notifiche ${isChecked ? 'attivate' : 'in pausa'}`,
-        description: `${isChecked ? 'Riceverai' : 'Non riceverai più'} promemoria per "${name}".`
+        description: `${isChecked ? 'Riceverai' : 'Non riceverai'} promemoria per "${name}".`,
+        duration: 5000,
       });
   };
 

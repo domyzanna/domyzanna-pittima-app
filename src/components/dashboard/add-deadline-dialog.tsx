@@ -172,6 +172,7 @@ function AddDeadlineForm({ onFinished }: { onFinished: () => void }) {
     toast({
       title: 'Successo!',
       description: 'Nuova scadenza aggiunta correttamente.',
+      duration: 5000,
     });
     onFinished();
     form.reset();

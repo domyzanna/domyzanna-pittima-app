@@ -80,6 +80,7 @@ export function EditCategoryDialog({
     toast({
       title: 'Successo!',
       description: 'Categoria aggiornata correttamente.',
+      duration: 5000,
     });
     onOpenChange(false);
   }

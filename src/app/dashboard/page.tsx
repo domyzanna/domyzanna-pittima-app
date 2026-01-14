@@ -195,6 +195,7 @@ export default function DashboardPage() {
     toast({
       title: 'Successo!',
       description: `"${deletingDeadline.name}" è stato eliminato.`,
+      duration: 5000,
     });
 
     setDialogState({});
