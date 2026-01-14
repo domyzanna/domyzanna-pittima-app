@@ -20,12 +20,14 @@ import { useToast } from '@/hooks/use-toast';
 import ClientDashboardHeader from '@/components/dashboard/client-dashboard-header';
 
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
-  { name: 'Veicoli', icon: 'Car' },
+  { name: 'Bollo Auto', icon: 'Car' },
+  { name: 'Revisione Auto', icon: 'Wrench' },
   { name: 'Assicurazioni', icon: 'Shield' },
   { name: 'Documenti Personali', icon: 'FileText' },
   { name: 'Abbonamenti', icon: 'Repeat' },
   { name: 'Casa', icon: 'Home' },
   { name: 'Tasse e Pagamenti', icon: 'Landmark' },
+  { name: 'Animali', icon: 'Dog' },
 ];
 
 export default function DashboardPage() {

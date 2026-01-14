@@ -42,6 +42,7 @@ import { AddCategoryDialog } from '../dashboard/add-category-dialog';
 import { iconNames } from '@/lib/icons';
 import { EditCategoryDialog } from '../dashboard/edit-category-dialog';
 import { HowItWorksDialog } from '../dashboard/how-it-works-dialog';
+import { ScrollArea } from '../ui/scroll-area';
 
 const getIcon = (iconName: string) => {
   const IconComponent = (LucideIcons as any)[iconName];
@@ -96,73 +97,75 @@ export function MainSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2 flex-1 overflow-y-auto">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Dashboard"
-              isActive={pathname === '/dashboard'}
-            >
-              <Link href="/dashboard">
-                <LayoutDashboard />
-                Dashboard
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          
-          <SidebarSeparator />
-
-          {isLoadingCategories && (
-            <>
-              <SidebarMenuSkeleton showIcon />
-              <SidebarMenuSkeleton showIcon />
-              <SidebarMenuSkeleton showIcon />
-            </>
-          )}
-
-          {categories?.map((cat) => (
-            <SidebarMenuItem key={cat.id}>
-              <SidebarMenuButton
+        <ScrollArea className="h-full">
+            <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton
                 asChild
-                tooltip={cat.name}
-                isActive={pathname === `/dashboard/category/${cat.id}`}
-              >
-                <Link href={`/dashboard/category/${cat.id}`}>
-                  {getIcon(cat.icon)}
-                  {cat.name}
-                </Link>
-              </SidebarMenuButton>
-                <SidebarMenuAction
-                    aria-label="Modifica categoria"
-                    showOnHover
-                    onClick={() => setEditingCategory(cat)}
+                tooltip="Dashboard"
+                isActive={pathname === '/dashboard'}
                 >
-                    <Settings />
-                </SidebarMenuAction>
+                <Link href="/dashboard">
+                    <LayoutDashboard />
+                    Dashboard
+                </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
-          <SidebarMenuItem>
-             <SidebarMenuButton
-                tooltip="Aggiungi Categoria"
-                onClick={() => setIsAddCategoryDialogOpen(true)}
-              >
-                <PlusCircle />
-                Aggiungi Categoria
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+            
+            <SidebarSeparator />
 
-          <SidebarSeparator />
+            {isLoadingCategories && (
+                <>
+                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon />
+                </>
+            )}
 
-          <SidebarMenuItem>
-             <SidebarMenuButton
-                tooltip="Come funziona"
-                onClick={() => setIsHowItWorksOpen(true)}
-              >
-                <HelpCircle />
-                Come funziona
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+            {categories?.map((cat) => (
+                <SidebarMenuItem key={cat.id}>
+                <SidebarMenuButton
+                    asChild
+                    tooltip={cat.name}
+                    isActive={pathname === `/dashboard/category/${cat.id}`}
+                >
+                    <Link href={`/dashboard/category/${cat.id}`}>
+                    {getIcon(cat.icon)}
+                    {cat.name}
+                    </Link>
+                </SidebarMenuButton>
+                    <SidebarMenuAction
+                        aria-label="Modifica categoria"
+                        showOnHover
+                        onClick={() => setEditingCategory(cat)}
+                    >
+                        <Settings />
+                    </SidebarMenuAction>
+                </SidebarMenuItem>
+            ))}
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                    tooltip="Aggiungi Categoria"
+                    onClick={() => setIsAddCategoryDialogOpen(true)}
+                >
+                    <PlusCircle />
+                    Aggiungi Categoria
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarSeparator />
+
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                    tooltip="Come funziona"
+                    onClick={() => setIsHowItWorksOpen(true)}
+                >
+                    <HelpCircle />
+                    Come funziona
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            </SidebarMenu>
+        </ScrollArea>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t">
         <DropdownMenu>
