@@ -7,6 +7,7 @@ import { useAuth } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  signOut,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -75,6 +76,7 @@ export function SignupForm() {
         values.password
       );
       await sendEmailVerification(userCredential.user);
+      await signOut(auth); // Log out the user immediately after registration
       setIsSubmitted(true);
     } catch (error: any) {
       let description = "Impossibile creare l'account. Riprova più tardi.";
