@@ -5,6 +5,7 @@ import type { MonthlySummaryOutput } from '@/ai/flows/monthly-summary-ai-urgency
 import type { ProcessedDeadline } from '@/lib/types';
 import { addMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { checkDeadlinesAndNotify } from '@/ai/flows/notification-hammer';
+import { createStripeCheckoutSession } from './stripe/actions';
 
 type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'category'> & {
   category: string;
@@ -66,3 +67,5 @@ export async function runCheckDeadlinesAndNotify() {
     return { success: false, error: error.message || 'Errore sconosciuto' };
   }
 }
+
+export { createStripeCheckoutSession };
