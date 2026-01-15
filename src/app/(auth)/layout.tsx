@@ -16,11 +16,16 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    // We only redirect if the user is fully loaded AND authenticated.
+    // This prevents redirecting away from the login page if the user has just signed up
+    // and is waiting for email verification.
     if (!isUserLoading && user) {
       router.push('/dashboard');
     }
   }, [user, isUserLoading, router]);
 
+  // We show a spinner only while the initial user state is being determined.
+  // If the user is loaded but not present (null), we proceed to render the children (login/signup forms).
   if (isUserLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -28,6 +33,7 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">

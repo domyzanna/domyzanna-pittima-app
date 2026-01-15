@@ -18,11 +18,17 @@
         "displayName": {
           "type": "string",
           "description": "User's display name."
+        },
+        "creationTime": {
+            "type": "string",
+            "description": "The ISO 8601 date string for when the user was created.",
+            "format": "date-time"
         }
       },
       "required": [
         "id",
-        "email"
+        "email",
+        "creationTime"
       ]
     },
     "Deadline": {

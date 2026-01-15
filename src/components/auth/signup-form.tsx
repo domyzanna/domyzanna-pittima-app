@@ -3,11 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signOut,
+  updateProfile,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -29,9 +30,11 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Checkbox } from '../ui/checkbox';
+import { doc } from 'firebase/firestore';
 
 const formSchema = z
   .object({
+    displayName: z.string().min(1, 'Il nome è obbligatorio.'),
     email: z.string().email({
       message: 'Inserisci un indirizzo email valido.',
     }),
@@ -52,6 +55,7 @@ const formSchema = z
 
 export function SignupForm() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -60,6 +64,7 @@ export function SignupForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      displayName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -75,9 +80,28 @@ export function SignupForm() {
         values.email,
         values.password
       );
-      await sendEmailVerification(userCredential.user);
+
+      const user = userCredential.user;
+      
+      // Update Firebase Auth profile
+      await updateProfile(user, { displayName: values.displayName });
+
+      // Create user document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      setDocumentNonBlocking(userDocRef, {
+        id: user.uid,
+        displayName: values.displayName,
+        email: user.email,
+        creationTime: new Date().toISOString(),
+      }, { merge: false });
+
+
+      await sendEmailVerification(user);
       await signOut(auth); // Log out the user immediately after registration
-      setIsSubmitted(true);
+      
+      // Redirect to login with a success parameter
+      router.push('/login?from=signup');
+
     } catch (error: any) {
       let description = "Impossibile creare l'account. Riprova più tardi.";
       if (error.code === 'auth/email-already-in-use') {
@@ -93,29 +117,25 @@ export function SignupForm() {
     }
   }
 
-  if (isSubmitted) {
-    return (
-      <div className="space-y-4">
-        <Alert variant="default" className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-700" />
-          <AlertTitle className="text-green-800">
-            Registrazione completata!
-          </AlertTitle>
-          <AlertDescription className="text-green-700">
-            Ti abbiamo inviato un'email. Clicca sul link di conferma per
-            attivare il tuo account e poter accedere.
-          </AlertDescription>
-        </Alert>
-        <Button asChild className="w-full">
-          <Link href="/login">Torna al Login</Link>
-        </Button>
-      </div>
-    );
-  }
+  // The confirmation message is now handled on the login page, so we remove it from here.
+  // The router will redirect to the login page which will show the message.
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+        <FormField
+          control={form.control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome</FormLabel>
+              <FormControl>
+                <Input placeholder="Mario Rossi" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"
@@ -187,7 +207,7 @@ export function SignupForm() {
                   </Link>
                   .
                 </FormDescription>
-                 <FormMessage />
+                <FormMessage />
               </div>
             </FormItem>
           )}
