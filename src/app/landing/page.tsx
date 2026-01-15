@@ -13,6 +13,7 @@ import {
   BellRing,
   History,
   Mail,
+  Rocket,
 } from 'lucide-react';
 import { Icons } from '@/components/icons';
 
@@ -193,17 +194,17 @@ export default function LandingPage() {
         <section className="w-full py-12 md:py-24 lg:py-32 border-t">
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold font-headline tracking-tighter md:text-4xl/tight">
-                Pronto a dire addio all'ansia da scadenza?
+              <h2 className="text-3xl font-bold font-headline tracking-tighter md:text-4xl/tight flex items-center justify-center gap-3">
+                <Rocket className="h-8 w-8 text-primary" />
+                Pronto a mettere ordine, per sempre?
               </h2>
               <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Inizia oggi. Bastano pochi minuti per mettere in ordine decine
-                di scadenze e liberare la mente.
+                Inizia gratis con le prime 6 scadenze. Quando sei pronto per un controllo totale, passa a Pro per soli **12€ all'anno** e aggiungi scadenze illimitate.
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
               <Button asChild size="lg" className="w-full">
-                <Link href="/signup">Inizia, è Gratis</Link>
+                <Link href="/signup">Inizia Gratis e Aggiungi 6 Scadenze</Link>
               </Button>
             </div>
           </div>
