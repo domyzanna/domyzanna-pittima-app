@@ -33,7 +33,7 @@ export const sendEmailTool = ai.defineTool(
 
     try {
       const { data, error } = await resend.emails.send({
-        from: 'Pittima App <info@zannalabs.com>',
+        from: 'Pittima App <infopittima@zannalabs.com>',
         to: [payload.to],
         subject: payload.subject,
         html: payload.body.replace(/\n/g, '<br>'), // Convert newlines to <br> for HTML

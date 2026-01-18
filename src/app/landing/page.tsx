@@ -219,7 +219,7 @@ export default function LandingPage() {
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6 items-center">
           <a
-            href="mailto:info@zannalabs.com"
+            href="mailto:infopittima@zannalabs.com"
             className="text-xs hover:underline underline-offset-4 flex items-center gap-1"
           >
             <Mail className="h-3 w-3" />
