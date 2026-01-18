@@ -2,11 +2,18 @@
 
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/layout/main-sidebar';
-import { useUser, FirebaseClientProvider, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import {
+  useUser,
+  FirebaseClientProvider,
+  useCollection,
+  useFirestore,
+  useMemoFirebase,
+  useDoc,
+} from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import { Icons } from '@/components/icons';
-import { collection } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import type { Deadline, User as AppUser } from '@/lib/types';
 import { differenceInDays } from 'date-fns';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
@@ -30,11 +37,13 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const firestore = useFirestore();
 
   // Fetch user profile data to get creationTime
-  const userDocQuery = useMemoFirebase(() => user ? collection(firestore, 'users') : null, [user, firestore]);
-  const { data: userData, isLoading: isUserDataLoading } = useCollection<AppUser>(userDocQuery, {
-      constraints: [{ type: 'where', fieldPath: 'id', opStr: '==', value: user?.uid }]
-  });
-  const appUser = useMemo(() => userData?.[0], [userData]);
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: appUser, isLoading: isUserDataLoading } =
+    useDoc<AppUser>(userDocRef);
+
 
   // Fetch active deadlines to check count
   const deadlinesQuery = useMemoFirebase(
