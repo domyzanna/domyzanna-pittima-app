@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PlusCircle } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Category, Deadline } from '@/lib/types';
@@ -134,6 +134,11 @@ function AddDeadlineForm({ onFinished }: { onFinished: () => void }) {
   );
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesQuery);
 
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
+  }, [categories]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -212,7 +217,7 @@ function AddDeadlineForm({ onFinished }: { onFinished: () => void }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {categories?.map((cat) => (
+                    {sortedCategories?.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
                       </SelectItem>

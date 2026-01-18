@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import type { Category, ProcessedDeadline } from '@/lib/types';
@@ -73,6 +73,11 @@ export function EditDeadlineDialog({
   );
   const { data: categories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesQuery);
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
+  }, [categories]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -143,7 +148,7 @@ export function EditDeadlineDialog({
                       <SelectTrigger><SelectValue placeholder={isLoadingCategories ? 'Caricamento...' : 'Seleziona una categoria'} /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories?.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
+                      {sortedCategories?.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -37,7 +37,7 @@ import {
 } from '../ui/dropdown-menu';
 import type { Category } from '@/lib/types';
 import { collection } from 'firebase/firestore';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AddCategoryDialog } from '../dashboard/add-category-dialog';
 import { iconNames } from '@/lib/icons';
 import { EditCategoryDialog } from '../dashboard/edit-category-dialog';
@@ -70,6 +70,11 @@ export function MainSidebar() {
   );
   const { data: categories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesQuery);
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
+  }, [categories]);
 
   const handleSignOut = async () => {
     try {
@@ -122,7 +127,7 @@ export function MainSidebar() {
                 </>
             )}
 
-            {categories?.map((cat) => (
+            {sortedCategories.map((cat) => (
                 <SidebarMenuItem key={cat.id}>
                 <SidebarMenuButton
                     asChild
