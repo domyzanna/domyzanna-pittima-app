@@ -4,7 +4,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
@@ -22,6 +23,7 @@ export function AuthProvider({ children }) {
   async function signup(email, password, displayName) {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName });
+    await sendEmailVerification(result.user);
     return result;
   }
 

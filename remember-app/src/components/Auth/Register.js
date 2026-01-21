@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { FiMail, FiLock, FiUser, FiUserPlus } from 'react-icons/fi';
+import { FiMail, FiLock, FiUser, FiUserPlus, FiCheckCircle } from 'react-icons/fi';
 
 export default function Register() {
   const [displayName, setDisplayName] = useState('');
@@ -10,8 +10,8 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { signup, logout } = useAuth();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -34,8 +34,8 @@ export default function Register() {
     try {
       setLoading(true);
       await signup(email, password, displayName);
-      toast.success('Account creato con successo!');
-      navigate('/');
+      await logout(); // Disconnetti l'utente per forzare la verifica
+      setIsSubmitted(true);
     } catch (error) {
       console.error(error);
       if (error.code === 'auth/email-already-in-use') {
@@ -50,6 +50,23 @@ export default function Register() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isSubmitted) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <FiCheckCircle style={{ fontSize: '3rem', color: 'var(--urgency-green)', margin: '0 auto 1rem' }} />
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Registrazione completata!</h2>
+          <p className="auth-subtitle" style={{ marginBottom: '1.5rem' }}>
+            Controlla la tua casella di posta per il link di verifica, poi potrai accedere.
+          </p>
+          <Link to="/login" className="btn-primary" style={{ width: 'auto' }}>
+            Torna al Login
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -8,7 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -21,12 +21,20 @@ export default function Login() {
 
     try {
       setLoading(true);
-      await login(email, password);
+      const userCredential = await login(email, password);
+      
+      if (!userCredential.user.emailVerified) {
+        toast.error('Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.');
+        await logout();
+        setLoading(false);
+        return;
+      }
+
       toast.success('Accesso effettuato!');
       navigate('/');
     } catch (error) {
       console.error(error);
-      if (error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         toast.error('Utente non trovato');
       } else if (error.code === 'auth/wrong-password') {
         toast.error('Password errata');
