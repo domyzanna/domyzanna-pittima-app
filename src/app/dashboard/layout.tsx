@@ -15,17 +15,18 @@ import { Icons } from '@/components/icons';
 import { collection } from 'firebase/firestore';
 import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
+import { VerifyEmailBanner } from '@/components/auth/verify-email-banner';
 
 const FREE_PLAN_LIMIT = 6;
 
 // Lista VIP per i beta tester.
 const PRO_USERS = [
-    'domyzmail@gmail.com',
-    'sheila99@virgilio.it',
-    'samanthagiampapa495@gmail.com',
-    'tester1@example.com',
-    'tester2@example.com',
-    'tester3@example.com',
+  'domyzmail@gmail.com',
+  'sheila99@virgilio.it',
+  'samanthagiampapa495@gmail.com',
+  'tester1@example.com',
+  'tester2@example.com',
+  'tester3@example.com',
 ];
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -35,12 +36,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Fetch active deadlines to check count
   const deadlinesQuery = useMemoFirebase(
-    () => user ? collection(firestore, 'users', user.uid, 'deadlines') : null,
+    () =>
+      user ? collection(firestore, 'users', user.uid, 'deadlines') : null,
     [user, firestore]
   );
-  const { data: deadlines, isLoading: areDeadlinesLoading } = useCollection<Deadline>(deadlinesQuery, {
-    constraints: [{ type: 'where', fieldPath: 'isCompleted', opStr: '==', value: false }]
-  });
+  const { data: deadlines, isLoading: areDeadlinesLoading } =
+    useCollection<Deadline>(deadlinesQuery, {
+      constraints: [{ type: 'where', fieldPath: 'isCompleted', opStr: '==', value: false }],
+    });
 
   const isLoading = isUserLoading || areDeadlinesLoading;
 
@@ -50,7 +53,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoading, router]);
 
-  const limitExceeded = (deadlines?.length ?? 0) > FREE_PLAN_LIMIT;
+  const limitExceeded = (deadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
   const isProUser = user?.email ? PRO_USERS.includes(user.email) : false;
   const shouldBlock = limitExceeded && !isProUser;
 
@@ -62,20 +65,23 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (shouldBlock) {
-    return <UpgradeProDialog limit={FREE_PLAN_LIMIT} forceOpen={true} />;
-  }
-
   return (
     <SidebarProvider>
       <MainSidebar />
       <SidebarInset>
-        {children}
+        {!user.emailVerified ? (
+          <div className="p-4 sm:p-6 lg:p-8">
+            <VerifyEmailBanner user={user} />
+          </div>
+        ) : shouldBlock ? (
+          <UpgradeProDialog limit={FREE_PLAN_LIMIT} forceOpen={true} />
+        ) : (
+          children
+        )}
       </SidebarInset>
     </SidebarProvider>
   );
 }
-
 
 export default function DashboardLayout({
   children,
@@ -86,5 +92,5 @@ export default function DashboardLayout({
     <FirebaseClientProvider>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
     </FirebaseClientProvider>
-  )
+  );
 }

@@ -7,7 +7,6 @@ import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signOut,
   updateProfile,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -59,7 +58,6 @@ export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,25 +80,27 @@ export function SignupForm() {
       );
 
       const user = userCredential.user;
-      
+
       // Update Firebase Auth profile
       await updateProfile(user, { displayName: values.displayName });
 
       // Create user document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
-      setDocumentNonBlocking(userDocRef, {
-        id: user.uid,
-        displayName: values.displayName,
-        email: user.email,
-      }, { merge: false });
-
+      setDocumentNonBlocking(
+        userDocRef,
+        {
+          id: user.uid,
+          displayName: values.displayName,
+          email: user.email,
+        },
+        { merge: false }
+      );
 
       await sendEmailVerification(user);
-      await signOut(auth); // Log out the user immediately after registration
-      
-      // Redirect to login with a success parameter
-      router.push('/login?from=signup');
 
+      // No longer signing out. The user will be redirected to the dashboard
+      // by the AuthLayout, and the dashboard will show a verification prompt.
+      router.push('/dashboard');
     } catch (error: any) {
       let description = "Impossibile creare l'account. Riprova più tardi.";
       if (error.code === 'auth/email-already-in-use') {
@@ -115,9 +115,6 @@ export function SignupForm() {
       setIsLoading(false);
     }
   }
-
-  // The confirmation message is now handled on the login page, so we remove it from here.
-  // The router will redirect to the login page which will show the message.
 
   return (
     <Form {...form}>
