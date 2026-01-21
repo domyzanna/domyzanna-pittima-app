@@ -34,6 +34,8 @@ const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Animali', icon: 'Dog' },
   { name: 'Compleanni', icon: 'Cake' },
   { name: 'Concerti ed eventi', icon: 'Ticket' },
+  { name: 'Analisi Cliniche', icon: 'TestTube' },
+  { name: 'Medica', icon: 'Stethoscope' },
 ];
 
 export default function DashboardPage() {
