@@ -92,7 +92,6 @@ export function SignupForm() {
         id: user.uid,
         displayName: values.displayName,
         email: user.email,
-        creationTime: new Date().toISOString(),
       }, { merge: false });
 
 

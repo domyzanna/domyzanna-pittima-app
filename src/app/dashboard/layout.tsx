@@ -8,18 +8,15 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
-  useDoc,
 } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import { Icons } from '@/components/icons';
-import { collection, doc } from 'firebase/firestore';
-import type { Deadline, User as AppUser } from '@/lib/types';
-import { differenceInDays } from 'date-fns';
+import { collection } from 'firebase/firestore';
+import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
 
 const FREE_PLAN_LIMIT = 6;
-const TRIAL_PERIOD_DAYS = 90;
 
 // Lista VIP per i beta tester.
 const PRO_USERS = [
@@ -36,15 +33,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const firestore = useFirestore();
 
-  // Fetch user profile data to get creationTime
-  const userDocRef = useMemoFirebase(
-    () => (user ? doc(firestore, 'users', user.uid) : null),
-    [firestore, user]
-  );
-  const { data: appUser, isLoading: isUserDataLoading } =
-    useDoc<AppUser>(userDocRef);
-
-
   // Fetch active deadlines to check count
   const deadlinesQuery = useMemoFirebase(
     () => user ? collection(firestore, 'users', user.uid, 'deadlines') : null,
@@ -54,7 +42,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     constraints: [{ type: 'where', fieldPath: 'isCompleted', opStr: '==', value: false }]
   });
 
-  const isLoading = isUserLoading || isUserDataLoading || areDeadlinesLoading;
+  const isLoading = isUserLoading || areDeadlinesLoading;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -62,14 +50,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoading, router]);
 
-  const trialExpired = useMemo(() => {
-    if (!appUser?.creationTime) return false;
-    return differenceInDays(new Date(), new Date(appUser.creationTime)) > TRIAL_PERIOD_DAYS;
-  }, [appUser]);
-
   const limitExceeded = (deadlines?.length ?? 0) > FREE_PLAN_LIMIT;
   const isProUser = user?.email ? PRO_USERS.includes(user.email) : false;
-  const shouldBlock = trialExpired && limitExceeded && !isProUser;
+  const shouldBlock = limitExceeded && !isProUser;
 
   if (isLoading || !user) {
     return (

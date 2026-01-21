@@ -24,7 +24,6 @@ export type User = {
   id: string; // This will be the Firebase Auth UID
   email: string | null;
   displayName: string | null;
-  creationTime?: string; // ISO 8601 format
 };
 
 // Firestore document for a user's deadline

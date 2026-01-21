@@ -45,13 +45,10 @@ export function UpgradeProDialog({ limit, forceOpen = false }: UpgradeProDialogP
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-headline">
             <Rocket className="text-primary" />
-            {forceOpen ? "Il tuo periodo di prova è terminato!" : "Passa a Pittima Pro!"}
+            Hai superato il limite del piano gratuito!
           </DialogTitle>
           <DialogDescription>
-             {forceOpen 
-                ? `Hai superato il limite di ${limit} scadenze e il tuo periodo di prova di 90 giorni è concluso. Fai l'upgrade per continuare a usare l'app senza limiti.`
-                : `Hai raggiunto il limite di ${limit} scadenze per il piano gratuito. Fai l'upgrade per aggiungere scadenze illimitate e sbloccare tutte le funzionalità.`
-             }
+            Hai raggiunto il limite di {limit} scadenze. Fai l'upgrade a Pro per aggiungere scadenze illimitate e sbloccare tutte le funzionalità.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
