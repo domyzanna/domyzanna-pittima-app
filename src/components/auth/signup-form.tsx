@@ -7,6 +7,7 @@ import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  signOut,
   updateProfile,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -58,6 +59,7 @@ export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -98,9 +100,10 @@ export function SignupForm() {
 
       await sendEmailVerification(user);
 
-      // No longer signing out. The user will be redirected to the dashboard
-      // by the AuthLayout, and the dashboard will show a verification prompt.
-      router.push('/dashboard');
+      // Sign the user out and show success message
+      await signOut(auth);
+      setIsSubmitted(true);
+
     } catch (error: any) {
       let description = "Impossibile creare l'account. Riprova più tardi.";
       if (error.code === 'auth/email-already-in-use') {
@@ -114,6 +117,29 @@ export function SignupForm() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (isSubmitted) {
+    return (
+      <div className="space-y-4">
+        <Alert
+          variant="default"
+          className="border-green-500 bg-green-50 dark:bg-green-950"
+        >
+          <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-300" />
+          <AlertTitle className="text-green-800 dark:text-green-300">
+            Controlla la tua email!
+          </AlertTitle>
+          <AlertDescription className="text-green-700 dark:text-green-400">
+            Ti abbiamo inviato un link di verifica. Cliccalo per attivare il tuo
+            account, poi potrai accedere.
+          </AlertDescription>
+        </Alert>
+        <Button asChild className="w-full">
+          <Link href="/login">Vai al Login</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (

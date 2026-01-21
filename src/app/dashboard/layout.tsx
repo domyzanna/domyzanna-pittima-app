@@ -15,7 +15,6 @@ import { Icons } from '@/components/icons';
 import { collection } from 'firebase/firestore';
 import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
-import { VerifyEmailBanner } from '@/components/auth/verify-email-banner';
 
 const FREE_PLAN_LIMIT = 6;
 
@@ -69,11 +68,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <MainSidebar />
       <SidebarInset>
-        {!user.emailVerified ? (
-          <div className="p-4 sm:p-6 lg:p-8">
-            <VerifyEmailBanner user={user} />
-          </div>
-        ) : shouldBlock ? (
+        {shouldBlock ? (
           <UpgradeProDialog limit={FREE_PLAN_LIMIT} forceOpen={true} />
         ) : (
           children
