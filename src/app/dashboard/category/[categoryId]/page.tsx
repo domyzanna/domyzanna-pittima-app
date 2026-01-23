@@ -1,11 +1,12 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useUser,
   useCollection,
   useFirestore,
   useMemoFirebase,
   useDoc,
+  deleteDocumentNonBlocking,
 } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
@@ -15,6 +16,9 @@ import { Icons } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import * as LucideIcons from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { EditDeadlineDialog } from '@/components/dashboard/edit-deadline-dialog';
+import { DeleteConfirmationDialog } from '@/components/dashboard/delete-confirmation-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const getIcon = (iconName: string | undefined) => {
   if (!iconName) {
@@ -34,6 +38,12 @@ export default function CategoryPage() {
   const categoryId = params.categoryId as string;
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const [dialogState, setDialogState] = useState<{
+    editingDeadline?: ProcessedDeadline;
+    deletingDeadline?: ProcessedDeadline;
+  }>({});
 
   // 1. Get the category details
   const categoryRef = useMemoFirebase(
@@ -83,6 +93,29 @@ export default function CategoryPage() {
       })
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [deadlines, category]);
+  
+  const handleEditDeadline = (deadline: ProcessedDeadline) => {
+    setDialogState({ editingDeadline: deadline });
+  };
+
+  const handleDeleteDeadline = (deadline: ProcessedDeadline) => {
+    setDialogState({ deletingDeadline: deadline });
+  };
+  
+  const confirmDeletion = () => {
+    const { deletingDeadline } = dialogState;
+    if (!deletingDeadline || !user || !firestore) return;
+
+    const docRef = doc(firestore, 'users', user.uid, 'deadlines', deletingDeadline.id);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+      title: 'Successo!',
+      description: `"${deletingDeadline.name}" è stato eliminato.`,
+      duration: 5000,
+    });
+
+    setDialogState({});
+};
 
   if (isLoading) {
     return (
@@ -94,41 +127,66 @@ export default function CategoryPage() {
 
   if (!category) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Categoria non trovata</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>La categoria che stai cercando non esiste o non hai i permessi per vederla.</p>
-            </CardContent>
-        </Card>
-    )
+      <Card>
+        <CardHeader>
+          <CardTitle>Categoria non trovata</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>
+            La categoria che stai cercando non esiste o non hai i permessi per
+            vederla.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <div className="space-y-8">
+    <>
+      <div className="space-y-8">
         <h2 className="text-xl font-headline font-semibold mb-4 flex items-center gap-3">
-            {getIcon(category?.icon)}
-            {category?.name}
+          {getIcon(category?.icon)}
+          {category?.name}
         </h2>
-      {processedDeadlines.length === 0 ? (
-         <Card>
-         <CardHeader>
-           <CardTitle>Nessuna scadenza trovata</CardTitle>
-         </CardHeader>
-         <CardContent>
-           <p>
-             Non hai ancora aggiunto nessuna scadenza in questa categoria.
-           </p>
-         </CardContent>
-       </Card>
-      ) : (
-        <div className="grid gap-4">
-        {processedDeadlines.map((deadline) => (
-          <DeadlineCard key={deadline.id} deadline={deadline} />
-        ))}
+        {processedDeadlines.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Nessuna scadenza trovata</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                Non hai ancora aggiunto nessuna scadenza in questa categoria.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {processedDeadlines.map((deadline) => (
+              <DeadlineCard
+                key={deadline.id}
+                deadline={deadline}
+                onEdit={() => handleEditDeadline(deadline)}
+                onDelete={() => handleDeleteDeadline(deadline)}
+              />
+            ))}
+          </div>
+        )}
       </div>
+      {dialogState.editingDeadline && (
+        <EditDeadlineDialog
+          open={!!dialogState.editingDeadline}
+          onOpenChange={(isOpen) => !isOpen && setDialogState({})}
+          deadline={dialogState.editingDeadline}
+        />
       )}
-    </div>
+      {dialogState.deletingDeadline && (
+        <DeleteConfirmationDialog
+          open={!!dialogState.deletingDeadline}
+          onOpenChange={(isOpen) => !isOpen && setDialogState({})}
+          itemName={dialogState.deletingDeadline.name}
+          onConfirm={confirmDeletion}
+        />
+      )}
+    </>
   );
 }
