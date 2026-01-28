@@ -7,10 +7,10 @@ import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signOut,
   updateProfile,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,9 +26,6 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { Icons } from '../icons';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { CheckCircle } from 'lucide-react';
-import Link from 'next/link';
 import { Checkbox } from '../ui/checkbox';
 import { doc } from 'firebase/firestore';
 
@@ -59,7 +56,6 @@ export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -100,10 +96,8 @@ export function SignupForm() {
 
       await sendEmailVerification(user);
 
-      // Sign the user out and show success message
-      await signOut(auth);
-      setIsSubmitted(true);
-
+      // Redirect to a dedicated success page which will handle sign out
+      router.push('/signup/success');
     } catch (error: any) {
       let description = "Impossibile creare l'account. Riprova più tardi.";
       if (error.code === 'auth/email-already-in-use') {
@@ -114,32 +108,8 @@ export function SignupForm() {
         title: 'Qualcosa è andato storto',
         description,
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading to false only on error
     }
-  }
-
-  if (isSubmitted) {
-    return (
-      <div className="space-y-4">
-        <Alert
-          variant="default"
-          className="border-green-500 bg-green-50 dark:bg-green-950"
-        >
-          <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-300" />
-          <AlertTitle className="text-green-800 dark:text-green-300">
-            Controlla la tua email!
-          </AlertTitle>
-          <AlertDescription className="text-green-700 dark:text-green-400">
-            Ti abbiamo inviato un link di verifica. Cliccalo per attivare il tuo
-            account, poi potrai accedere.
-          </AlertDescription>
-        </Alert>
-        <Button asChild className="w-full">
-          <Link href="/login">Vai al Login</Link>
-        </Button>
-      </div>
-    );
   }
 
   return (
