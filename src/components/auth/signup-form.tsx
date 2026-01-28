@@ -29,6 +29,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '../ui/checkbox';
 import { doc } from 'firebase/firestore';
 
+const passwordValidationMessage =
+  'La password deve contenere almeno 8 caratteri, una maiuscola, una minuscola e un numero.';
+
 const formSchema = z
   .object({
     displayName: z.string().min(1, 'Il nome è obbligatorio.'),
@@ -37,14 +40,14 @@ const formSchema = z
     }),
     password: z
       .string()
-      .min(8, { message: 'La password deve contenere almeno 8 caratteri.' })
+      .min(8, { message: passwordValidationMessage })
       .regex(/[A-Z]/, {
-        message: 'La password deve contenere almeno una lettera maiuscola.',
+        message: passwordValidationMessage,
       })
       .regex(/[a-z]/, {
-        message: 'La password deve contenere almeno una lettera minuscola.',
+        message: passwordValidationMessage,
       })
-      .regex(/[0-9]/, { message: 'La password deve contenere almeno un numero.' }),
+      .regex(/[0-9]/, { message: passwordValidationMessage }),
     confirmPassword: z.string(),
     acceptTerms: z.boolean().default(false),
   })
@@ -110,8 +113,7 @@ export function SignupForm() {
       if (error.code === 'auth/email-already-in-use') {
         description = 'Questo indirizzo email è già in uso. Prova ad accedere.';
       } else if (error.code === 'auth/weak-password') {
-        description =
-          'La password non rispetta i requisiti di sicurezza. Deve contenere almeno 8 caratteri, una maiuscola, una minuscola e un numero.';
+        description = passwordValidationMessage;
       }
       toast({
         variant: 'destructive',
