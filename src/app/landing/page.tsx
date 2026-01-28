@@ -14,8 +14,10 @@ import {
   History,
   Mail,
   Rocket,
+  Download,
 } from 'lucide-react';
 import { Icons } from '@/components/icons';
+import { useState, useEffect } from 'react';
 
 const features = [
   {
@@ -43,6 +45,36 @@ export default function LandingPage() {
     (p) => p.id === 'landing-hero'
   );
   
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+  
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+  
+  const handleInstallClick = () => {
+    if (!installPrompt) {
+      return;
+    }
+    // The type assertion is needed because 'prompt' is not in the default Event type
+    (installPrompt as any).prompt();
+    (installPrompt as any).userChoice.then((choiceResult: { outcome: string }) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      setInstallPrompt(null);
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -66,6 +98,12 @@ export default function LandingPage() {
                   <Button asChild size="lg">
                     <Link href="/signup">Registrati Gratis</Link>
                   </Button>
+                  {installPrompt && (
+                    <Button onClick={handleInstallClick} variant="outline" size="lg">
+                      <Download className="mr-2 h-5 w-5" />
+                      Scarica Pittima App
+                    </Button>
+                  )}
                 </div>
               </div>
               {heroImage && (
