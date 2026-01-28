@@ -51,20 +51,20 @@ export function LoginForm() {
         values.email,
         values.password
       );
-      
+
       if (!userCredential.user.emailVerified) {
         toast({
-            variant: 'destructive',
-            title: 'Email non verificata',
-            description: 'Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.',
+          variant: 'destructive',
+          title: 'Email non verificata',
+          description:
+            'Controlla la tua casella di posta e clicca sul link di conferma prima di accedere.',
         });
         await signOut(auth);
         setIsLoading(false);
         return;
       }
-      
-      router.push('/dashboard');
 
+      router.push('/dashboard');
     } catch (error: any) {
       let description = 'Credenziali non valide. Riprova.';
       if (
@@ -75,7 +75,19 @@ export function LoginForm() {
         description = 'Email o password non corrette. Controlla e riprova.';
       } else if (error.code === 'auth/user-disabled') {
         description = 'Questo account è stato disabilitato.';
+      } else if (error.code === 'auth/weak-password') {
+        toast({
+          variant: 'destructive',
+          title: 'Password non sicura',
+          description:
+            'La tua password non rispetta i nuovi requisiti di sicurezza. Per favore, reimpostala.',
+          duration: 7000,
+        });
+        router.push('/forgot-password');
+        setIsLoading(false);
+        return;
       }
+
       toast({
         variant: 'destructive',
         title: 'Accesso fallito',
