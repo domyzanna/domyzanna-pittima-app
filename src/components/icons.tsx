@@ -1,9 +1,9 @@
 import {
-  Timer,
+  AlarmClock,
   Loader2,
 } from 'lucide-react';
 
 export const Icons = {
-  logo: Timer,
+  logo: AlarmClock,
   spinner: Loader2,
 };
