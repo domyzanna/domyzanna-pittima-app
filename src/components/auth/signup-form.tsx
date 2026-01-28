@@ -37,7 +37,14 @@ const formSchema = z
     }),
     password: z
       .string()
-      .min(6, 'La password deve contenere almeno 6 caratteri.'),
+      .min(8, { message: 'La password deve contenere almeno 8 caratteri.' })
+      .regex(/[A-Z]/, {
+        message: 'La password deve contenere almeno una lettera maiuscola.',
+      })
+      .regex(/[a-z]/, {
+        message: 'La password deve contenere almeno una lettera minuscola.',
+      })
+      .regex(/[0-9]/, { message: 'La password deve contenere almeno un numero.' }),
     confirmPassword: z.string(),
     acceptTerms: z.boolean().default(false),
   })
@@ -102,6 +109,9 @@ export function SignupForm() {
       let description = "Impossibile creare l'account. Riprova più tardi.";
       if (error.code === 'auth/email-already-in-use') {
         description = 'Questo indirizzo email è già in uso. Prova ad accedere.';
+      } else if (error.code === 'auth/weak-password') {
+        description =
+          'La password non rispetta i requisiti di sicurezza. Deve contenere almeno 8 caratteri, una maiuscola, una minuscola e un numero.';
       }
       toast({
         variant: 'destructive',

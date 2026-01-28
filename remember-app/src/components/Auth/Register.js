@@ -26,8 +26,8 @@ export default function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('La password deve avere almeno 6 caratteri');
+    if (password.length < 8) {
+      toast.error('La password deve avere almeno 8 caratteri');
       return;
     }
 
@@ -43,7 +43,7 @@ export default function Register() {
       } else if (error.code === 'auth/invalid-email') {
         toast.error('Email non valida');
       } else if (error.code === 'auth/weak-password') {
-        toast.error('Password troppo debole');
+        toast.error('Password troppo debole. Deve includere maiuscole, minuscole e numeri.');
       } else {
         toast.error('Errore durante la registrazione');
       }
