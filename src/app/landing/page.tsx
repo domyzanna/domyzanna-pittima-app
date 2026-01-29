@@ -41,10 +41,6 @@ const features = [
 ];
 
 export default function LandingPage() {
-  const heroImage = placeholderImages.placeholderImages.find(
-    (p) => p.id === 'landing-hero'
-  );
-  
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
 
   useEffect(() => {
@@ -82,40 +78,32 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-card">
           <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Mai più una scadenza dimenticata.
-                  </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Pittima è l'app intelligente che ti aiuta a gestire
-                    assicurazioni, bollette, abbonamenti e tasse. Tutto in un
-                    unico posto.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button asChild size="lg">
-                    <Link href="/signup">Registrati Gratis</Link>
-                  </Button>
-                  {installPrompt && (
-                    <Button onClick={handleInstallClick} variant="outline" size="lg">
-                      <Download className="mr-2 h-5 w-5" />
-                      Scarica Pittima App
-                    </Button>
-                  )}
-                </div>
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl xl:text-6xl/none">
+                  Mai più una scadenza dimenticata.
+                </h1>
+                <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  Pittima è l'app intelligente che ti aiuta a gestire
+                  assicurazioni, bollette, abbonamenti e tasse. Tutto in un
+                  unico posto.
+                </p>
               </div>
-              {heroImage && (
-                <Image
-                  src={heroImage.imageUrl}
-                  alt={heroImage.description}
-                  width={1200}
-                  height={800}
-                  className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square"
-                  data-ai-hint={heroImage.imageHint}
-                />
-              )}
+              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <Button asChild size="lg">
+                  <Link href="/signup">Registrati Gratis</Link>
+                </Button>
+                {installPrompt && (
+                  <Button
+                    onClick={handleInstallClick}
+                    variant="outline"
+                    size="lg"
+                  >
+                    <Download className="mr-2 h-5 w-5" />
+                    Scarica Pittima App
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </section>
