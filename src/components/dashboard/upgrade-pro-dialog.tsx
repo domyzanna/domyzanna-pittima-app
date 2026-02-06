@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
 import {
   Dialog,
   DialogContent,
@@ -23,16 +22,6 @@ type UpgradeProDialogProps = {
   forceOpen?: boolean;
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-      Fai l'Upgrade a Pro - 12€/anno
-    </Button>
-  );
-}
-
 export function UpgradeProDialog({
   limit,
   forceOpen = false,
@@ -40,6 +29,7 @@ export function UpgradeProDialog({
   const [isOpen, setIsOpen] = useState(forceOpen);
   const { user } = useUser();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setIsOpen(forceOpen);
@@ -57,23 +47,32 @@ export function UpgradeProDialog({
     };
   }, [forceOpen]);
 
-  const formAction = async () => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
     if (!user || !user.email) {
       toast({
         variant: 'destructive',
         title: 'Errore',
-        description: 'Devi essere loggato per fare l\'upgrade.',
+        description: "Devi essere loggato per fare l'upgrade.",
       });
+      setIsSubmitting(false);
       return;
     }
+    
     try {
-      await createStripeCheckoutSession(user.email, user.uid);
+      const origin = window.location.origin;
+      await createStripeCheckoutSession(user.email, user.uid, origin);
+      // Redirect happens on the server, so we might not need to set isSubmitting to false here
     } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Errore Checkout',
-            description: error.message || 'Impossibile connettersi a Stripe. Riprova più tardi.',
-        });
+      toast({
+        variant: 'destructive',
+        title: 'Errore Checkout',
+        description:
+          error.message || 'Impossibile connettersi a Stripe. Riprova più tardi.',
+      });
+      setIsSubmitting(false);
     }
   };
 
@@ -102,8 +101,13 @@ export function UpgradeProDialog({
           </ul>
         </div>
         <DialogFooter>
-          <form action={formAction} className='w-full'>
-            <SubmitButton />
+          <form onSubmit={handleSubmit} className="w-full">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && (
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Fai l'Upgrade a Pro - 12€/anno
+            </Button>
           </form>
         </DialogFooter>
       </DialogContent>

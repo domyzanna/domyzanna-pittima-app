@@ -5,7 +5,6 @@ import type { MonthlySummaryOutput } from '@/ai/flows/monthly-summary-ai-urgency
 import type { ProcessedDeadline } from '@/lib/types';
 import { addMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { checkDeadlinesAndNotify } from '@/ai/flows/notification-hammer';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Stripe from 'stripe';
 
@@ -72,7 +71,8 @@ export async function runCheckDeadlinesAndNotify() {
 
 export async function createStripeCheckoutSession(
   email: string | null,
-  userId: string | null
+  userId: string | null,
+  origin: string,
 ) {
   if (!email || !userId) {
     throw new Error('User email and ID are required to create a checkout session.');
@@ -83,8 +83,6 @@ export async function createStripeCheckoutSession(
     throw new Error('STRIPE_SECRET_KEY is not set in environment variables.');
   }
 
-  // Get the base URL from the request headers to construct success/cancel URLs
-  const origin = headers().get('origin');
   if (!origin) {
     throw new Error('Could not determine the request origin.');
   }
@@ -94,8 +92,6 @@ export async function createStripeCheckoutSession(
     typescript: true,
   });
 
-  // IMPORTANT: You need to create this product and price in your Stripe dashboard first!
-  // The price ID can be found in your Stripe dashboard.
   const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
   if (!proPriceId) {
     throw new Error('STRIPE_PRO_PRICE_ID is not set in environment variables.');
@@ -111,13 +107,10 @@ export async function createStripeCheckoutSession(
           quantity: 1,
         },
       ],
-      // We pass the user's email and our internal user ID to Stripe.
-      // This allows us to link the Stripe customer to our user.
       customer_email: email,
       metadata: {
         firebaseUid: userId,
       },
-      // Define the URLs where Stripe will redirect the user after payment.
       success_url: `${origin}/dashboard?payment=success`,
       cancel_url: `${origin}/dashboard?payment=cancel`,
     });
