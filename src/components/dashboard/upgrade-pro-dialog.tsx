@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Rocket } from 'lucide-react';
 import { useUser } from '@/firebase';
-import { createStripeCheckoutSession } from '@/app/stripe/actions';
+import { createStripeCheckoutSession } from '@/app/actions';
 import { Icons } from '../icons';
 import { useToast } from '@/hooks/use-toast';
 
