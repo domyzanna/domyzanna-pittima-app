@@ -1,15 +1,18 @@
+import type { NextConfig } from 'next';
+import withPWAInit from '@ducanh2912/next-pwa';
 
-import type {NextConfig} from 'next';
+const withPWA = withPWAInit({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+});
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
-  // This allows requests from the Firebase Studio development environment.
-  experimental: {
-    allowedDevOrigins: ['https://*.cloudworkstations.dev'],
-  },
+  turbopack: {},
   images: {
     remotePatterns: [
       {
@@ -25,8 +28,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https'
-        ,
+        protocol: 'https',
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
@@ -35,4 +37,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
