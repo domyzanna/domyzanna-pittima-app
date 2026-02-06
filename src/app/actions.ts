@@ -93,8 +93,7 @@ function initializeAdminApp(): App {
 }
 
 export async function createStripeCheckoutSession(
-  userId: string | null,
-  baseUrl: string
+  userId: string | null
 ) {
   if (!userId) {
     throw new Error('User is not authenticated.');
@@ -108,6 +107,8 @@ export async function createStripeCheckoutSession(
     throw new Error('STRIPE_PRO_PRICE_ID is not set in environment variables.');
   }
 
+  const productionBaseUrl = 'https://rememberapp.zannalabs.com';
+
   const checkoutSessionCollection = db
     .collection('customers')
     .doc(userId)
@@ -115,8 +116,8 @@ export async function createStripeCheckoutSession(
 
   const sessionDocRef = await checkoutSessionCollection.add({
     price: proPriceId,
-    success_url: `${baseUrl}/dashboard?payment=success`,
-    cancel_url: `${baseUrl}/dashboard?payment=cancel`,
+    success_url: `${productionBaseUrl}/dashboard?payment=success`,
+    cancel_url: `${productionBaseUrl}/dashboard?payment=cancel`,
   });
 
   // Wait for the Stripe extension to create the checkout session URL
@@ -141,6 +142,7 @@ export async function createStripeCheckoutSession(
           clearTimeout(timeoutId);
           unsubscribe();
           redirect(url); // This throws, so the promise might not resolve.
+          resolve();
         }
       },
       (err) => {

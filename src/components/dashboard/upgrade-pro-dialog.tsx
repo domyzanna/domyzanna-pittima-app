@@ -63,7 +63,6 @@ export function UpgradeProDialog({
     
     try {
       await createStripeCheckoutSession(user.uid);
-      // Redirect happens on the server, so we might not need to set isSubmitting to false here
     } catch (error: any) {
       toast({
         variant: 'destructive',
