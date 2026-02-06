@@ -12,21 +12,11 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import { Icons } from '@/components/icons';
-import { collection } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
 
 const FREE_PLAN_LIMIT = 6;
-
-// Lista VIP per i beta tester.
-const PRO_USERS = [
-  'domyzmail@gmail.com',
-  'sheila99@virgilio.it',
-  'samanthagiampapa495@gmail.com',
-  'tester1@example.com',
-  'tester2@example.com',
-  'tester3@example.com',
-];
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -36,15 +26,20 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   // Fetch active deadlines to check count
   const deadlinesQuery = useMemoFirebase(
     () =>
-      user ? collection(firestore, 'users', user.uid, 'deadlines') : null,
+      user ? query(collection(firestore, 'users', user.uid, 'deadlines'), where('isCompleted', '==', false)) : null,
     [user, firestore]
   );
   const { data: deadlines, isLoading: areDeadlinesLoading } =
-    useCollection<Deadline>(deadlinesQuery, {
-      constraints: [{ type: 'where', fieldPath: 'isCompleted', opStr: '==', value: false }],
-    });
+    useCollection<Deadline>(deadlinesQuery);
+    
+  // Fetch user's Stripe subscriptions to determine Pro status
+  const subscriptionsQuery = useMemoFirebase(
+    () => user ? query(collection(firestore, 'customers', user.uid, 'subscriptions'), where('status', 'in', ['trialing', 'active'])) : null,
+    [user, firestore]
+  );
+  const { data: subscriptions, isLoading: isLoadingSubscriptions } = useCollection(subscriptionsQuery);
 
-  const isLoading = isUserLoading || areDeadlinesLoading;
+  const isLoading = isUserLoading || areDeadlinesLoading || isLoadingSubscriptions;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -52,8 +47,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoading, router]);
 
+  // A user is "Pro" if they have at least one active subscription.
+  const isProUser = subscriptions && subscriptions.length > 0;
+  
   const limitExceeded = (deadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
-  const isProUser = user?.email ? PRO_USERS.includes(user.email) : false;
   const shouldBlock = limitExceeded && !isProUser;
 
   if (isLoading || !user) {

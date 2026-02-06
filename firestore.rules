@@ -56,5 +56,11 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId) && resource.data.userId == userId;
       }
     }
+    
+    // Stripe extension rules
+    // Allow user to read their own subscription status and checkout sessions
+     match /customers/{uid}/{any=**} {
+       allow read: if request.auth.uid == uid;
+    }
   }
 }

@@ -92,8 +92,7 @@ function initializeAdminApp(): App {
 }
 
 export async function createStripeCheckoutSession(
-  userId: string | null,
-  origin: string
+  userId: string | null
 ) {
   if (!userId) {
     throw new Error('User is not authenticated.');
@@ -114,8 +113,8 @@ export async function createStripeCheckoutSession(
 
   const sessionDocRef = await checkoutSessionCollection.add({
     price: proPriceId,
-    success_url: `${origin}/dashboard?payment=success`,
-    cancel_url: `${origin}/dashboard?payment=cancel`,
+    success_url: 'https://rememberapp.zannalabs.com/dashboard?payment=success',
+    cancel_url: 'https://rememberapp.zannalabs.com/dashboard?payment=cancel',
   });
 
   // Wait for the Stripe extension to create the checkout session URL
