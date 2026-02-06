@@ -60,15 +60,24 @@ export function UpgradeProDialog({
       setIsSubmitting(false);
       return;
     }
-    
+
     try {
       await createStripeCheckoutSession(user.uid);
+      // This line may not be reached if redirect is successful, as it throws an error.
+      // If it is reached, it means something went wrong without throwing an error.
+      setIsSubmitting(false);
     } catch (error: any) {
+      // If the error is a redirect error, re-throw it so Next.js can handle it.
+      if (error.digest?.includes('NEXT_REDIRECT')) {
+        throw error;
+      }
+      
+      // Handle all other actual errors.
       toast({
         variant: 'destructive',
         title: 'Errore Checkout',
         description:
-          error.message || 'Impossibile connettersi a Stripe. Riprova più tardi.',
+          error.message || 'An unexpected response was received from the server.',
       });
       setIsSubmitting(false);
     }
