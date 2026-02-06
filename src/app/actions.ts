@@ -1,3 +1,4 @@
+
 'use server';
 
 import { generateMonthlySummary } from '@/ai/flows/monthly-summary-ai-urgency';
@@ -92,7 +93,8 @@ function initializeAdminApp(): App {
 }
 
 export async function createStripeCheckoutSession(
-  userId: string | null
+  userId: string | null,
+  baseUrl: string
 ) {
   if (!userId) {
     throw new Error('User is not authenticated.');
@@ -113,38 +115,40 @@ export async function createStripeCheckoutSession(
 
   const sessionDocRef = await checkoutSessionCollection.add({
     price: proPriceId,
-    success_url: 'https://rememberapp.zannalabs.com/dashboard?payment=success',
-    cancel_url: 'https://rememberapp.zannalabs.com/dashboard?payment=cancel',
+    success_url: `${baseUrl}/dashboard?payment=success`,
+    cancel_url: `${baseUrl}/dashboard?payment=cancel`,
   });
 
   // Wait for the Stripe extension to create the checkout session URL
   return new Promise<void>((resolve, reject) => {
-    const unsubscribe = sessionDocRef.onSnapshot(
+    
+    let unsubscribe = () => {};
+
+    const timeoutId = setTimeout(() => {
+        unsubscribe();
+        reject(new Error('Could not create a payment session. Please try again later.'));
+    }, 15000); // 15 seconds timeout
+
+    unsubscribe = sessionDocRef.onSnapshot(
       (snap) => {
         const { error, url } = snap.data() || {};
         if (error) {
+          clearTimeout(timeoutId);
           unsubscribe();
           reject(new Error(`An error occurred: ${error.message}`));
         }
         if (url) {
+          clearTimeout(timeoutId);
           unsubscribe();
-          // We have a URL, let's redirect!
-          redirect(url);
-          // This resolve may not be reached due to redirect, but it's good practice.
-          resolve(); 
+          redirect(url); // This throws, so the promise might not resolve.
         }
       },
       (err) => {
+        clearTimeout(timeoutId);
         unsubscribe();
         console.error('onSnapshot error:', err);
         reject(new Error('Failed to listen for checkout session.'));
       }
     );
-
-    // Add a timeout to prevent waiting indefinitely
-    setTimeout(() => {
-        unsubscribe();
-        reject(new Error('Could not create a payment session. Please try again later.'));
-    }, 15000); // 15 seconds timeout
   });
 }
