@@ -115,9 +115,17 @@ export async function createStripeCheckoutSession(
     .collection('checkout_sessions');
 
   const sessionDocRef = await checkoutSessionCollection.add({
-    price: proPriceId,
+    mode: 'subscription',
+    billing_address_collection: 'required',
+    line_items: [
+        {
+            price: proPriceId,
+            quantity: 1,
+        },
+    ],
     success_url: `${productionBaseUrl}/dashboard?payment=success`,
     cancel_url: `${productionBaseUrl}/dashboard?payment=cancel`,
+    allow_promotion_codes: false,
   });
 
   // Wait for the Stripe extension to create the checkout session URL
@@ -128,7 +136,7 @@ export async function createStripeCheckoutSession(
     const timeoutId = setTimeout(() => {
         unsubscribe();
         reject(new Error('Could not create a payment session. Please try again later.'));
-    }, 15000); // 15 seconds timeout
+    }, 30000); // 30 seconds timeout
 
     unsubscribe = sessionDocRef.onSnapshot(
       (snap) => {
@@ -141,7 +149,7 @@ export async function createStripeCheckoutSession(
         if (url) {
           clearTimeout(timeoutId);
           unsubscribe();
-          redirect(url); // This throws, so the promise might not resolve.
+          redirect(url);
           resolve();
         }
       },
