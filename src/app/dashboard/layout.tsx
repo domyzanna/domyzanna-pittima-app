@@ -16,6 +16,12 @@ import { collection, query, where } from 'firebase/firestore';
 import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
 
+const PRO_USERS = [
+    'domyzmail@gmail.com',
+    'domyz71@alice.it',
+    'sheila99@virgilio.it',
+    'samanthagiampapa495@gmail.com',
+];
 const FREE_PLAN_LIMIT = 6;
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -48,7 +54,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, router]);
 
   // A user is "Pro" if they have at least one active subscription.
-  const isProUser = subscriptions && subscriptions.length > 0;
+  const isProUser = (subscriptions && subscriptions.length > 0) || (user?.email && PRO_USERS.includes(user.email));
   
   const limitExceeded = (deadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
   const shouldBlock = limitExceeded && !isProUser;
