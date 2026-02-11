@@ -1,3 +1,4 @@
+
 'use client';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/layout/main-sidebar';
@@ -65,7 +66,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <MainSidebar />
+      <MainSidebar isProUser={!!isProUser} />
       <SidebarInset>
         {children}
         {shouldShowUpgrade && (

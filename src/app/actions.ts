@@ -13,6 +13,7 @@ import {
 import { checkDeadlinesAndNotify } from '@/ai/flows/notification-hammer';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, App } from 'firebase-admin/app';
+import Stripe from 'stripe';
 
 type SerializableProcessedDeadline = Omit<ProcessedDeadline, 'category'> & {
   category: string;
@@ -156,4 +157,47 @@ export async function createStripeCheckoutSession(
       }
     );
   });
+}
+
+export async function createStripePortalSession(
+  userId: string
+): Promise<{ url: string }> {
+  if (!userId) {
+    throw new Error('User is not authenticated.');
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2023-10-16',
+  });
+
+  const adminApp = initializeAdminApp();
+  const db = getFirestore(adminApp);
+
+  const customerDoc = await db
+    .collection('customers')
+    .doc(userId)
+    .get();
+
+  if (!customerDoc.exists) {
+    throw new Error('Cliente non trovato');
+  }
+
+  const stripeId = customerDoc.data()?.stripeId;
+
+  if (!stripeId) {
+    throw new Error('Stripe ID non trovato per questo utente');
+  }
+
+  const productionBaseUrl = 'https://rememberapp.zannalabs.com';
+
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: stripeId,
+    return_url: `${productionBaseUrl}/dashboard`,
+  });
+
+  if (!portalSession.url) {
+    throw new Error('Could not create a portal session.');
+  }
+
+  return { url: portalSession.url };
 }

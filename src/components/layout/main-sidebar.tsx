@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -13,7 +14,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -44,6 +45,7 @@ import { EditCategoryDialog } from '../dashboard/edit-category-dialog';
 import { HowItWorksDialog } from '../dashboard/how-it-works-dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { createStripePortalSession } from '@/app/actions';
 
 const getIcon = (iconName: string) => {
   const IconComponent = (LucideIcons as any)[iconName];
@@ -53,8 +55,9 @@ const getIcon = (iconName: string) => {
   const FallbackIcon = (LucideIcons as any)['Folder'];
   return <FallbackIcon />;
 };
+  
 
-export function MainSidebar() {
+export function MainSidebar({ isProUser }: { isProUser: boolean }) {
   const pathname = usePathname();
   const { user } = useUser();
   const auth = useAuth();
@@ -189,6 +192,34 @@ export function MainSidebar() {
     }
   };
 
+  const handleManageSubscription = async () => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Non autenticato',
+        description: 'Devi essere loggato per gestire il tuo abbonamento.',
+      });
+      return;
+    }
+
+    try {
+      const { url } = await createStripePortalSession(user.uid);
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error: any) {
+      console.error('Error creating Stripe portal session:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description:
+          error.message ||
+          'Impossibile accedere al portale di gestione. Riprova più tardi.',
+      });
+    }
+  };
+
+
   return (
     <>
     <Sidebar collapsible="icon" variant="sidebar">
@@ -316,6 +347,12 @@ export function MainSidebar() {
               <Download className="mr-2 h-4 w-4" />
               <span>Esporta CSV</span>
             </DropdownMenuItem>
+            {isProUser && (
+              <DropdownMenuItem onClick={handleManageSubscription}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Gestisci Abbonamento</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
           </DropdownMenuContent>
