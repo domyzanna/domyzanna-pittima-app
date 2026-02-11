@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,15 +42,7 @@ import { UpgradeProDialog } from './upgrade-pro-dialog';
 
 const FREE_PLAN_LIMIT = 6;
 // Lista VIP per i beta tester. Sostituisci con le loro email reali.
-const PRO_USERS = [
-    'domyzmail@gmail.com',
-    'domyz71@alice.it',
-    'sheila99@virgilio.it',
-    'samanthagiampapa495@gmail.com',
-    'tester1@example.com',
-    'tester2@example.com',
-    'tester3@example.com',
-];
+const PRO_USERS: string[] = [];
 
 const formSchema = z.object({
   name: z.string().min(1, 'Il nome è obbligatorio'),
@@ -79,7 +70,14 @@ export function AddDeadlineDialog() {
   );
   const { data: activeDeadlines, isLoading: isLoadingDeadlines } = useCollection<Deadline>(deadlinesQuery);
 
-  const isProUser = user?.email ? PRO_USERS.includes(user.email) : false;
+  // Fetch user's Stripe subscriptions to determine Pro status
+  const subscriptionsQuery = useMemoFirebase(
+    () => user ? query(collection(firestore, 'customers', user.uid, 'subscriptions'), where('status', 'in', ['trialing', 'active'])) : null,
+    [user, firestore]
+  );
+  const { data: subscriptions } = useCollection(subscriptionsQuery);
+
+  const isProUser = (subscriptions && subscriptions.length > 0) || (user?.email ? PRO_USERS.includes(user.email) : false);
   const isLimitReached = !isProUser && (activeDeadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
 
 

@@ -1,5 +1,4 @@
 'use client';
-
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/layout/main-sidebar';
 import {
@@ -10,24 +9,21 @@ import {
   useMemoFirebase,
 } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Icons } from '@/components/icons';
 import { collection, query, where } from 'firebase/firestore';
 import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
 
-const PRO_USERS = [
-    'domyzmail@gmail.com',
-    'domyz71@alice.it',
-    'sheila99@virgilio.it',
-    'samanthagiampapa495@gmail.com',
-];
+const PRO_USERS: string[] = [];
+
 const FREE_PLAN_LIMIT = 6;
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
+  const [upgradeDialogDismissed, setUpgradeDialogDismissed] = useState(false);
 
   // Fetch active deadlines to check count
   const deadlinesQuery = useMemoFirebase(
@@ -57,7 +53,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const isProUser = (subscriptions && subscriptions.length > 0) || (user?.email && PRO_USERS.includes(user.email));
   
   const limitExceeded = (deadlines?.length ?? 0) >= FREE_PLAN_LIMIT;
-  const shouldBlock = limitExceeded && !isProUser;
+  const shouldShowUpgrade = limitExceeded && !isProUser && !upgradeDialogDismissed;
 
   if (isLoading || !user) {
     return (
@@ -71,10 +67,13 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <MainSidebar />
       <SidebarInset>
-        {shouldBlock ? (
-          <UpgradeProDialog limit={FREE_PLAN_LIMIT} forceOpen={true} />
-        ) : (
-          children
+        {children}
+        {shouldShowUpgrade && (
+          <UpgradeProDialog 
+            limit={FREE_PLAN_LIMIT} 
+            forceOpen={true} 
+            onDismiss={() => setUpgradeDialogDismissed(true)}
+          />
         )}
       </SidebarInset>
     </SidebarProvider>

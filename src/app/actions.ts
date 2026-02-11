@@ -11,7 +11,6 @@ import {
   isWithinInterval,
 } from 'date-fns';
 import { checkDeadlinesAndNotify } from '@/ai/flows/notification-hammer';
-import { redirect } from 'next/navigation';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, App } from 'firebase-admin/app';
 
@@ -79,14 +78,11 @@ export async function runCheckDeadlinesAndNotify() {
 // Admin SDK Init
 function initializeAdminApp(): App {
     const adminAppName = 'firebase-admin-stripe';
-    // Prevent re-initializing the app on every call in dev environments
     const existingApp = getApps().find((app) => app.name === adminAppName);
     if (existingApp) {
       return existingApp;
     }
     
-    // Assumes Application Default Credentials (ADC) are available in the App Hosting environment.
-    // process.env.GOOGLE_CLOUD_PROJECT is automatically set by App Hosting.
     return initializeApp({
       projectId: process.env.GOOGLE_CLOUD_PROJECT || 'studio-1765347057-3bb5c',
     }, adminAppName);
@@ -94,7 +90,7 @@ function initializeAdminApp(): App {
 
 export async function createStripeCheckoutSession(
   userId: string | null
-) {
+): Promise<{ url: string }> {
   if (!userId) {
     throw new Error('User is not authenticated.');
   }
@@ -129,7 +125,7 @@ export async function createStripeCheckoutSession(
   });
 
   // Wait for the Stripe extension to create the checkout session URL
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<{ url: string }>((resolve, reject) => {
     
     let unsubscribe = () => {};
 
@@ -149,8 +145,7 @@ export async function createStripeCheckoutSession(
         if (url) {
           clearTimeout(timeoutId);
           unsubscribe();
-          redirect(url);
-          resolve();
+          resolve({ url });
         }
       },
       (err) => {

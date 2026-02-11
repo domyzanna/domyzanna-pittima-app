@@ -1,6 +1,5 @@
 
 'use client';
-
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -20,11 +19,13 @@ import { useToast } from '@/hooks/use-toast';
 type UpgradeProDialogProps = {
   limit: number;
   forceOpen?: boolean;
+  onDismiss?: () => void;
 };
 
 export function UpgradeProDialog({
   limit,
   forceOpen = false,
+  onDismiss,
 }: UpgradeProDialogProps) {
   const [isOpen, setIsOpen] = useState(forceOpen);
   const { user } = useUser();
@@ -47,6 +48,13 @@ export function UpgradeProDialog({
     };
   }, [forceOpen]);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    if (onDismiss) {
+      onDismiss();
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -62,17 +70,13 @@ export function UpgradeProDialog({
     }
 
     try {
-      await createStripeCheckoutSession(user.uid);
-      // This line may not be reached if redirect is successful, as it throws an error.
-      // If it is reached, it means something went wrong without throwing an error.
-      setIsSubmitting(false);
-    } catch (error: any) {
-      // If the error is a redirect error, re-throw it so Next.js can handle it.
-      if (error.digest?.includes('NEXT_REDIRECT')) {
-        throw error;
+      const result = await createStripeCheckoutSession(user.uid);
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        throw new Error('No checkout URL received.');
       }
-      
-      // Handle all other actual errors.
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Errore Checkout',
@@ -84,12 +88,8 @@ export function UpgradeProDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={forceOpen ? undefined : setIsOpen}>
-      <DialogContent
-        onInteractOutside={(e) => {
-          if (forceOpen) e.preventDefault();
-        }}
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-headline">
             <Rocket className="text-primary" />
@@ -107,7 +107,7 @@ export function UpgradeProDialog({
             <li>🚀 Accesso a tutte le funzionalità future</li>
           </ul>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex flex-col gap-2 sm:flex-col">
           <form onSubmit={handleSubmit} className="w-full">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && (
@@ -116,6 +116,11 @@ export function UpgradeProDialog({
               Fai l'Upgrade a Pro - 12€/anno
             </Button>
           </form>
+          {onDismiss && (
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={handleClose}>
+              Continua con il piano gratuito
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
