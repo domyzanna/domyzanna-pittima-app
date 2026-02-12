@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { RegisterSW } from '@/components/register-sw';
 
 export const metadata: Metadata = {
   title: 'Remember App',
@@ -50,6 +51,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         {children}
+        <RegisterSW />
         <Toaster />
       </body>
     </html>
