@@ -13,3 +13,5 @@ scheduledJobs:
 env:
   - variable: RESEND_API_KEY
     secret: RESEND_API_KEY
+  - variable: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    value: BEXZNLXQtO_Xb81inZ-ixOsWCRomyPxReOUKARpzZNj7juIuVCIEjODwGwooyIdm5O2k84FfOaVwQ1fbURWkWsA
