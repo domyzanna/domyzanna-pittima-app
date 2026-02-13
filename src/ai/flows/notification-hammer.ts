@@ -12,6 +12,7 @@ import { initializeApp, getApps, App, ServiceAccount } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
 import { sendEmailTool } from '@/ai/tools/send-email-tool';
+import { sendPushToUser } from '@/lib/send-push';
 import { credential } from 'firebase-admin';
 
 
@@ -135,6 +136,18 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
           console.log(`-> Summary email sent successfully to ${email}.`);
         } catch (e) {
           console.error(`-> Failed to send summary email to ${email}:`, e);
+        }
+
+        // Send push notification
+        try {
+          const pushCount = await sendPushToUser(uid, {
+            title: `📅 ${deadlinesToNotify.length} scadenze in avvicinamento!`,
+            body: deadlinesToNotify.slice(0, 3).map(d => d.name).join(", ") + (deadlinesToNotify.length > 3 ? ` e altre ${deadlinesToNotify.length - 3}...` : ""),
+            url: "https://rememberapp.zannalabs.com/dashboard",
+          });
+          console.log(`-> Push notifications sent to ${email}: ${pushCount} devices.`);
+        } catch (pushError) {
+          console.error(`-> Failed to send push to ${email}:`, pushError);
         }
       }
     }

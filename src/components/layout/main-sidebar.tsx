@@ -14,7 +14,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -46,6 +46,7 @@ import { HowItWorksDialog } from '../dashboard/how-it-works-dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { createStripePortalSession } from '@/app/actions';
+import { PushNotificationToggle } from '@/components/dashboard/push-notification-toggle';
 
 const getIcon = (iconName: string) => {
   const IconComponent = (LucideIcons as any)[iconName];
@@ -343,6 +344,9 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              {user && <PushNotificationToggle userId={user.uid} />}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleExportCSV}>
               <Download className="mr-2 h-4 w-4" />
               <span>Esporta CSV</span>
