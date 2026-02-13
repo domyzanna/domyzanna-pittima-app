@@ -97,6 +97,7 @@ export default function LandingPage() {
                   <Button
                     onClick={handleInstallClick}
                     variant="outline"
+                    className="bg-red-600 text-white border-red-600 hover:bg-red-700 hover:border-red-700"
                     size="lg"
                   >
                     <Download className="mr-2 h-5 w-5" />
