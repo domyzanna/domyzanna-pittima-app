@@ -1,6 +1,5 @@
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
-import { initializeApp, getApps } from 'firebase/app';
-import { firebaseConfig } from '@/firebase/config';
+import { getApp, getApps } from 'firebase/app';
 import { getFirestore, doc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 let messagingInstance: ReturnType<typeof getMessaging> | null = null;
@@ -14,7 +13,14 @@ async function getMessagingInstance() {
     return null;
   }
 
-  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  // Use the existing Firebase app (already initialized by the main app)
+  if (getApps().length === 0) {
+    console.error('[PUSH] No Firebase app initialized');
+    return null;
+  }
+  
+  const app = getApp();
+  console.log('[PUSH] Using existing Firebase app:', app.name);
   messagingInstance = getMessaging(app);
   return messagingInstance;
 }
@@ -54,7 +60,6 @@ export async function requestPushPermission(userId: string): Promise<string | nu
       return null;
     }
 
-    // Wait for SW to be ready (important!)
     console.log('[PUSH] Step 6: Waiting for SW to be ready...');
     const registration = await navigator.serviceWorker.ready;
     console.log('[PUSH] Step 7: SW ready:', !!registration, 'scope:', registration.scope);
@@ -81,7 +86,7 @@ export async function requestPushPermission(userId: string): Promise<string | nu
 }
 
 async function saveFcmToken(userId: string, token: string) {
-  const app = getApps()[0];
+  const app = getApp();
   const db = getFirestore(app);
   
   await setDoc(doc(db, 'users', userId), {
@@ -92,7 +97,7 @@ async function saveFcmToken(userId: string, token: string) {
 }
 
 export async function removeFcmToken(userId: string, token: string) {
-  const app = getApps()[0];
+  const app = getApp();
   const db = getFirestore(app);
   
   await setDoc(doc(db, 'users', userId), {
