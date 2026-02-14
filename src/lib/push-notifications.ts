@@ -10,7 +10,7 @@ async function getMessagingInstance() {
   
   const supported = await isSupported();
   if (!supported) {
-    console.log('Push notifications not supported in this browser');
+    console.log('[PUSH] Firebase Messaging not supported in this browser');
     return null;
   }
 
@@ -24,43 +24,64 @@ async function getMessagingInstance() {
  */
 export async function requestPushPermission(userId: string): Promise<string | null> {
   try {
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.log('Notification permission denied');
+    console.log('[PUSH] Step 1: Checking current permission:', Notification.permission);
+    
+    // If already denied, can't do anything
+    if (Notification.permission === 'denied') {
+      console.log('[PUSH] Permission was previously denied by user');
       return null;
     }
 
+    // Request permission
+    console.log('[PUSH] Step 2: Requesting permission...');
+    const permission = await Notification.requestPermission();
+    console.log('[PUSH] Step 3: Permission result:', permission);
+    
+    if (permission !== 'granted') {
+      console.log('[PUSH] Permission not granted:', permission);
+      return null;
+    }
+
+    console.log('[PUSH] Step 4: Getting messaging instance...');
     const messaging = await getMessagingInstance();
-    if (!messaging) return null;
+    if (!messaging) {
+      console.log('[PUSH] Messaging not available');
+      return null;
+    }
 
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    console.log('[PUSH] Step 5: VAPID key present:', !!vapidKey, 'length:', vapidKey?.length);
     if (!vapidKey) {
-      console.error('VAPID key not found');
+      console.error('[PUSH] VAPID key not found in env');
       return null;
     }
 
     // Get the registration from our manual SW
+    console.log('[PUSH] Step 6: Getting SW registration...');
     const registration = await navigator.serviceWorker.getRegistration();
+    console.log('[PUSH] Step 7: SW registration:', !!registration, registration?.scope);
     if (!registration) {
-      console.error('Service Worker not registered');
+      console.error('[PUSH] Service Worker not registered');
       return null;
     }
 
+    console.log('[PUSH] Step 8: Requesting FCM token...');
     const token = await getToken(messaging, {
       vapidKey,
       serviceWorkerRegistration: registration,
     });
+    console.log('[PUSH] Step 9: FCM Token obtained:', !!token, 'length:', token?.length);
 
     if (token) {
-      console.log('✅ FCM Token obtained');
       // Save token to Firestore
+      console.log('[PUSH] Step 10: Saving token to Firestore for user:', userId);
       await saveFcmToken(userId, token);
       return token;
     }
 
     return null;
   } catch (error) {
-    console.error('Error getting push token:', error);
+    console.error('[PUSH] Error in requestPushPermission:', error);
     return null;
   }
 }
@@ -76,7 +97,7 @@ async function saveFcmToken(userId: string, token: string) {
     fcmTokens: arrayUnion(token),
   }, { merge: true });
   
-  console.log('✅ FCM token saved to Firestore');
+  console.log('[PUSH] ✅ FCM token saved to Firestore');
 }
 
 /**
@@ -99,7 +120,7 @@ export async function onForegroundMessage(callback: (payload: any) => void) {
   if (!messaging) return;
 
   onMessage(messaging, (payload) => {
-    console.log('📬 Push ricevuta in foreground:', payload);
+    console.log('[PUSH] 📬 Foreground message received:', payload);
     callback(payload);
   });
 }
