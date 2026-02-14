@@ -26,13 +26,11 @@ export async function requestPushPermission(userId: string): Promise<string | nu
   try {
     console.log('[PUSH] Step 1: Checking current permission:', Notification.permission);
     
-    // If already denied, can't do anything
     if (Notification.permission === 'denied') {
       console.log('[PUSH] Permission was previously denied by user');
       return null;
     }
 
-    // Request permission
     console.log('[PUSH] Step 2: Requesting permission...');
     const permission = await Notification.requestPermission();
     console.log('[PUSH] Step 3: Permission result:', permission);
@@ -56,14 +54,11 @@ export async function requestPushPermission(userId: string): Promise<string | nu
       return null;
     }
 
-    // Get the registration from our manual SW
-    console.log('[PUSH] Step 6: Getting SW registration...');
-    const registration = await navigator.serviceWorker.getRegistration();
-    console.log('[PUSH] Step 7: SW registration:', !!registration, registration?.scope);
-    if (!registration) {
-      console.error('[PUSH] Service Worker not registered');
-      return null;
-    }
+    // Wait for SW to be ready (important!)
+    console.log('[PUSH] Step 6: Waiting for SW to be ready...');
+    const registration = await navigator.serviceWorker.ready;
+    console.log('[PUSH] Step 7: SW ready:', !!registration, 'scope:', registration.scope);
+    console.log('[PUSH] Step 7b: pushManager available:', !!registration.pushManager);
 
     console.log('[PUSH] Step 8: Requesting FCM token...');
     const token = await getToken(messaging, {
@@ -73,7 +68,6 @@ export async function requestPushPermission(userId: string): Promise<string | nu
     console.log('[PUSH] Step 9: FCM Token obtained:', !!token, 'length:', token?.length);
 
     if (token) {
-      // Save token to Firestore
       console.log('[PUSH] Step 10: Saving token to Firestore for user:', userId);
       await saveFcmToken(userId, token);
       return token;
@@ -86,9 +80,6 @@ export async function requestPushPermission(userId: string): Promise<string | nu
   }
 }
 
-/**
- * Save FCM token to Firestore under the user's document
- */
 async function saveFcmToken(userId: string, token: string) {
   const app = getApps()[0];
   const db = getFirestore(app);
@@ -100,9 +91,6 @@ async function saveFcmToken(userId: string, token: string) {
   console.log('[PUSH] ✅ FCM token saved to Firestore');
 }
 
-/**
- * Remove FCM token (for logout or disable notifications)
- */
 export async function removeFcmToken(userId: string, token: string) {
   const app = getApps()[0];
   const db = getFirestore(app);
@@ -112,9 +100,6 @@ export async function removeFcmToken(userId: string, token: string) {
   }, { merge: true });
 }
 
-/**
- * Listen for foreground messages
- */
 export async function onForegroundMessage(callback: (payload: any) => void) {
   const messaging = await getMessagingInstance();
   if (!messaging) return;
