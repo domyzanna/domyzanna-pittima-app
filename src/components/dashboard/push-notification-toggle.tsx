@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { requestPushPermission, onForegroundMessage } from '@/lib/push-notifications';
@@ -15,16 +15,30 @@ export function PushNotificationToggle({ userId }: PushNotificationToggleProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const { toast } = useToast();
+  const hasAutoRegistered = useRef(false);
 
   useEffect(() => {
-    // Check if push is supported and already enabled
+    // Check if push is supported
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       setIsSupported(false);
       return;
     }
 
-    if (Notification.permission === 'granted') {
+    // If permission already granted, auto-register token
+    if (Notification.permission === 'granted' && !hasAutoRegistered.current) {
+      hasAutoRegistered.current = true;
       setIsEnabled(true);
+      
+      // Auto-register FCM token in background
+      console.log('[PUSH] Permission already granted, auto-registering token...');
+      requestPushPermission(userId).then((token) => {
+        if (token) {
+          console.log('[PUSH] ✅ Token auto-registered successfully');
+        } else {
+          console.log('[PUSH] ⚠️ Token auto-registration returned null');
+        }
+      });
+
       // Listen for foreground messages
       onForegroundMessage((payload) => {
         toast({
@@ -33,11 +47,10 @@ export function PushNotificationToggle({ userId }: PushNotificationToggleProps) 
         });
       });
     }
-  }, [toast]);
+  }, [userId, toast]);
 
   const handleToggle = async () => {
     if (isEnabled) {
-      // Can't programmatically revoke - tell user how
       toast({
         title: 'Disattiva notifiche',
         description: 'Per disattivare, vai nelle impostazioni del browser e rimuovi il permesso notifiche per questo sito.',
