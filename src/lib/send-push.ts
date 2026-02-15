@@ -1,12 +1,10 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getMessaging } from 'firebase-admin/messaging';
 import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps } from 'firebase-admin/app';
 
 function getAdminApp() {
   const adminAppName = 'admin-push';
   const existingApp = getApps().find((app) => app.name === adminAppName);
   if (existingApp) return existingApp;
-
   return initializeApp({
     projectId: process.env.GOOGLE_CLOUD_PROJECT || 'studio-1765347057-3bb5c',
   }, adminAppName);
@@ -19,65 +17,64 @@ export interface PushPayload {
 }
 
 /**
- * Send push notification to a user by reading their FCM tokens from Firestore
+ * Send push notification to a user using web-push
  */
 export async function sendPushToUser(userId: string, payload: PushPayload): Promise<number> {
+  const webpush = require('web-push');
+  
+  // Set VAPID details
+  webpush.setVapidDetails(
+    'mailto:infopittima@zannalabs.com',
+    process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+    process.env.VAPID_PRIVATE_KEY || ''
+  );
+
   const app = getAdminApp();
   const db = getFirestore(app);
-  const messaging = getMessaging(app);
 
   const userDoc = await db.doc(`users/${userId}`).get();
   const userData = userDoc.data();
-  const fcmTokens: string[] = userData?.fcmTokens || [];
+  const subscriptions: string[] = userData?.fcmTokens || [];
 
-  if (fcmTokens.length === 0) {
-    console.log(`No FCM tokens for user ${userId}`);
+  if (subscriptions.length === 0) {
+    console.log(`No push subscriptions for user ${userId}`);
     return 0;
   }
 
   let sent = 0;
-  const tokensToRemove: string[] = [];
+  const toRemove: string[] = [];
 
-  for (const token of fcmTokens) {
+  const notificationPayload = JSON.stringify({
+    title: payload.title,
+    body: payload.body,
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    tag: 'pittima-deadline',
+    url: payload.url || 'https://rememberapp.zannalabs.com/dashboard',
+  });
+
+  for (const subStr of subscriptions) {
     try {
-      await messaging.send({
-        token,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-        },
-        webpush: {
-          fcmOptions: {
-            link: payload.url || 'https://rememberapp.zannalabs.com/dashboard',
-          },
-          notification: {
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
-            tag: 'pittima-deadline',
-            renotify: true,
-          },
-        },
-      });
+      const subscription = JSON.parse(subStr);
+      await webpush.sendNotification(subscription, notificationPayload);
       sent++;
+      console.log(`Push sent to user ${userId}`);
     } catch (error: any) {
-      console.error(`Failed to send push to token ${token.substring(0, 10)}...:`, error.message);
-      // Remove invalid tokens
-      if (
-        error.code === 'messaging/invalid-registration-token' ||
-        error.code === 'messaging/registration-token-not-registered'
-      ) {
-        tokensToRemove.push(token);
+      console.error(`Failed to send push:`, error.message);
+      if (error.statusCode === 410 || error.statusCode === 404) {
+        // Subscription expired or invalid
+        toRemove.push(subStr);
       }
     }
   }
 
-  // Clean up invalid tokens
-  if (tokensToRemove.length > 0) {
+  // Clean up invalid subscriptions
+  if (toRemove.length > 0) {
     const { FieldValue } = await import('firebase-admin/firestore');
     await db.doc(`users/${userId}`).update({
-      fcmTokens: FieldValue.arrayRemove(...tokensToRemove),
+      fcmTokens: FieldValue.arrayRemove(...toRemove),
     });
-    console.log(`Removed ${tokensToRemove.length} invalid tokens for user ${userId}`);
+    console.log(`Removed ${toRemove.length} invalid subscriptions`);
   }
 
   return sent;

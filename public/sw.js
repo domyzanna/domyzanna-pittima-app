@@ -1,45 +1,46 @@
-// Pittima App Service Worker - PWA + Push Notifications
-const CACHE_NAME = 'pittima-v1';
+// Pittima App Service Worker - PWA + Web Push Notifications
+const CACHE_NAME = 'pittima-v2';
 
-// Import Firebase Messaging SW - MUST match client SDK version
-importScripts('https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/11.9.1/firebase-messaging-compat.js');
+// Handle push events (web-push native)
+self.addEventListener('push', (event) => {
+  console.log('Push received');
+  
+  let data = { title: 'Pittima App', body: 'Hai scadenze in avvicinamento!', url: '/dashboard' };
+  
+  if (event.data) {
+    try {
+      data = { ...data, ...event.data.json() };
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
 
-// Initialize Firebase in the SW
-firebase.initializeApp({
-  apiKey: "AIzaSyBchqpggDU6D9jJzsCORBKZDtJDowRAy-4",
-  authDomain: "studio-1765347057-3bb5c.firebaseapp.com",
-  projectId: "studio-1765347057-3bb5c",
-  messagingSenderId: "976623372980",
-  appId: "1:976623372980:web:f37952c3c22714b81de5e1",
-});
-
-const messaging = firebase.messaging();
-
-// Handle background push messages
-messaging.onBackgroundMessage((payload) => {
-  console.log('Push ricevuta in background:', payload);
-
-  const title = payload.notification?.title || 'Pittima App';
   const options = {
-    body: payload.notification?.body || 'Hai scadenze in avvicinamento!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    tag: 'pittima-deadline',
+    body: data.body,
+    icon: data.icon || '/icons/icon-192x192.png',
+    badge: data.badge || '/icons/icon-72x72.png',
+    tag: data.tag || 'pittima-deadline',
     renotify: true,
-    data: {
-      url: payload.data?.url || '/dashboard',
-    },
+    data: { url: data.url || '/dashboard' },
   };
 
-  self.registration.showNotification(title, options);
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+  
+  // Notify foreground clients
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      clientList.forEach((client) => {
+        client.postMessage({ type: 'PUSH_RECEIVED', ...data });
+      });
+    })
+  );
 });
 
-// Handle notification click - open the app
+// Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked');
   event.notification.close();
-
   const targetUrl = event.notification.data?.url || '/dashboard';
 
   event.waitUntil(

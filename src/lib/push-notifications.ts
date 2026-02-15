@@ -1,32 +1,10 @@
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import { getApp, getApps } from 'firebase/app';
 import { getFirestore, doc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
-let messagingInstance: ReturnType<typeof getMessaging> | null = null;
-
-async function getMessagingInstance() {
-  if (messagingInstance) return messagingInstance;
-  
-  const supported = await isSupported();
-  if (!supported) {
-    console.log('[PUSH] Firebase Messaging not supported in this browser');
-    return null;
-  }
-
-  // Use the existing Firebase app (already initialized by the main app)
-  if (getApps().length === 0) {
-    console.error('[PUSH] No Firebase app initialized');
-    return null;
-  }
-  
-  const app = getApp();
-  console.log('[PUSH] Using existing Firebase app:', app.name);
-  messagingInstance = getMessaging(app);
-  return messagingInstance;
-}
+const VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 
 /**
- * Request notification permission and get FCM token
+ * Request notification permission and subscribe to push
  */
 export async function requestPushPermission(userId: string): Promise<string | null> {
   try {
@@ -46,56 +24,59 @@ export async function requestPushPermission(userId: string): Promise<string | nu
       return null;
     }
 
-    console.log('[PUSH] Step 4: Getting messaging instance...');
-    const messaging = await getMessagingInstance();
-    if (!messaging) {
-      console.log('[PUSH] Messaging not available');
-      return null;
-    }
-
-    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    console.log('[PUSH] Step 5: VAPID key present:', !!vapidKey, 'length:', vapidKey?.length);
-    if (!vapidKey) {
-      console.error('[PUSH] VAPID key not found in env');
-      return null;
-    }
-
-    console.log('[PUSH] Step 6: Waiting for SW to be ready...');
+    console.log('[PUSH] Step 4: Waiting for SW to be ready...');
     const registration = await navigator.serviceWorker.ready;
-    console.log('[PUSH] Step 7: SW ready:', !!registration, 'scope:', registration.scope);
-    console.log('[PUSH] Step 7b: pushManager available:', !!registration.pushManager);
+    console.log('[PUSH] Step 5: SW ready, subscribing to push...');
 
-    console.log('[PUSH] Step 8: Requesting FCM token...');
-    const token = await getToken(messaging, {
-      vapidKey,
-      serviceWorkerRegistration: registration,
-    });
-    console.log('[PUSH] Step 9: FCM Token obtained:', !!token, 'length:', token?.length);
-
-    if (token) {
-      console.log('[PUSH] Step 10: Saving token to Firestore for user:', userId);
-      await saveFcmToken(userId, token);
-      return token;
+    // Check for existing subscription
+    let subscription = await registration.pushManager.getSubscription();
+    
+    if (!subscription) {
+      console.log('[PUSH] Step 6: No existing subscription, creating new one...');
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: VAPID_KEY,
+      });
+    } else {
+      console.log('[PUSH] Step 6: Using existing subscription');
     }
 
-    return null;
+    const subJson = subscription.toJSON();
+    const token = JSON.stringify(subJson);
+    console.log('[PUSH] Step 7: Subscription obtained, endpoint:', subJson.endpoint?.substring(0, 60));
+
+    // Save subscription to Firestore
+    console.log('[PUSH] Step 8: Saving to Firestore for user:', userId);
+    await savePushSubscription(userId, token);
+    
+    return token;
   } catch (error) {
     console.error('[PUSH] Error in requestPushPermission:', error);
     return null;
   }
 }
 
-async function saveFcmToken(userId: string, token: string) {
+/**
+ * Save push subscription to Firestore
+ */
+async function savePushSubscription(userId: string, subscriptionJson: string) {
+  if (getApps().length === 0) {
+    console.error('[PUSH] No Firebase app');
+    return;
+  }
   const app = getApp();
   const db = getFirestore(app);
   
   await setDoc(doc(db, 'users', userId), {
-    fcmTokens: arrayUnion(token),
+    fcmTokens: arrayUnion(subscriptionJson),
   }, { merge: true });
   
-  console.log('[PUSH] ✅ FCM token saved to Firestore');
+  console.log('[PUSH] ✅ Push subscription saved to Firestore');
 }
 
+/**
+ * Remove push subscription
+ */
 export async function removeFcmToken(userId: string, token: string) {
   const app = getApp();
   const db = getFirestore(app);
@@ -105,12 +86,16 @@ export async function removeFcmToken(userId: string, token: string) {
   }, { merge: true });
 }
 
+/**
+ * Listen for foreground messages (using SW message event)
+ */
 export async function onForegroundMessage(callback: (payload: any) => void) {
-  const messaging = await getMessagingInstance();
-  if (!messaging) return;
-
-  onMessage(messaging, (payload) => {
-    console.log('[PUSH] 📬 Foreground message received:', payload);
-    callback(payload);
-  });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'PUSH_RECEIVED') {
+        console.log('[PUSH] 📬 Foreground message received');
+        callback(event.data);
+      }
+    });
+  }
 }
