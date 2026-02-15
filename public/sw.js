@@ -1,9 +1,9 @@
 // Pittima App Service Worker - PWA + Push Notifications
 const CACHE_NAME = 'pittima-v1';
 
-// Import Firebase Messaging SW
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
+// Import Firebase Messaging SW - MUST match client SDK version
+importScripts('https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.9.1/firebase-messaging-compat.js');
 
 // Initialize Firebase in the SW
 firebase.initializeApp({
@@ -18,7 +18,7 @@ const messaging = firebase.messaging();
 
 // Handle background push messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('📬 Push ricevuta in background:', payload);
+  console.log('Push ricevuta in background:', payload);
 
   const title = payload.notification?.title || 'Pittima App';
   const options = {
@@ -37,20 +37,18 @@ messaging.onBackgroundMessage((payload) => {
 
 // Handle notification click - open the app
 self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 Notification clicked');
+  console.log('Notification clicked');
   event.notification.close();
 
   const targetUrl = event.notification.data?.url || '/dashboard';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If app is already open, focus it
       for (const client of clientList) {
         if (client.url.includes('/dashboard') && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open new window
       return clients.openWindow(targetUrl);
     })
   );
