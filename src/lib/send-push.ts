@@ -31,7 +31,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   );
 
   const app = getAdminApp();
-  const db = getFirestore(app);
+  const db = getFirestore(app, "(default)");
 
   const docPath = "users/" + userId;
   console.log("[SEND-PUSH] Reading Firestore doc:", docPath);
