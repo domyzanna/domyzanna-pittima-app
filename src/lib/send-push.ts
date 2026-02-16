@@ -2,7 +2,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
 
 function getAdminApp() {
-  const adminAppName = "admin-push";
+  const adminAppName = "admin-test";
   const existingApp = getApps().find((app) => app.name === adminAppName);
   if (existingApp) return existingApp;
   return initializeApp({
