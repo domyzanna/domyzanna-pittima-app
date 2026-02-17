@@ -65,8 +65,9 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
       sent++;
       console.log("[SEND-PUSH] Push sent successfully");
     } catch (error: any) {
-      console.error("[SEND-PUSH] Failed:", error.message);
-      if (error.statusCode === 410 || error.statusCode === 404) {
+      console.error("[SEND-PUSH] Failed:", error.message, "statusCode:", error.statusCode, "body:", error.body);
+      
+            if (error.statusCode === 410 || error.statusCode === 404) {
         toRemove.push(subStr);
       }
     }
