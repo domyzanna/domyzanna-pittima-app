@@ -14,8 +14,8 @@ env:
   - variable: RESEND_API_KEY
     secret: RESEND_API_KEY
   - variable: NEXT_PUBLIC_VAPID_PUBLIC_KEY
-    value: BEXZNLXQtO_Xb81inZ-ixOsWCRomyPxReOUKARpzZNj7juIuVCIEjODwGwooyIdm5O2k84FfOaVwQ1fbURWkWsA
+    value: BNfOinJIjDoCCRtxU3uB3w9x1hgrU-9HphmLTo5Chks3i1IHVjHjOG4wc21wIQozaWtxWu_rCfK3we4V-oBgv88
   - variable: VAPID_PRIVATE_KEY
-    value: -jGrS9lf5fpZ4fycD6EsFXUc4yaR8N-eMu4u2XEgnG4
+    value: q3JXNErPPcIdK6mUP6e3DJ4wrFh1B8iE9iRXndVy-Ug
   - variable: VAPID_PUBLIC_KEY
-    value: BEXZNLXQtO_Xb81inZ-ixOsWCRomyPxReOUKARpzZNj7juIuVCIEjODwGwooyIdm5O2k84FfOaVwQ1fbURWkWsA
+    value: BNfOinJIjDoCCRtxU3uB3w9x1hgrU-9HphmLTo5Chks3i1IHVjHjOG4wc21wIQozaWtxWu_rCfK3we4V-oBgv88
