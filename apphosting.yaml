@@ -16,6 +16,6 @@ env:
   - variable: NEXT_PUBLIC_VAPID_PUBLIC_KEY
     value: BNfOinJIjDoCCRtxU3uB3w9x1hgrU-9HphmLTo5Chks3i1IHVjHjOG4wc21wIQozaWtxWu_rCfK3we4V-oBgv88
   - variable: VAPID_PRIVATE_KEY
-    value: q3JXNErPPcIdK6mUP6e3DJ4wrFh1B8iE9iRXndVy-Ug
+    value: VAPID_PRIVATE_KEY
   - variable: VAPID_PUBLIC_KEY
     value: BNfOinJIjDoCCRtxU3uB3w9x1hgrU-9HphmLTo5Chks3i1IHVjHjOG4wc21wIQozaWtxWu_rCfK3we4V-oBgv88
