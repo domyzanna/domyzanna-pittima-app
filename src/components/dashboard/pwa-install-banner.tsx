@@ -51,9 +51,9 @@ export function PwaInstallBanner() {
       e.preventDefault();
       setDeferredPrompt(e);
     };
-
+  
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
+  
     const timer = setTimeout(() => {
       if (detectedBrowser !== 'chrome') {
         setShowBanner(true);
@@ -90,6 +90,68 @@ export function PwaInstallBanner() {
 
   if (!showBanner) return null;
 
+  const renderInstructions = () => {
+    if (deferredPrompt) {
+      return (
+        <>
+          <p className="text-xs text-muted-foreground mt-1">
+            Installa l app per accesso rapido e notifiche push.
+          </p>
+          <Button size="sm" className="mt-2" onClick={handleInstallClick}>
+            <Download className="h-4 w-4 mr-1.5" />
+            Installa
+          </Button>
+        </>
+      );
+    }
+
+    switch (browser) {
+      case 'safari-ios':
+        return (
+          <div className="text-xs text-muted-foreground mt-1 space-y-1.5">
+            <p>Per installare l app su iPhone/iPad:</p>
+            <div className="flex items-center gap-2">
+              <span className="bg-muted rounded px-1.5 py-0.5 font-medium inline-flex items-center gap-1">
+                <Share className="h-3 w-3" /> Condividi
+              </span>
+              <span>poi</span>
+              <span className="bg-muted rounded px-1.5 py-0.5 font-medium inline-flex items-center gap-1">
+                <Plus className="h-3 w-3" /> Aggiungi alla schermata Home
+              </span>
+            </div>
+            <p className="text-[11px] opacity-75">Necessario per ricevere le notifiche push su iOS.</p>
+          </div>
+        );
+      case 'safari-mac':
+        return (
+          <div className="text-xs text-muted-foreground mt-1 space-y-1">
+            <p>Per installare: vai nel menu File e poi Aggiungi al Dock</p>
+          </div>
+        );
+      case 'firefox':
+        return (
+          <div className="text-xs text-muted-foreground mt-1 space-y-1">
+            <p>Firefox non supporta l installazione di web app.</p>
+            <p>Per la migliore esperienza, apri questa pagina con Chrome o Safari.</p>
+          </div>
+        );
+      case 'edge':
+      case 'samsung':
+      case 'other':
+        return (
+          <div className="text-xs text-muted-foreground mt-1 space-y-1">
+            <p>
+              Cerca l opzione Installa app o Aggiungi alla schermata Home nel menu del browser
+              <MoreVertical className="h-3 w-3 inline ml-1" />
+            </p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 bg-background border-t shadow-lg animate-in slide-in-from-bottom duration-300">
       <div className="max-w-lg mx-auto relative">
@@ -106,56 +168,7 @@ export function PwaInstallBanner() {
           
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">Installa Pittima App</p>
-            
-            {deferredPrompt && (
-              <>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Installa l app per accesso rapido e notifiche push.
-                </p>
-                <Button size="sm" className="mt-2" onClick={handleInstallClick}>
-                  <Download className="h-4 w-4 mr-1.5" />
-                  Installa
-                </Button>
-              </>
-            )}
-
-            {!deferredPrompt && browser === 'safari-ios' && (
-              <div className="text-xs text-muted-foreground mt-1 space-y-1.5">
-                <p>Per installare l app su iPhone/iPad:</p>
-                <div className="flex items-center gap-2">
-                  <span className="bg-muted rounded px-1.5 py-0.5 font-medium inline-flex items-center gap-1">
-                    <Share className="h-3 w-3" /> Condividi
-                  </span>
-                  <span>poi</span>
-                  <span className="bg-muted rounded px-1.5 py-0.5 font-medium inline-flex items-center gap-1">
-                    <Plus className="h-3 w-3" /> Aggiungi alla schermata Home
-                  </span>
-                </div>
-                <p className="text-[11px] opacity-75">Necessario per ricevere le notifiche push su iOS.</p>
-              </div>
-            )}
-
-            {!deferredPrompt && browser === 'safari-mac' && (
-              <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                <p>Per installare: vai nel menu File e poi Aggiungi al Dock</p>
-              </div>
-            )}
-
-            {!deferredPrompt && browser === 'firefox' && (
-              <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                <p>Firefox non supporta l installazione di web app.</p>
-                <p>Per la migliore esperienza, apri questa pagina con Chrome o Safari.</p>
-              </div>
-            )}
-
-            {!deferredPrompt && (browser === 'other' || browser === 'edge' || browser === 'samsung') && (
-              <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                <p>
-                  Cerca l opzione Installa app o Aggiungi alla schermata Home nel menu del browser
-                  <MoreVertical className="h-3 w-3 inline ml-1" />
-                </p>
-              </div>
-            )}
+            {renderInstructions()}
           </div>
         </div>
       </div>
