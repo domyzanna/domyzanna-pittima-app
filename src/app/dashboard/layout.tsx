@@ -15,7 +15,7 @@ import { Icons } from '@/components/icons';
 import { collection, query, where } from 'firebase/firestore';
 import type { Deadline } from '@/lib/types';
 import { UpgradeProDialog } from '@/components/dashboard/upgrade-pro-dialog';
-
+import { PwaInstallBanner } from '@/components/dashboard/pwa-install-banner';
 const PRO_USERS: string[] = [];
 
 const FREE_PLAN_LIMIT = 6;
@@ -76,6 +76,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             onDismiss={() => setUpgradeDialogDismissed(true)}
           />
         )}
+        <PwaInstallBanner />
       </SidebarInset>
     </SidebarProvider>
   );
