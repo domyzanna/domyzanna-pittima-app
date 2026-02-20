@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -242,7 +241,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
                 asChild
                 tooltip="Dashboard"
                 isActive={pathname === '/dashboard'}
-                className="text-primary"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
                 >
                 <Link href="/dashboard">
                     <LayoutDashboard />
