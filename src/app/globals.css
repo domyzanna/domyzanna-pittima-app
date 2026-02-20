@@ -27,8 +27,8 @@
     
     --status-low: 120 73% 47%;
     --status-medium: 42 100% 50%;
-    --status-high: 25 95% 53%;   /* Using Accent color */
-    --status-expired: 0 84% 60%;
+    --status-high: 0 84% 60%;   /* Rosso Fuoco */
+    --status-expired: 282 82% 58%; /* Viola */
   }
   
   .dark {
@@ -54,8 +54,8 @@
     
     --status-low: 120 63% 57%;
     --status-medium: 42 100% 55%;
-    --status-high: 25 95% 53%;
-    --status-expired: 0 84% 70%;
+    --status-high: 0 84% 70%; /* Rosso Fuoco (più luminoso per dark mode) */
+    --status-expired: 282 82% 68%; /* Viola (più luminoso per dark mode) */
   }
 }
 
