@@ -18,6 +18,7 @@ import { EditDeadlineDialog } from '@/components/dashboard/edit-deadline-dialog'
 import { DeleteConfirmationDialog } from '@/components/dashboard/delete-confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
 import ClientDashboardHeader from '@/components/dashboard/client-dashboard-header';
+import { Accordion } from '@/components/ui/accordion';
 
 const defaultCategories: Omit<Category, 'id' | 'userId'>[] = [
   { name: 'Bollo Auto', icon: 'Car' },
@@ -253,15 +254,23 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
               )}
-            {sortedCategories?.map((category) => (
-              <CategorySection
-                key={category.id}
-                category={category}
-                deadlines={deadlinesByCategory[category.id] || []}
-                onEditDeadline={handleEditDeadline}
-                onDeleteDeadline={handleDeleteDeadline}
-              />
-            ))}
+            {sortedCategories?.length > 0 && sortedDeadlines.length > 0 && (
+              <Accordion type="multiple" className="w-full space-y-4">
+                {sortedCategories?.map((category) => {
+                  const categoryDeadlines = deadlinesByCategory[category.id] || [];
+                  if (categoryDeadlines.length === 0) return null;
+                  return (
+                    <CategorySection
+                      key={category.id}
+                      category={category}
+                      deadlines={categoryDeadlines}
+                      onEditDeadline={handleEditDeadline}
+                      onDeleteDeadline={handleDeleteDeadline}
+                    />
+                  );
+                })}
+              </Accordion>
+            )}
           </div>
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-8">
