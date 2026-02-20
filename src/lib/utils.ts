@@ -22,8 +22,12 @@ export function getNextExpiration(date: Date, recurrence: Recurrence): Date {
   switch (recurrence) {
     case 'mensile':
       return add(date, { months: 1 });
+    case 'bimestrale':
+      return add(date, { months: 2 });
     case 'trimestrale':
       return add(date, { months: 3 });
+    case 'quadrimestrale':
+      return add(date, { months: 4 });
     case 'semestrale':
       return add(date, { months: 6 });
     case 'annuale':

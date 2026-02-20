@@ -52,7 +52,9 @@ const formSchema = z.object({
   recurrence: z.enum([
     'una-tantum',
     'mensile',
+    'bimestrale',
     'trimestrale',
+    'quadrimestrale',
     'semestrale',
     'annuale',
   ]),
@@ -271,7 +273,9 @@ function AddDeadlineForm({ onFinished }: { onFinished: () => void }) {
                     <SelectContent>
                       <SelectItem value="una-tantum">Una tantum</SelectItem>
                       <SelectItem value="mensile">Mensile</SelectItem>
+                      <SelectItem value="bimestrale">Bimestrale</SelectItem>
                       <SelectItem value="trimestrale">Trimestrale</SelectItem>
+                      <SelectItem value="quadrimestrale">Quadrimestrale</SelectItem>
                       <SelectItem value="semestrale">Semestrale</SelectItem>
                       <SelectItem value="annuale">Annuale</SelectItem>
                     </SelectContent>

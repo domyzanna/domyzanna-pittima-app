@@ -3,7 +3,9 @@ import type { LucideIcon } from 'lucide-react';
 export type Recurrence =
   | 'una-tantum'
   | 'mensile'
+  | 'bimestrale'
   | 'trimestrale'
+  | 'quadrimestrale'
   | 'semestrale'
   | 'annuale';
 
