@@ -140,7 +140,9 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
              const recurrenceMap: Record<Recurrence, string> = {
                 'una-tantum': 'Una Tantum',
                 'mensile': 'Mensile',
+                'bimestrale': 'Bimestrale',
                 'trimestrale': 'Trimestrale',
+                'quadrimestrale': 'Quadrimestrale',
                 'semestrale': 'Semestrale',
                 'annuale': 'Annuale',
             };
@@ -240,6 +242,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
                 asChild
                 tooltip="Dashboard"
                 isActive={pathname === '/dashboard'}
+                className="text-primary"
                 >
                 <Link href="/dashboard">
                     <LayoutDashboard />
@@ -283,6 +286,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
                 <SidebarMenuButton
                     tooltip="Aggiungi Categoria"
                     onClick={() => setIsAddCategoryDialogOpen(true)}
+                    className="text-primary font-semibold"
                 >
                     <PlusCircle />
                     Aggiungi Categoria
@@ -295,6 +299,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
                 <SidebarMenuButton
                     tooltip="Come funziona"
                     onClick={() => setIsHowItWorksOpen(true)}
+                    className="text-status-low font-semibold"
                 >
                     <HelpCircle />
                     Come funziona
