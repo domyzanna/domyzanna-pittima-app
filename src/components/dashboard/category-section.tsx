@@ -33,12 +33,14 @@ export function CategorySection({
 
   return (
     <section>
-      <Link href={`/dashboard/category/${category.id}`} className="group">
-        <h2 className="text-xl font-headline font-semibold mb-4 flex items-center gap-3 group-hover:text-primary transition-colors">
-          {getIcon(category.icon)}
-          {category.name}
-        </h2>
-      </Link>
+      <div className="bg-secondary p-3 rounded-lg mb-4">
+        <Link href={`/dashboard/category/${category.id}`} className="group">
+          <h2 className="text-xl font-headline font-semibold flex items-center gap-3 group-hover:text-primary transition-colors">
+            {getIcon(category.icon)}
+            {category.name}
+          </h2>
+        </Link>
+      </div>
       <div className="grid gap-4">
         {deadlines.map((deadline) => (
           <DeadlineCard 
