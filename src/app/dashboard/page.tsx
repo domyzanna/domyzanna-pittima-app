@@ -7,7 +7,7 @@ import {
   useMemoFirebase,
   deleteDocumentNonBlocking,
 } from '@/firebase';
-import { collection, writeBatch, doc } from 'firebase/firestore';
+import { collection, writeBatch, doc, query, where } from 'firebase/firestore';
 import type { ProcessedDeadline, Category, Deadline } from '@/lib/types';
 import { calculateDaysRemaining, getUrgency } from '@/lib/utils';
 import { CategorySection } from '@/components/dashboard/category-section';
@@ -56,7 +56,13 @@ export default function DashboardPage() {
     [firestore, user]
   );
   const deadlinesQuery = useMemoFirebase(
-    () => (user ? collection(firestore, 'users', user.uid, 'deadlines') : null),
+    () =>
+      user
+        ? query(
+            collection(firestore, 'users', user.uid, 'deadlines'),
+            where('isCompleted', '==', false)
+          )
+        : null,
     [firestore, user]
   );
 
