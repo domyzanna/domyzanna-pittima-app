@@ -33,28 +33,24 @@ service cloud.firestore {
       // A user can create their own document, ensuring the doc ID matches their UID.
       allow create: if isOwner(userId) && request.resource.id == userId;
       allow list: if false;
+    }
 
-      /**
-       * Manages a user's private deadlines.
-       * All operations are restricted to the owner of the data.
-       * The `userId` field within the document must match the owner's UID and cannot be changed.
-       */
-      match /deadlines/{deadlineId} {
-        allow list, get: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update, delete: if isOwner(userId) && resource.data.userId == userId;
-      }
+    /**
+     * Manages a user's private deadlines.
+     * All operations are restricted to the owner of the data.
+     */
+    match /users/{userId}/deadlines/{deadlineId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
 
-      /**
-       * Manages a user's private categories.
-       * All operations are restricted to the owner of the data.
-       * The `userId` field within the document must match the owner's UID and cannot be changed.
-       */
-      match /categories/{categoryId} {
-        allow list, get: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update, delete: if isOwner(userId) && resource.data.userId == userId;
-      }
+    /**
+     * Manages a user's private categories.
+     * All operations are restricted to the owner of the data.
+     */
+    match /users/{userId}/categories/{categoryId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
     }
     
     // Stripe extension rules
