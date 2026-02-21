@@ -298,7 +298,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
                 <SidebarMenuButton
                     tooltip="Come funziona"
                     onClick={() => setIsHowItWorksOpen(true)}
-                    className="text-status-low font-semibold"
+                    className="text-green-600 font-semibold"
                 >
                     <HelpCircle />
                     Come funziona
