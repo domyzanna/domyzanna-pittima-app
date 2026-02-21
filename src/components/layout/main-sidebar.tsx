@@ -13,7 +13,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell, History } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -354,6 +354,12 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
             <DropdownMenuItem onClick={handleExportCSV}>
               <Download className="mr-2 h-4 w-4" />
               <span>Esporta CSV</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/archive">
+                <History className="mr-2 h-4 w-4" />
+                <span>Archivio</span>
+              </Link>
             </DropdownMenuItem>
             {isProUser && (
               <DropdownMenuItem onClick={handleManageSubscription}>

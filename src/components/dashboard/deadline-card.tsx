@@ -42,7 +42,10 @@ export function DeadlineCard({ deadline, onEdit, onDelete }: DeadlineCardProps) 
     const deadlineRef = doc(firestore, 'users', user.uid, 'deadlines', id);
 
     if (recurrence === 'una-tantum') {
-      updateDocumentNonBlocking(deadlineRef, { isCompleted: true });
+      updateDocumentNonBlocking(deadlineRef, { 
+        isCompleted: true,
+        completedAt: new Date().toISOString()
+      });
       toast({ title: 'Completato!', description: `La scadenza "${name}" è stata archiviata.`, duration: 5000 });
     } else {
       const nextExpiration = getNextExpiration(new Date(expirationDate), recurrence);

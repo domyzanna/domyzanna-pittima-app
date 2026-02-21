@@ -38,6 +38,7 @@ export type Deadline = {
   expirationDate: string; // ISO 8601 format
   recurrence: Recurrence;
   isCompleted: boolean;
+  completedAt?: string; // ISO 8601 string for when it was completed
   notificationDays: number;
   notificationStartDate: string; // ISO 8601 format
   notificationStatus: NotificationStatus;
