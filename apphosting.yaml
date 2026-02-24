@@ -19,3 +19,9 @@ env:
     secret: VAPID_PRIVATE_KEY
   - variable: VAPID_PUBLIC_KEY
     value: BNfOinJIjDoCCRtxU3uB3w9x1hgrU-9HphmLTo5Chks3i1IHVjHjOG4wc21wIQozaWtxWu_rCfK3we4V-oBgv88
+  - variable: TWILIO_ACCOUNT_SID
+    secret: TWILIO_ACCOUNT_SID
+  - variable: TWILIO_AUTH_TOKEN
+    secret: TWILIO_AUTH_TOKEN
+  - variable: TWILIO_WHATSAPP_FROM
+    value: "whatsapp:+14155238886"
