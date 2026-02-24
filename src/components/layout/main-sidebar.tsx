@@ -13,7 +13,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell, History } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell, History, MessageSquare } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -46,6 +46,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { createStripePortalSession } from '@/app/actions';
 import { PushNotificationToggle } from '@/components/dashboard/push-notification-toggle';
+import { WhatsAppSettingsDialog } from '@/components/dashboard/whatsapp-settings-dialog';
 
 const getIcon = (iconName: string) => {
   const IconComponent = (LucideIcons as any)[iconName];
@@ -66,6 +67,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+  const [isWhatsAppSettingsOpen, setIsWhatsAppSettingsOpen] = useState(false);
   const { toast } = useToast();
 
   const categoriesQuery = useMemoFirebase(
@@ -351,6 +353,10 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               {user && <PushNotificationToggle userId={user.uid} />}
             </DropdownMenuItem>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsWhatsAppSettingsOpen(true)}>
+              <MessageSquare className="mr-2 h-4 w-4 text-green-600" />
+              <span>Notifiche WhatsApp</span>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleExportCSV}>
               <Download className="mr-2 h-4 w-4" />
               <span>Esporta CSV</span>
@@ -386,6 +392,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
         />
     )}
     <HowItWorksDialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
+    <WhatsAppSettingsDialog open={isWhatsAppSettingsOpen} onOpenChange={setIsWhatsAppSettingsOpen} isProUser={isProUser} />
     </>
   );
 }
