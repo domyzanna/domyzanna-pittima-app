@@ -166,7 +166,7 @@ export function WhatsAppSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onInteractOutside={() => onOpenChange(false)} onEscapeKeyDown={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-green-600" />
