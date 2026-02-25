@@ -353,7 +353,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               {user && <PushNotificationToggle userId={user.uid} />}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsWhatsAppSettingsOpen(true)}>
+            <DropdownMenuItem onClick={() => setTimeout(() => setIsWhatsAppSettingsOpen(true), 300)}>
               <MessageSquare className="mr-2 h-4 w-4 text-green-600" />
               <span>Notifiche WhatsApp</span>
             </DropdownMenuItem>
