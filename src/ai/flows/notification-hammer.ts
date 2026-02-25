@@ -13,6 +13,7 @@ import { getAuth } from 'firebase-admin/auth';
 import type { Deadline, User } from '@/lib/types';
 import { sendEmailTool } from '@/ai/tools/send-email-tool';
 import { sendPushToUser } from '@/lib/send-push';
+import { sendWhatsApp } from '@/ai/tools/send-whatsapp-tool';
 import { credential } from 'firebase-admin';
 
 
@@ -148,6 +149,55 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
           console.log(`-> Push notifications sent to ${email}: ${pushCount} devices.`);
         } catch (pushError) {
           console.error(`-> Failed to send push to ${email}:`, pushError);
+        }
+
+        // --- WHATSAPP (solo Pro, solo giorno prima e giorno stesso) ---
+        try {
+          const userDoc = await db.collection("users").doc(uid).get();
+          const userData = userDoc.data() || {};
+          const whatsappEnabled = userData.whatsappEnabled === true;
+          const whatsappNumber = userData.whatsappNumber;
+
+          // Verifica Pro (subscription attiva)
+          const subsSnap = await db
+            .collection("customers").doc(uid)
+            .collection("subscriptions")
+            .where("status", "in", ["trialing", "active"])
+            .limit(1).get();
+          const isPro = !subsSnap.empty;
+
+          if (isPro && whatsappEnabled && whatsappNumber) {
+            const waDeadlines = deadlinesToNotify.filter(d => {
+              const expiry = new Date(d.expirationDate);
+              expiry.setHours(0, 0, 0, 0);
+              const dayBefore = new Date(expiry);
+              dayBefore.setDate(dayBefore.getDate() - 1);
+              const isToday = today.getTime() === expiry.getTime();
+              const isDayBefore = today.getTime() === dayBefore.getTime();
+              return isToday || isDayBefore;
+            });
+
+            if (waDeadlines.length > 0) {
+              let msg = "\u{1F4C5} Pittima - Promemoria Scadenze\n\n";
+              for (const d of waDeadlines) {
+                const expiry = new Date(d.expirationDate);
+                expiry.setHours(0, 0, 0, 0);
+                const isExpToday = today.getTime() === expiry.getTime();
+                const prefix = isExpToday ? "\u{1F534} OGGI" : "\u26A0\uFE0F DOMANI";
+                const formattedDate = expiry.toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" });
+                msg += `${prefix}: ${d.name} - scade ${formattedDate}\n`;
+              }
+              msg += "\nApri Pittima per aggiornare le tue scadenze.";
+
+              await sendWhatsApp({
+                to: `whatsapp:${whatsappNumber}`,
+                body: msg,
+              });
+              console.log(`-> WhatsApp sent to ${whatsappNumber} (${waDeadlines.length} deadlines)`);
+            }
+          }
+        } catch (waError) {
+          console.error(`-> Failed to send WhatsApp for ${email}:`, waError);
         }
       }
     }
