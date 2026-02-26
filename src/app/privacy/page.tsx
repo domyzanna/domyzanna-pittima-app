@@ -15,7 +15,7 @@ export default function PrivacyPage() {
           <CardTitle className="font-headline text-3xl">
             Informativa sulla Privacy
           </CardTitle>
-          <CardDescription>Ultimo aggiornamento: 28/01/2026</CardDescription>
+          <CardDescription>Ultimo aggiornamento: 26/02/2026</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 text-muted-foreground">
           
@@ -48,6 +48,12 @@ export default function PrivacyPage() {
                 di sicurezza e funzionamento del servizio.
               </li>
               <li>
+              <li>
+                <strong>Numero di telefono (facoltativo):</strong> Fornito
+                volontariamente dall'utente per ricevere notifiche WhatsApp.
+                Il numero viene conservato finché l'utente non lo rimuove
+                dalle impostazioni o cancella l'account.
+              </li>
                 <strong>Dati di pagamento:</strong> Le transazioni sono gestite 
                 interamente da Stripe Inc. Non memorizziamo né abbiamo accesso ai 
                 dati delle carte di credito.
@@ -123,6 +129,11 @@ export default function PrivacyPage() {
                 <strong>Resend:</strong> Per l'invio di email transazionali.
               </li>
               <li>
+                <strong>Twilio Inc.:</strong> Per l'invio di notifiche WhatsApp.
+                Il numero di telefono dell'utente viene condiviso con Twilio
+                esclusivamente per la consegna dei messaggi.
+              </li>
+              <li>
                 <strong>Autorità competenti:</strong> Quando richiesto per legge.
               </li>
             </ul>
@@ -133,7 +144,33 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">7. Trasferimento Dati Extra-UE</h3>
+            <h3 className="font-semibold text-foreground mb-2">7. Notifiche WhatsApp</h3>
+            <p className="mb-2">
+              L'utente Pro può attivare facoltativamente le notifiche WhatsApp
+              per ricevere promemoria sulle proprie scadenze. In tal caso:
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong>Base giuridica:</strong> Consenso esplicito (Art. 6.1.a GDPR).
+                L'utente attiva le notifiche tramite apposito toggle nelle impostazioni.
+              </li>
+              <li>
+                <strong>Dati condivisi:</strong> Il numero di telefono viene trasmesso
+                a Twilio Inc. (sub-responsabile) esclusivamente per l'invio dei messaggi.
+              </li>
+              <li>
+                <strong>Frequenza:</strong> Massimo 2 messaggi per scadenza (il giorno
+                prima e il giorno stesso della scadenza), con un limite annuale di 120 messaggi.
+              </li>
+              <li>
+                <strong>Revoca:</strong> L'utente può disattivare le notifiche WhatsApp
+                e/o rimuovere il proprio numero di telefono in qualsiasi momento dalla dashboard.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-foreground mb-2">8. Trasferimento Dati Extra-UE</h3>
             <p>
               Alcuni fornitori di servizi (es. Stripe) potrebbero trasferire dati al 
               di fuori dello Spazio Economico Europeo. Tali trasferimenti avvengono 
@@ -143,7 +180,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">8. Diritti dell'Utente</h3>
+            <h3 className="font-semibold text-foreground mb-2">9. Diritti dell'Utente</h3>
             <p className="mb-2">
               Ai sensi degli articoli 15-22 del GDPR, l'utente ha diritto di:
             </p>
@@ -163,7 +200,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">9. Limitazione di Responsabilità</h3>
+            <h3 className="font-semibold text-foreground mb-2">10. Limitazione di Responsabilità</h3>
             <p>
               Pittima App è uno strumento di supporto alla gestione delle scadenze. 
               L'utente riconosce espressamente che:
@@ -201,7 +238,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">10. Sicurezza</h3>
+            <h3 className="font-semibold text-foreground mb-2">11. Sicurezza</h3>
             <p>
               Adottiamo misure tecniche e organizzative appropriate per proteggere 
               i dati personali, tra cui: crittografia dei dati in transito (TLS/SSL), 
@@ -212,7 +249,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">11. Modifiche all'Informativa</h3>
+            <h3 className="font-semibold text-foreground mb-2">12. Modifiche all'Informativa</h3>
             <p>
               Ci riserviamo il diritto di modificare questa informativa in qualsiasi 
               momento. Le modifiche sostanziali saranno comunicate via email o tramite 
@@ -222,7 +259,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">12. Legge Applicabile e Foro Competente</h3>
+            <h3 className="font-semibold text-foreground mb-2">13. Legge Applicabile e Foro Competente</h3>
             <p>
               La presente informativa è regolata dalla legge italiana. Per qualsiasi 
               controversia sarà competente in via esclusiva il Foro di Roma, 
@@ -232,7 +269,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h3 className="font-semibold text-foreground mb-2">13. Contatti</h3>
+            <h3 className="font-semibold text-foreground mb-2">14. Contatti</h3>
             <p>
               Per qualsiasi domanda relativa al trattamento dei dati personali:<br />
               Email: privacy@zannalabs.com<br />

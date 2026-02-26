@@ -15,7 +15,7 @@ export default function TermsPage() {
           <CardTitle className="font-headline text-3xl">
             Termini e Condizioni di Servizio
           </CardTitle>
-          <CardDescription>Ultimo aggiornamento: 28/01/2026</CardDescription>
+          <CardDescription>Ultimo aggiornamento: 26/02/2026</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 text-muted-foreground">
 
@@ -76,9 +76,27 @@ export default function TermsPage() {
                 promemoria attivi contemporaneamente.
               </li>
               <li>
-                <strong>Piano Premium:</strong> Accesso illimitato a tutte le funzionalità 
+                <strong>Piano Pro:</strong> Fino a 60 scadenze attive 
                 al costo di €12,00 (dodici/00) all'anno, con rinnovo automatico.
               </li>
+            </ul>
+            <p className="mt-3 mb-2">
+              <strong>Limiti di servizio per il Piano Pro:</strong>
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Massimo 60 scadenze attive.</li>
+              <li>Notifiche email: fino a 2.000 all'anno.</li>
+              <li>Notifiche WhatsApp: fino a 120 all'anno (massimo 2 per scadenza: il giorno prima e il giorno stesso).</li>
+              <li>Preavviso notifiche: massimo 30 giorni prima della scadenza.</li>
+              <li>Notifiche push: illimitate.</li>
+            </ul>
+            <p className="mt-3 mb-2">
+              <strong>Limiti di servizio per il Piano Gratuito:</strong>
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Massimo 6 scadenze attive.</li>
+              <li>Notifiche email e push incluse.</li>
+              <li>Notifiche WhatsApp non disponibili.</li>
             </ul>
             <p className="mt-3">
               I pagamenti sono elaborati tramite Stripe Inc. L'utente accetta i termini 
@@ -271,6 +289,15 @@ export default function TermsPage() {
               relative al Servizio, incluse notifiche, aggiornamenti, comunicazioni 
               amministrative e promozionali. L'utente può disattivare le comunicazioni 
               promozionali ma non quelle relative al funzionamento del Servizio.
+            </p>
+            <p className="mt-3">
+              <strong>Notifiche WhatsApp:</strong> L'utente Pro può attivare
+              facoltativamente le notifiche WhatsApp. Il servizio di messaggistica
+              è fornito tramite Twilio Inc. Il Fornitore non è responsabile per
+              ritardi, mancate consegne o interruzioni del servizio WhatsApp
+              dipendenti da Twilio, Meta (WhatsApp) o dall'operatore telefonico
+              dell'utente. L'utente può disattivare le notifiche WhatsApp
+              in qualsiasi momento dalle impostazioni della dashboard.
             </p>
           </section>
 
