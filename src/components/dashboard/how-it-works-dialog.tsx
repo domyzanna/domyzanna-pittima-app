@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { HelpCircle, PlusCircle, Bell, Wand2, FolderPlus } from 'lucide-react';
+import { HelpCircle, PlusCircle, Bell, Wand2, FolderPlus, MessageSquare } from 'lucide-react';
 
 type HowItWorksDialogProps = {
   open: boolean;
@@ -29,7 +29,7 @@ const steps = [
     {
         icon: <Bell className="h-6 w-6 text-primary" />,
         title: "3. Ricevi notifiche incessanti",
-        description: "A partire dal giorno che hai impostato, Pittima ti invierà notifiche email ogni giorno, assicurandosi che tu non possa dimenticare la scadenza."
+        description: "Email e push ogni giorno dal preavviso impostato. Con il piano Pro, ricevi anche un WhatsApp il giorno prima e il giorno stesso della scadenza."
     },
     {
         icon: <Wand2 className="h-6 w-6 text-primary" />,
