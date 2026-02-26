@@ -3,35 +3,10 @@
 import { useState, useEffect } from 'react';
 import { X, Share, Download, MoreVertical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { detectBrowser, isStandalone } from '@/lib/utils';
 
-type BrowserType = 'chrome' | 'safari-ios' | 'safari-mac' | 'firefox' | 'edge' | 'samsung' | 'other';
+type BrowserType = ReturnType<typeof detectBrowser>;
 
-function detectBrowser(): BrowserType {
-  if (typeof window === 'undefined') return 'other';
-  
-  const ua = navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isMac = /macintosh/.test(ua) && !('ontouchend' in document);
-  const isSamsung = /samsungbrowser/.test(ua);
-  const isEdge = /edg\//.test(ua);
-  const isFirefox = /firefox/.test(ua) && !/seamonkey/.test(ua);
-  const isChrome = /chrome/.test(ua) && !/edg\//.test(ua) && !/samsungbrowser/.test(ua);
-  const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
-
-  if (isSamsung) return 'samsung';
-  if (isEdge) return 'edge';
-  if (isIOS && isSafari) return 'safari-ios';
-  if (isMac && isSafari) return 'safari-mac';
-  if (isFirefox) return 'firefox';
-  if (isChrome) return 'chrome';
-  return 'other';
-}
-
-function isStandalone(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         (window.navigator as any).standalone === true;
-}
 
 export function PwaInstallBanner() {
   const [showBanner, setShowBanner] = useState(false);

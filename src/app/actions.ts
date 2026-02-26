@@ -3,6 +3,8 @@
 
 import { generateMonthlySummary } from '@/ai/flows/monthly-summary-ai-urgency';
 import type { MonthlySummaryOutput } from '@/ai/flows/monthly-summary-ai-urgency';
+import { askPittimaChatbot } from '@/ai/flows/pittima-chatbot';
+import type { PittimaChatbotInput, PittimaChatbotOutput } from '@/ai/flows/pittima-chatbot';
 import type { ProcessedDeadline } from '@/lib/types';
 import {
   addMonths,
@@ -59,6 +61,18 @@ export async function getAiSummary(
     console.error('La generazione del riepilogo AI è fallita:', error);
     return {
       summary: 'Impossibile generare il riepilogo AI. Controlla i log.',
+    };
+  }
+}
+
+export async function askPittima(input: PittimaChatbotInput): Promise<PittimaChatbotOutput> {
+  try {
+    const result = await askPittimaChatbot(input);
+    return result;
+  } catch (error) {
+    console.error('Error calling askPittimaChatbot flow:', error);
+    return {
+      response: 'Spiacente, non sono riuscito a elaborare la tua richiesta. Riprova più tardi.',
     };
   }
 }

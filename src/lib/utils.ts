@@ -37,3 +37,30 @@ export function getNextExpiration(date: Date, recurrence: Recurrence): Date {
       return date;
   }
 }
+
+export function detectBrowser(): 'chrome' | 'safari-ios' | 'safari-mac' | 'firefox' | 'edge' | 'samsung' | 'other' {
+  if (typeof window === 'undefined') return 'other';
+  
+  const ua = navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isMac = /macintosh/.test(ua) && !('ontouchend' in document);
+  const isSamsung = /samsungbrowser/.test(ua);
+  const isEdge = /edg\//.test(ua);
+  const isFirefox = /firefox/.test(ua) && !/seamonkey/.test(ua);
+  const isChrome = /chrome/.test(ua) && !/edg\//.test(ua) && !/samsungbrowser/.test(ua);
+  const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
+
+  if (isSamsung) return 'samsung';
+  if (isEdge) return 'edge';
+  if (isIOS && isSafari) return 'safari-ios';
+  if (isMac && isSafari) return 'safari-mac';
+  if (isFirefox) return 'firefox';
+  if (isChrome) return 'chrome';
+  return 'other';
+}
+
+export function isStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
+}
