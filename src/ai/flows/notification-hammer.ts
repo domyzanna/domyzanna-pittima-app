@@ -84,6 +84,22 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
       
       foundDeadlines += deadlinesSnapshot.size;
 
+      // --- LOAD YEARLY COUNTERS ---
+      const userRef = db.collection("users").doc(uid);
+      const userDoc = await userRef.get();
+      const userData = userDoc.data() || {};
+      const currentYear = new Date().getFullYear().toString();
+      let yearlyEmailCount = userData.yearlyEmailCount || 0;
+      let yearlyWhatsappCount = userData.yearlyWhatsappCount || 0;
+      const counterResetYear = userData.counterResetYear || "";
+      
+      // Reset counters if year changed
+      if (counterResetYear !== currentYear) {
+        yearlyEmailCount = 0;
+        yearlyWhatsappCount = 0;
+        await userRef.set({ yearlyEmailCount: 0, yearlyWhatsappCount: 0, counterResetYear: currentYear }, { merge: true });
+      }
+
       const deadlinesToNotify: Deadline[] = [];
 
       for (const doc of deadlinesSnapshot.docs) {
@@ -132,11 +148,19 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
 
         body += "<br>Controlla l'app per tutti i dettagli.<br><br>Grazie per usare Pittima App.";
 
-        try {
-          await sendEmailTool({ to: email, subject, body });
-          console.log(`-> Summary email sent successfully to ${email}.`);
-        } catch (e) {
-          console.error(`-> Failed to send summary email to ${email}:`, e);
+        // Check email yearly limit (2000/year)
+        const EMAIL_YEARLY_LIMIT = 2000;
+        if (yearlyEmailCount < EMAIL_YEARLY_LIMIT) {
+          try {
+            await sendEmailTool({ to: email, subject, body });
+            yearlyEmailCount++;
+            await userRef.set({ yearlyEmailCount }, { merge: true });
+            console.log(`-> Summary email sent to ${email}. (${yearlyEmailCount}/${EMAIL_YEARLY_LIMIT} yearly)`);
+          } catch (e) {
+            console.error(`-> Failed to send summary email to ${email}:`, e);
+          }
+        } else {
+          console.log(`-> Email yearly limit reached for ${email} (${yearlyEmailCount}/${EMAIL_YEARLY_LIMIT})`);
         }
 
         // Send push notification
@@ -189,11 +213,19 @@ export const checkDeadlinesAndNotify = ai.defineFlow(
               }
               msg += "\nApri Pittima per aggiornare le tue scadenze.";
 
-              await sendWhatsApp({
-                to: `whatsapp:${whatsappNumber}`,
-                body: msg,
-              });
-              console.log(`-> WhatsApp sent to ${whatsappNumber} (${waDeadlines.length} deadlines)`);
+              // Check WhatsApp yearly limit (120/year)
+              const WA_YEARLY_LIMIT = 120;
+              if (yearlyWhatsappCount < WA_YEARLY_LIMIT) {
+                await sendWhatsApp({
+                  to: `whatsapp:${whatsappNumber}`,
+                  body: msg,
+                });
+                yearlyWhatsappCount++;
+                await userRef.set({ yearlyWhatsappCount }, { merge: true });
+                console.log(`-> WhatsApp sent to ${whatsappNumber} (${waDeadlines.length} deadlines, ${yearlyWhatsappCount}/${WA_YEARLY_LIMIT} yearly)`);
+              } else {
+                console.log(`-> WhatsApp yearly limit reached for ${email} (${yearlyWhatsappCount}/${WA_YEARLY_LIMIT})`);
+              }
             }
           }
         } catch (waError) {
