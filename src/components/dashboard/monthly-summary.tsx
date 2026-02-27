@@ -167,6 +167,9 @@ export function MonthlySummary({ deadlines }: { deadlines: ProcessedDeadline[] }
                 <Button variant="outline" size="sm" onClick={() => handleQuickAction("Come funziona Pittima?")}>
                     Come funziona Pittima?
                 </Button>
+                <Button variant="outline" size="sm" onClick={() => handleQuickAction("Riepilogo delle mie scadenze")}>
+                    Riepilogo Scadenze
+                </Button>
             </div>
         )}
 
