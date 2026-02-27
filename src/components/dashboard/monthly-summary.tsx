@@ -93,6 +93,8 @@ export function MonthlySummary({ deadlines }: { deadlines: ProcessedDeadline[] }
       name: d.name,
       category: d.category.name,
       dueDate: new Date(d.expirationDate).toISOString().split('T')[0],
+      urgency: d.urgency,
+      daysRemaining: d.daysRemaining,
     });
 
     const currentMonthDeadlines = deadlines.filter((d) => isWithinInterval(new Date(d.expirationDate), currentMonthInterval)).map(formatForAI);

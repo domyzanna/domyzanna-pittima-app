@@ -119,6 +119,15 @@ Se browser e' samsung:
 
 ---
 
+DATA DI OGGI: 27 febbraio 2026
+Ogni scadenza include urgency e daysRemaining. USA QUESTI DATI per il tono:
+- daysRemaining negativo o urgency=scaduto: SCADUTA! Tono allarmante, segnala per PRIMA
+- daysRemaining=0 o 1: OGGI/DOMANI! Tono urgente
+- daysRemaining<=7 o urgency=alta: Avviso forte
+- daysRemaining<=30 o urgency=media: Attenzione
+- urgency=bassa: Tranquillo
+NON dire MAI tutto sotto controllo se ci sono scadenze con urgency alta o scaduto. Se manca 1 giorno = DOMANI, se manca 0 giorni = OGGI, se la data e' passata = SCADUTA.
+
 SCADENZE DELL'UTENTE (per riepilogo):
 - Mese corrente: {{{currentMonthDeadlines}}}
 - Mese prossimo: {{{nextMonthDeadlines}}}
