@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, Send, Loader2, Phone } from 'lucide-react';
+import { MessageSquare, Send, Loader2, Phone, ShieldCheck, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -34,15 +34,21 @@ export function WhatsAppSettingsDialog({
 
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
-  const [consentGiven, setConsentGiven] = useState(false);
+  const [whatsappVerified, setWhatsappVerified] = useState(false);
+  const [verifiedNumber, setVerifiedNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [consentGiven, setConsentGiven] = useState(false);
 
-  // Load existing settings when dialog opens
   useEffect(() => {
     if (open && user) {
       loadSettings();
+      setOtpSent(false);
+      setOtpCode('');
     }
   }, [open, user]);
 
@@ -55,6 +61,8 @@ export function WhatsAppSettingsDialog({
         const data = userDoc.data();
         setWhatsappNumber(data.whatsappNumber || '');
         setWhatsappEnabled(data.whatsappEnabled || false);
+        setWhatsappVerified(data.whatsappVerified || false);
+        setVerifiedNumber(data.whatsappNumber || '');
         setConsentGiven(data.whatsappConsentGiven || false);
       }
     } catch (error) {
@@ -64,29 +72,115 @@ export function WhatsAppSettingsDialog({
     }
   };
 
-  const handleSave = async () => {
-    if (!user) return;
+  const numberChanged = whatsappNumber !== verifiedNumber;
 
-    // Validate number format
-    if (whatsappEnabled && whatsappNumber) {
-      const cleanNumber = whatsappNumber.replace(/\s/g, '');
-      if (!/^\+\d{10,15}$/.test(cleanNumber)) {
-        toast({
-          title: 'Numero non valido',
-          description: 'Inserisci il numero con prefisso internazionale (es: +393291234567)',
-          variant: 'destructive',
-        });
-        return;
-      }
+  const handleSendOtp = async () => {
+    if (!user || !whatsappNumber) return;
+
+    const cleanNumber = whatsappNumber.replace(/\s/g, '');
+    if (!/^\+\d{10,15}$/.test(cleanNumber)) {
+      toast({
+        title: 'Numero non valido',
+        description: 'Inserisci il numero con prefisso internazionale (es: +393291234567)',
+        variant: 'destructive',
+      });
+      return;
     }
 
+    setIsSendingOtp(true);
+    try {
+      const response = await fetch('/api/whatsapp-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          uid: user.uid,
+          phoneNumber: cleanNumber,
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        setOtpSent(true);
+        toast({
+          title: 'Codice inviato!',
+          description: 'Controlla WhatsApp e inserisci il codice a 4 cifre.',
+        });
+      } else {
+        toast({
+          title: 'Invio fallito',
+          description: result.message || 'Impossibile inviare il codice.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Errore',
+        description: 'Impossibile inviare il codice. Riprova.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!user || !otpCode) return;
+
+    setIsVerifying(true);
+    try {
+      const response = await fetch('/api/whatsapp-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          uid: user.uid,
+          code: otpCode,
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        setWhatsappVerified(true);
+        setVerifiedNumber(whatsappNumber);
+        setOtpSent(false);
+        setOtpCode('');
+
+        // Save the verified number
+        const cleanNumber = whatsappNumber.replace(/\s/g, '');
+        await setDoc(doc(firestore, 'users', user.uid), {
+          whatsappNumber: cleanNumber,
+          whatsappConsentGiven: true,
+        }, { merge: true });
+
+        toast({
+          title: '\u2705 Numero verificato!',
+          description: 'Ora puoi attivare le notifiche WhatsApp.',
+        });
+      } else {
+        toast({
+          title: 'Verifica fallita',
+          description: result.message || 'Codice non valido.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Errore',
+        description: 'Impossibile verificare il codice. Riprova.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
     setIsSaving(true);
     try {
-      const userRef = doc(firestore, 'users', user.uid);
-      await setDoc(userRef, {
-        whatsappNumber: whatsappNumber.replace(/\s/g, '') || null,
+      await setDoc(doc(firestore, 'users', user.uid), {
         whatsappEnabled,
-        whatsappConsentGiven: consentGiven,
       }, { merge: true });
 
       toast({
@@ -106,62 +200,6 @@ export function WhatsAppSettingsDialog({
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleTest = async () => {
-    if (!whatsappNumber) {
-      toast({
-        title: 'Numero mancante',
-        description: 'Inserisci il tuo numero di telefono prima di fare il test.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const cleanNumber = whatsappNumber.replace(/\s/g, '');
-    setIsTesting(true);
-    try {
-      const response = await fetch('/api/test-whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: cleanNumber }),
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        toast({
-          title: 'Messaggio inviato!',
-          description: 'Controlla WhatsApp sul tuo telefono.',
-        });
-      } else {
-        toast({
-          title: 'Invio fallito',
-          description: result.message || 'Errore durante l\'invio del messaggio di test.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Errore',
-        description: 'Impossibile inviare il messaggio di test.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsTesting(false);
-    }
-  };
-
-  const handleToggleEnabled = (checked: boolean) => {
-    if (checked && !consentGiven) {
-      // First time enabling - need consent
-      return;
-    }
-    setWhatsappEnabled(checked);
-  };
-
-  const handleConsent = () => {
-    setConsentGiven(true);
-    setWhatsappEnabled(true);
   };
 
   return (
@@ -204,78 +242,129 @@ export function WhatsAppSettingsDialog({
                 type="tel"
                 placeholder="+393291234567"
                 value={whatsappNumber}
-                onChange={(e) => setWhatsappNumber(e.target.value)}
+                onChange={(e) => {
+                  setWhatsappNumber(e.target.value);
+                  if (e.target.value !== verifiedNumber) {
+                    setWhatsappVerified(false);
+                    setWhatsappEnabled(false);
+                    setOtpSent(false);
+                    setOtpCode('');
+                  }
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 Con prefisso internazionale (es: +39 per Italia)
               </p>
             </div>
 
-            {/* Consent + Toggle */}
-            {!consentGiven && whatsappNumber ? (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
-                <p className="text-sm text-blue-800">
-                  Attivando le notifiche WhatsApp, il tuo numero di telefono
-                  verr\u00e0 condiviso con Twilio per l&apos;invio dei messaggi.
-                  Puoi disattivare questa funzione in qualsiasi momento.
-                </p>
-                <Button size="sm" onClick={handleConsent}>
-                  Accetto, attiva WhatsApp
-                </Button>
+            {/* Verification status */}
+            {whatsappVerified && !numberChanged ? (
+              <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+                <p className="text-sm text-green-700 font-medium">Numero verificato</p>
               </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <Label htmlFor="whatsapp-toggle" className="text-sm">
-                  Notifiche WhatsApp attive
-                </Label>
-                <Switch
-                  id="whatsapp-toggle"
-                  checked={whatsappEnabled}
-                  onCheckedChange={handleToggleEnabled}
-                  disabled={!whatsappNumber}
-                />
-              </div>
-            )}
-
-            {/* Info about notification schedule */}
-            {whatsappEnabled && (
-              <div className="rounded-lg bg-green-50 border border-green-200 p-3">
-                <p className="text-xs text-green-700">
-                  Riceverai un messaggio WhatsApp il giorno prima della scadenza
-                  e uno il giorno stesso. Le email continueranno come sempre.
-                </p>
-              </div>
-            )}
-
-            {/* Test button */}
-            {whatsappNumber && consentGiven && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleTest}
-                disabled={isTesting}
-                className="w-full"
-              >
-                {isTesting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : whatsappNumber ? (
+              <div className="space-y-3">
+                {!otpSent ? (
+                  <>
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                      <p className="text-xs text-blue-800">
+                        Per attivare le notifiche WhatsApp, verifica il tuo numero.
+                        Riceverai un codice a 4 cifre su WhatsApp.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendOtp}
+                      disabled={isSendingOtp}
+                      className="w-full"
+                    >
+                      {isSendingOtp ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-2" />
+                      )}
+                      {isSendingOtp ? 'Invio in corso...' : 'Invia codice di verifica'}
+                    </Button>
+                  </>
                 ) : (
-                  <Send className="h-4 w-4 mr-2" />
+                  <>
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs text-amber-800">
+                        Codice inviato! Controlla WhatsApp e inseriscilo qui sotto. Scade tra 10 minuti.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="0000"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        className="text-center text-2xl tracking-widest font-mono"
+                      />
+                      <Button
+                        onClick={handleVerifyOtp}
+                        disabled={isVerifying || otpCode.length !== 4}
+                      >
+                        {isVerifying ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <KeyRound className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSendOtp}
+                      disabled={isSendingOtp}
+                      className="w-full text-xs"
+                    >
+                      Non hai ricevuto il codice? Rinvia
+                    </Button>
+                  </>
                 )}
-                {isTesting ? 'Invio in corso...' : 'Invia messaggio di test'}
-              </Button>
-            )}
+              </div>
+            ) : null}
 
-            {/* Save button */}
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {isSaving ? 'Salvataggio...' : 'Salva impostazioni'}
-            </Button>
+            {/* Toggle - only if verified */}
+            {whatsappVerified && !numberChanged && (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="whatsapp-toggle" className="text-sm">
+                    Notifiche WhatsApp attive
+                  </Label>
+                  <Switch
+                    id="whatsapp-toggle"
+                    checked={whatsappEnabled}
+                    onCheckedChange={setWhatsappEnabled}
+                  />
+                </div>
+
+                {whatsappEnabled && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+                    <p className="text-xs text-green-700">
+                      Riceverai un messaggio WhatsApp il giorno prima della scadenza
+                      e uno il giorno stesso. Le email continueranno come sempre.
+                    </p>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="w-full"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  {isSaving ? 'Salvataggio...' : 'Salva impostazioni'}
+                </Button>
+              </>
+            )}
           </div>
         )}
       </DialogContent>
