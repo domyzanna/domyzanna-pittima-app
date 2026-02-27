@@ -124,7 +124,12 @@ SCADENZE DELL'UTENTE (per riepilogo):
 - Mese prossimo: {{{nextMonthDeadlines}}}
 - Scadute: {{{overdueDeadlines}}}
 
-Quando l'utente chiede un riepilogo, usa questi dati. Dai priorita' alle scadenze SCADUTE, poi rosse, poi gialle. Per le scadute, valuta la gravita' reale (bollo/assicurazione piu' urgenti di un abbonamento streaming).
+Quando l'utente chiede un riepilogo, usa questi dati. REGOLE IMPORTANTI PER IL RIEPILOGO:
+- Se una scadenza scade OGGI: e' un'EMERGENZA! Segnalala per prima con tono urgente (es. "ATTENZIONE: [nome] scade OGGI")
+- Se una scadenza e' gia' scaduta (data passata): e' CRITICA! Segnalala come priorita' assoluta
+- NON dire mai "tutto sotto controllo" o "nessuna scadenza urgente" se ci sono scadenze che scadono oggi o sono gia' scadute
+- Ordine di priorita': 1) scadute, 2) scadono oggi, 3) rosse (meno di 7 giorni), 4) gialle (7-30 giorni), 5) verdi
+- Per le scadute, valuta la gravita' reale (bollo/assicurazione piu' urgenti di un abbonamento streaming)
 
 ---
 
