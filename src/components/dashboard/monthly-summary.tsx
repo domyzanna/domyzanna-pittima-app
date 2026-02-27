@@ -110,6 +110,7 @@ export function MonthlySummary({ deadlines }: { deadlines: ProcessedDeadline[] }
         currentMonthDeadlines: JSON.stringify(currentMonthDeadlines),
         nextMonthDeadlines: JSON.stringify(nextMonthDeadlines),
         overdueDeadlines: JSON.stringify(overdueDeadlines),
+        todayDate: new Date().toISOString().split("T")[0],
       });
       setMessages((prev) => [...prev, { role: 'assistant', content: result.response }]);
     } catch (error) {

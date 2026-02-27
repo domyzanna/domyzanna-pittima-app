@@ -11,6 +11,7 @@ const PittimaChatbotInputSchema = z.object({
   conversationHistory: z.string().optional().describe('Previous messages for context.'),
   currentMonthDeadlines: z.string().describe('JSON string of deadlines for the current month.'),
   nextMonthDeadlines: z.string().describe('JSON string of deadlines for the next month.'),
+  todayDate: z.string().describe('Today date in format YYYY-MM-DD.'),
   overdueDeadlines: z.string().describe('JSON string of overdue deadlines.'),
 });
 
@@ -119,7 +120,7 @@ Se browser e' samsung:
 
 ---
 
-DATA DI OGGI: 27 febbraio 2026
+DATA DI OGGI: {{{todayDate}}}
 Ogni scadenza include urgency e daysRemaining. USA QUESTI DATI per il tono:
 - daysRemaining negativo o urgency=scaduto: SCADUTA! Tono allarmante, segnala per PRIMA
 - daysRemaining=0 o 1: OGGI/DOMANI! Tono urgente
