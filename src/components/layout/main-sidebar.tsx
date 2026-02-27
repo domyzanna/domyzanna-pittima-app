@@ -330,7 +330,7 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
               </div>
               <div className="flex flex-col items-start group-data-[collapsible=icon]:hidden">
                 <span className="text-sm font-medium">
-                  {user?.displayName || 'Utente'}
+                  {'Impostazioni'}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {user?.email}
