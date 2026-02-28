@@ -13,7 +13,7 @@ import {
   SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import * as LucideIcons from 'lucide-react';
-import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell, History, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Settings, HelpCircle, Download, CreditCard, Bell, History, MessageSquare, Share2 } from 'lucide-react';
 import { Icons } from '../icons';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -373,6 +373,22 @@ export function MainSidebar({ isProUser }: { isProUser: boolean }) {
                 <span>Gestisci Abbonamento</span>
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem onClick={() => {
+              const shareData = {
+                title: "Pittima App",
+                text: "Non dimenticare più nessuna scadenza! Prova Pittima App gratis \u{1F449}",
+                url: "https://rememberapp.zannalabs.com/landing",
+              };
+              if (navigator.share) {
+                navigator.share(shareData);
+              } else {
+                navigator.clipboard.writeText("Non dimenticare più nessuna scadenza! Prova Pittima App gratis \u{1F449} https://rememberapp.zannalabs.com/landing");
+                toast({ title: "Link copiato!", description: "Incollalo e condividilo con i tuoi amici." });
+              }
+            }}>
+              <Share2 className="mr-2 h-4 w-4" />
+              <span>Invita un amico</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>Esci</DropdownMenuItem>
           </DropdownMenuContent>
