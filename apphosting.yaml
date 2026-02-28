@@ -4,7 +4,7 @@ runConfig:
   maxInstances: 1
 
 scheduledJobs:
-- schedule: "every day 09:00"
+- schedule: "every day 06:00"
   timeZone: "Europe/Rome"
   task:
     type: genkit
